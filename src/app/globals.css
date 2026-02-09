@@ -1,0 +1,471 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ═══════════════════════════════════════════════════════════
+   وشّى | WUSHA - Dark Heritage Design System
+   منصة فنية رقمية عربية — النسخة الداكنة التراثية
+═══════════════════════════════════════════════════════════ */
+
+:root {
+  /* الألوان الأساسية — Dark Heritage */
+  --wusha-bg: #080808;
+  --wusha-surface: #111111;
+  --wusha-surface-2: #1a1a1a;
+  --wusha-border: rgba(206, 174, 127, 0.1);
+  --wusha-border-strong: rgba(206, 174, 127, 0.25);
+  --wusha-text: #f0ebe3;
+  --wusha-text-muted: rgba(240, 235, 227, 0.5);
+  --wusha-gold: #ceae7f;
+  --wusha-gold-light: #e0c99a;
+  --wusha-earth: #5A3E2B;
+  --wusha-mist: #9D8BB1;
+  --wusha-forest: #2a7a5a;
+  --wusha-ink: #f0ebe3;
+
+  /* مساحات */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 2rem;
+  --space-xl: 4rem;
+  --space-2xl: 8rem;
+
+  /* انتقالات */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-quad: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 300ms;
+  --duration-slow: 600ms;
+  --duration-ultra: 1200ms;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Base Styles
+═══════════════════════════════════════════════════════════ */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--wusha-bg);
+  color: var(--wusha-text);
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Typography - RTL Arabic
+═══════════════════════════════════════════════════════════ */
+
+.font-arabic {
+  font-feature-settings: "ss01", "ss02";
+  letter-spacing: 0.02em;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--wusha-text);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Noise Texture Overlay
+═══════════════════════════════════════════════════════════ */
+
+.noise-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Scrollbar Styling — Dark Gold
+═══════════════════════════════════════════════════════════ */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--wusha-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(206, 174, 127, 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--wusha-gold);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Selection
+═══════════════════════════════════════════════════════════ */
+
+::selection {
+  background-color: var(--wusha-gold);
+  color: var(--wusha-bg);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Glass Card Effect
+═══════════════════════════════════════════════════════════ */
+
+.glass-card {
+  background: rgba(17, 17, 17, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--wusha-border);
+  transition: all 0.5s var(--ease-smooth);
+}
+
+.glass-card:hover {
+  border-color: var(--wusha-border-strong);
+  background: rgba(26, 26, 26, 0.8);
+  box-shadow: 0 8px 32px rgba(206, 174, 127, 0.08);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Custom Components — Dark Heritage
+═══════════════════════════════════════════════════════════ */
+
+@layer components {
+  .btn-primary {
+    @apply px-8 py-4 bg-forest text-white font-medium rounded-lg transition-all duration-300 hover:brightness-110 hover:scale-[1.02] active:scale-[0.98];
+  }
+
+  .btn-secondary {
+    @apply px-8 py-4 border border-gold/30 text-gold font-medium rounded-lg transition-all duration-300 hover:bg-gold/10 hover:border-gold/60;
+  }
+
+  .btn-gold {
+    @apply px-8 py-4 font-bold rounded-lg transition-all duration-500 hover:scale-[1.02] active:scale-[0.98];
+    background: linear-gradient(to right, #ceae7f, #b8964f);
+    color: #0a0a0a;
+  }
+
+  .btn-gold:hover {
+    box-shadow: 0 0 30px rgba(206, 174, 127, 0.3);
+  }
+
+  .card-artwork {
+    @apply relative overflow-hidden rounded-2xl bg-surface/70 backdrop-blur-sm border border-gold/10 transition-all duration-500;
+  }
+
+  .card-artwork:hover {
+    @apply border-gold/30 shadow-2xl;
+    box-shadow: 0 20px 60px rgba(206, 174, 127, 0.1);
+    transform: translateY(-4px);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Text Gradient — Gold Heritage
+═══════════════════════════════════════════════════════════ */
+
+.text-gradient {
+  background: linear-gradient(135deg, #e0c99a 0%, #ceae7f 40%, #b8964f 70%, #ceae7f 100%);
+  background-size: 200% 200%;
+  animation: gradient 8s ease infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-mist {
+  background: linear-gradient(135deg, var(--wusha-mist) 0%, var(--wusha-forest) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Shimmer Gold Effect
+═══════════════════════════════════════════════════════════ */
+
+.shimmer-gold {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer-gold::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg,
+      transparent 25%,
+      rgba(206, 174, 127, 0.08) 37%,
+      transparent 63%);
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Gold Glow Pulse
+═══════════════════════════════════════════════════════════ */
+
+.glow-gold {
+  box-shadow: 0 0 20px rgba(206, 174, 127, 0.15);
+}
+
+.glow-gold:hover {
+  box-shadow: 0 0 40px rgba(206, 174, 127, 0.25);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Section Divider
+═══════════════════════════════════════════════════════════ */
+
+.section-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--wusha-border-strong), transparent);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Animated Background Shapes — Subtle Dark
+═══════════════════════════════════════════════════════════ */
+
+.bg-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.15;
+  animation: float 8s ease-in-out infinite;
+}
+
+.bg-blob-gold {
+  background: var(--wusha-gold);
+}
+
+.bg-blob-mist {
+  background: var(--wusha-mist);
+}
+
+.bg-blob-forest {
+  background: var(--wusha-forest);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Grid Pattern Background — Dark
+═══════════════════════════════════════════════════════════ */
+
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(206, 174, 127, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(206, 174, 127, 0.05) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Reveal Animation Classes
+═══════════════════════════════════════════════════════════ */
+
+.reveal-text {
+  overflow: hidden;
+}
+
+.reveal-text span {
+  display: inline-block;
+  transform: translateY(100%);
+  opacity: 0;
+  animation: slideUp 0.8s var(--ease-out-expo) forwards;
+}
+
+.reveal-text span:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.reveal-text span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.reveal-text span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.reveal-text span:nth-child(4) {
+  animation-delay: 0.4s;
+}
+
+.reveal-text span:nth-child(5) {
+  animation-delay: 0.5s;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Hover Effects — Enhanced
+═══════════════════════════════════════════════════════════ */
+
+.hover-lift {
+  @apply transition-all duration-500;
+}
+
+.hover-lift:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 40px rgba(206, 174, 127, 0.2);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Magnetic Button Effect
+═══════════════════════════════════════════════════════════ */
+
+.magnetic {
+  transition: transform 0.3s var(--ease-out-expo);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Line Decorations — Gold
+═══════════════════════════════════════════════════════════ */
+
+.line-horizontal {
+  @apply h-px bg-gradient-to-r from-transparent via-gold/20 to-transparent;
+}
+
+.line-vertical {
+  @apply w-px bg-gradient-to-b from-transparent via-gold/20 to-transparent;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RTL Specific Styles
+═══════════════════════════════════════════════════════════ */
+
+[dir="rtl"] {
+  text-align: right;
+}
+
+[dir="rtl"] .flip-rtl {
+  transform: scaleX(-1);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Loading States — Dark
+═══════════════════════════════════════════════════════════ */
+
+.skeleton {
+  @apply animate-pulse bg-white/5 rounded;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Focus States - Accessibility
+═══════════════════════════════════════════════════════════ */
+
+:focus-visible {
+  outline: 2px solid var(--wusha-gold);
+  outline-offset: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Container
+═══════════════════════════════════════════════════════════ */
+
+.container-wusha {
+  @apply w-full max-w-[1400px] mx-auto px-4 sm:px-6 md:px-12;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Responsive — Mobile Polish
+═══════════════════════════════════════════════════════════ */
+
+@media (max-width: 640px) {
+  h1 {
+    font-size: clamp(2.5rem, 12vw, 4rem);
+  }
+
+  h2 {
+    font-size: clamp(1.75rem, 7vw, 2.5rem);
+  }
+
+  .btn-gold,
+  .btn-secondary,
+  .btn-primary {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+    padding: 1rem 1.5rem;
+    font-size: 0.95rem;
+    min-height: 48px;
+  }
+
+  .glass-card {
+    border-radius: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Heritage Patterns
+═══════════════════════════════════════════════════════════ */
+
+.heritage-border {
+  border-image: linear-gradient(90deg, transparent, var(--wusha-gold), transparent) 1;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Video Background
+═══════════════════════════════════════════════════════════ */
+
+.video-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+
+.video-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg,
+      rgba(8, 8, 8, 0.4) 0%,
+      rgba(8, 8, 8, 0.6) 50%,
+      rgba(8, 8, 8, 0.95) 100%);
+  z-index: 1;
+}
