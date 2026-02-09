@@ -4,15 +4,6 @@
 // ═══════════════════════════════════════════════════════════
 
 import { createClient } from "@supabase/supabase-js";
-import { v4 as uuidv4 } from "uuid";
-
-// Note: This script uses SERVICE_ROLE_KEY to bypass RLS and create users directly
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-const supabase = createClient(supabaseUrl, serviceRoleKey, {
-    auth: { persistSession: false },
-});
 
 const ARTISTS = [
     {
@@ -125,6 +116,12 @@ const PRODUCTS = [
 
 export async function seedData() {
     console.log("🌱 Starting seed...");
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+    const supabase = createClient(supabaseUrl, serviceRoleKey, {
+        auth: { persistSession: false },
+    });
 
     // 1. Get Categories Map
     const { data: categories } = await supabase.from("categories").select("id, slug");
