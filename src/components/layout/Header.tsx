@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Palette } from "lucide-react";
+import { Menu, X, Palette, ShoppingBag } from "lucide-react";
+import { useCartStore } from "@/stores/cart-store";
 import { Logo } from "@/components/ui/Logo";
 import {
   SignedIn,
@@ -22,6 +23,8 @@ const navItems = [
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { toggleCart, totalItems } = useCartStore();
+  const itemCount = totalItems();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -70,8 +73,27 @@ export function Header() {
               ))}
             </nav>
 
-            {/* Auth Buttons */}
+            {/* Cart + Auth Buttons */}
             <div className="hidden md:flex items-center gap-4">
+              {/* Cart Icon */}
+              <motion.button
+                onClick={toggleCart}
+                className="relative p-2 text-white/60 hover:text-gold transition-colors duration-300 cursor-pointer"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                aria-label="سلة المشتريات"
+              >
+                <ShoppingBag className="w-5 h-5" />
+                {itemCount > 0 && (
+                  <motion.span
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute -top-0.5 -right-0.5 w-4.5 h-4.5 bg-gold text-black text-[10px] font-bold rounded-full flex items-center justify-center min-w-[18px] h-[18px]"
+                  >
+                    {itemCount}
+                  </motion.span>
+                )}
+              </motion.button>
               <SignedOut>
                 <motion.div
                   className="flex items-center gap-3"
@@ -125,18 +147,32 @@ export function Header() {
               </SignedIn>
             </div>
 
-            {/* Mobile Menu Button */}
-            <button
-              className="md:hidden p-3 -mr-2 text-white/80"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              aria-label="القائمة"
-            >
-              {isMobileMenuOpen ? (
-                <X className="w-6 h-6" />
-              ) : (
-                <Menu className="w-6 h-6" />
-              )}
-            </button>
+            {/* Mobile: Cart + Menu */}
+            <div className="flex md:hidden items-center gap-1">
+              <button
+                onClick={toggleCart}
+                className="relative p-3 text-white/80"
+                aria-label="سلة المشتريات"
+              >
+                <ShoppingBag className="w-5 h-5" />
+                {itemCount > 0 && (
+                  <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-gold text-black text-[9px] font-bold rounded-full flex items-center justify-center">
+                    {itemCount}
+                  </span>
+                )}
+              </button>
+              <button
+                className="p-3 -mr-2 text-white/80"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                aria-label="القائمة"
+              >
+                {isMobileMenuOpen ? (
+                  <X className="w-6 h-6" />
+                ) : (
+                  <Menu className="w-6 h-6" />
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </motion.header>
