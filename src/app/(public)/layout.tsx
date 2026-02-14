@@ -1,6 +1,6 @@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { CartDrawer } from "@/components/cart/CartDrawer";
+import { CartSheet } from "@/components/store/CartSheet";
 
 export default function PublicLayout({
     children,
@@ -10,7 +10,7 @@ export default function PublicLayout({
     return (
         <>
             <Header />
-            <CartDrawer />
+            <CartSheet />
             {children}
             <Footer />
         </>

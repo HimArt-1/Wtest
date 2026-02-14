@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Palette, ShoppingBag } from "lucide-react";
-import { useCartStore } from "@/stores/cart-store";
+import { useCartStore } from "@/stores/cartStore";
 import { Logo } from "@/components/ui/Logo";
 import {
   SignedIn,
@@ -15,24 +15,28 @@ import {
 import Link from "next/link";
 
 const navItems = [
-  { label: "المعرض", href: "#gallery" },
-  { label: "المتجر", href: "#store" },
-  { label: "انضم إلينا", href: "#join" },
+  { label: "المعرض", href: "/#gallery" },
+  { label: "المتجر", href: "/#store" },
+  { label: "انضم إلينا", href: "/#join" },
 ];
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { toggleCart, totalItems } = useCartStore();
-  const itemCount = totalItems();
+  const { toggleCart, getCartCount } = useCartStore();
+  const itemCount = getCartCount();
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  if (!mounted) return null;
 
   return (
     <>
@@ -77,7 +81,7 @@ export function Header() {
             <div className="hidden md:flex items-center gap-4">
               {/* Cart Icon */}
               <motion.button
-                onClick={toggleCart}
+                onClick={() => toggleCart(true)}
                 className="relative p-2 text-white/60 hover:text-gold transition-colors duration-300 cursor-pointer"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
@@ -150,7 +154,7 @@ export function Header() {
             {/* Mobile: Cart + Menu */}
             <div className="flex md:hidden items-center gap-1">
               <button
-                onClick={toggleCart}
+                onClick={() => toggleCart(true)}
                 className="relative p-3 text-white/80"
                 aria-label="سلة المشتريات"
               >

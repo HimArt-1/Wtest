@@ -2,9 +2,10 @@
 
 import { motion } from "framer-motion";
 import { Star, ShoppingCart } from "lucide-react";
-import { useCartStore } from "@/stores/cart-store";
+import { useCartStore } from "@/stores/cartStore";
 import { getProducts } from "@/app/actions/products";
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import type { Product } from "@/types/database";
 
 type ProductWithArtist = Product & {
@@ -76,10 +77,11 @@ export function Store() {
                 className="glass-card rounded-2xl overflow-hidden group"
               >
                 <div className="relative aspect-square overflow-hidden">
-                  <img
+                  <Image
                     src={product.image_url}
                     alt={product.title}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    fill
+                    className="object-cover transition-transform duration-700 group-hover:scale-110"
                   />
                   {product.badge && (
                     <div className="absolute top-4 right-4 bg-gradient-to-r from-gold to-[#b8964f] text-[#0a0a0a] text-xs font-bold px-3 py-1 rounded-full">
@@ -107,13 +109,13 @@ export function Store() {
                     <motion.button
                       onClick={() =>
                         addToCart({
-                          product_id: product.id,
+                          id: product.id,
                           title: product.title,
                           price: Number(product.price),
-                          currency: product.currency,
                           image_url: product.image_url,
                           artist_name: product.artist?.display_name || "Wusha Artist",
                           size: null,
+                          type: "product"
                         })
                       }
                       className="p-2.5 bg-gold/10 text-gold rounded-xl hover:bg-gold hover:text-[#0a0a0a] transition-all duration-300 border border-gold/20"

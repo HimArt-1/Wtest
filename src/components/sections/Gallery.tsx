@@ -2,205 +2,168 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Eye, Heart, Loader2 } from "lucide-react";
+import { Eye, Heart, ShoppingBag } from "lucide-react";
+import Image from "next/image";
 import { getArtworks } from "@/app/actions/artworks";
-import type { Artwork, Category } from "@/types/database";
-
-type ArtworkWithArtist = Artwork & {
-  artist: {
-    display_name: string;
-    avatar_url: string | null;
-  };
-};
+import { useCartStore } from "@/stores/cartStore";
 
 const categories = [
   { id: "all", label: "الكل" },
-  { id: "digital", label: "رقمي" },
+  { id: "painting", label: "رسم زيتي" },
+  { id: "digital", label: "فن رقمي" },
+  { id: "calligraphy", label: "خط عربي" },
+  { id: "sculpture", label: "نحت" },
   { id: "photography", label: "تصوير" },
-  { id: "calligraphy", label: "خط" },
-  { id: "traditional", label: "تقليدي" },
-  { id: "abstract", label: "تجريدي" },
 ];
 
 export function Gallery() {
   const [activeCategory, setActiveCategory] = useState("all");
-  const [artworks, setArtworks] = useState<ArtworkWithArtist[]>([]);
+  const [artworks, setArtworks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-
-  async function loadArtworks(reset = false) {
-    setLoading(true);
-    const currentPage = reset ? 1 : page;
-    const { data, count } = await getArtworks(currentPage, activeCategory);
-
-    const newArtworks = data as unknown as ArtworkWithArtist[];
-
-    if (reset) {
-      setArtworks(newArtworks);
-      setPage(2);
-    } else {
-      setArtworks((prev) => [...prev, ...newArtworks]);
-      setPage((prev) => prev + 1);
-    }
-
-    setHasMore(newArtworks.length > 0 && (reset ? newArtworks.length : artworks.length + newArtworks.length) < count);
-    setLoading(false);
-  }
+  const addToCart = useCartStore((state) => state.addItem);
 
   useEffect(() => {
-    loadArtworks(true);
+    async function fetchArtworks() {
+      setLoading(true);
+      const { data } = await getArtworks(1, activeCategory);
+      setArtworks(data || []);
+      setLoading(false);
+    }
+    fetchArtworks();
   }, [activeCategory]);
 
   return (
-    <section id="gallery" className="py-16 sm:py-24 relative">
-      {/* Section Divider */}
-      <div className="section-divider mb-16 sm:mb-24" />
+    <section id="gallery" className="py-20 bg-[#080808] relative overflow-hidden">
+      {/* Background Elements */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+        <div className="absolute top-[20%] left-[10%] w-[500px] h-[500px] bg-gold/5 rounded-full blur-3xl opacity-20 animate-pulse-slow" />
+        <div className="absolute bottom-[20%] right-[10%] w-[600px] h-[600px] bg-[#9D8BB1]/5 rounded-full blur-3xl opacity-20 animate-pulse-slow delay-1000" />
+      </div>
 
-      <div className="container-wusha">
-        {/* Section Header */}
-        <div className="text-center mb-10 sm:mb-16">
-          <motion.span
-            className="text-gold/60 text-sm tracking-[0.3em] uppercase block mb-4"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            إبداعات لا حدود لها
-          </motion.span>
-          <motion.h2
-            className="text-4xl md:text-6xl font-bold mb-4"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <span className="text-gradient">معرض الأعمال</span>
-          </motion.h2>
-          <motion.p
-            className="text-white/40 max-w-2xl mx-auto"
+      <div className="container-wusha relative z-10">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8">
+          <div>
+            <motion.h2
+              className="text-4xl md:text-5xl font-bold mb-4"
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+            >
+              معرض <span className="text-gold">الأعمال المميزة</span>
+            </motion.h2>
+            <motion.p
+              className="text-white/60 max-w-xl text-lg"
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+            >
+              اكتشف مجموعة مختارة من أبدع الأعمال الفنية لفنانينا الموهوبين
+            </motion.p>
+          </div>
+
+          <motion.div
+            className="flex flex-wrap gap-2"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
           >
-            اكتشف أحدث إبداعات الفنانين العرب، من اللوحات التقليدية إلى الفنون الرقمية
-          </motion.p>
+            {categories.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setActiveCategory(cat.id)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${activeCategory === cat.id
+                  ? "bg-gold text-black"
+                  : "bg-white/5 text-white/60 hover:bg-white/10 hover:text-white"
+                  }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </motion.div>
         </div>
 
-        {/* Filter Categories */}
-        <motion.div
-          className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-10 sm:mb-14"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.3 }}
-        >
-          {categories.map((category) => (
-            <button
-              key={category.id}
-              onClick={() => setActiveCategory(category.id)}
-              className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-medium transition-all duration-500 ${activeCategory === category.id
-                ? "bg-gradient-to-r from-gold to-[#b8964f] text-[#0a0a0a] shadow-[0_0_20px_rgba(206,174,127,0.2)]"
-                : "bg-white/5 text-white/50 hover:bg-white/10 hover:text-white/80 border border-white/5"
-                }`}
-            >
-              {category.label}
-            </button>
-          ))}
-        </motion.div>
-
-        {/* Artworks Grid */}
-        <motion.div
-          layout
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8"
-        >
-          <AnimatePresence mode="popLayout">
-            {artworks.map((artwork, index) => (
-              <motion.div
-                layout
-                key={artwork.id}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.5, delay: index * 0.05 }}
-                className="group relative glass-card rounded-2xl overflow-hidden"
-              >
-                {/* Image */}
-                <div className="relative aspect-[4/5] overflow-hidden">
-                  <img
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="aspect-[4/5] bg-white/5 rounded-2xl animate-pulse" />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <AnimatePresence mode="popLayout">
+              {artworks.map((artwork) => (
+                <motion.div
+                  key={artwork.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.3 }}
+                  className="group relative aspect-[4/5] rounded-2xl overflow-hidden bg-white/5 border border-white/10"
+                >
+                  <Image
                     src={artwork.image_url}
                     alt={artwork.title}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    fill
+                    className="object-cover transition-transform duration-700 group-hover:scale-110"
                   />
 
                   {/* Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#080808] via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500">
-                    <div className="absolute bottom-0 left-0 right-0 p-6 translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                      <div className="flex items-center justify-between text-white mb-2">
-                        <span className="font-bold text-lg text-gold">{artwork.price ? `${artwork.price} ${artwork.currency}` : 'للعرض فقط'}</span>
-                        <div className="flex gap-3">
-                          <button className="p-2 bg-white/10 rounded-full hover:bg-gold hover:text-[#0a0a0a] transition-all backdrop-blur-sm">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="absolute bottom-0 left-0 w-full p-6">
+                      <div className="flex justify-between items-end">
+                        <div>
+                          <h3 className="text-xl font-bold text-white mb-1">{artwork.title}</h3>
+                          <p className="text-gold text-sm">{artwork.artist?.display_name || "فنان مجهول"}</p>
+                          {artwork.price && (
+                            <p className="text-white/80 font-bold mt-2">{artwork.price} ر.س</p>
+                          )}
+                        </div>
+
+                        <div className="flex gap-2">
+                          {artwork.price && (
+                            <button
+                              onClick={() => addToCart({
+                                id: artwork.id,
+                                title: artwork.title,
+                                price: Number(artwork.price),
+                                image_url: artwork.image_url,
+                                artist_name: artwork.artist?.display_name || "Wusha Artist",
+                                type: "artwork",
+                              })}
+                              className="p-3 bg-gold text-black rounded-full hover:bg-white transition-colors"
+                              title="أضف للسلة"
+                            >
+                              <ShoppingBag className="w-5 h-5" />
+                            </button>
+                          )}
+                          <button className="p-3 bg-white/10 text-white rounded-full hover:bg-white/20 transition-colors backdrop-blur-sm">
                             <Heart className="w-5 h-5" />
-                          </button>
-                          <button className="p-2 bg-white/10 rounded-full hover:bg-gold hover:text-[#0a0a0a] transition-all backdrop-blur-sm">
-                            <Eye className="w-5 h-5" />
                           </button>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-
-                {/* Info */}
-                <div className="p-6 relative z-10">
-                  <h3 className="text-lg font-bold mb-2 text-white/90 truncate">{artwork.title}</h3>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full overflow-hidden bg-white/10">
-                        {artwork.artist?.avatar_url && (
-                          <img src={artwork.artist.avatar_url} alt={artwork.artist.display_name} className="w-full h-full object-cover" />
-                        )}
-                      </div>
-                      <span className="text-sm text-white/40">{artwork.artist?.display_name || 'فنان مجهول'}</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-xs text-white/30">
-                      <Eye className="w-3 h-3" />
-                      <span>{artwork.views_count}</span>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </motion.div>
-
-        {/* Loading State */}
-        {loading && (
-          <div className="flex justify-center mt-12">
-            <Loader2 className="w-8 h-8 animate-spin text-gold" />
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
         )}
 
-        {/* Empty State */}
         {!loading && artworks.length === 0 && (
-          <div className="text-center mt-12 text-white/30">
-            لا توجد أعمال فنية في هذا التصنيف حالياً.
+          <div className="text-center py-20">
+            <p className="text-white/30 text-lg">لا توجد أعمال في هذا التصنيف حالياً</p>
           </div>
         )}
 
-        {/* Load More Button */}
-        {!loading && hasMore && (
-          <div className="text-center mt-14">
-            <motion.button
-              onClick={() => loadArtworks(false)}
-              className="px-10 py-3 border border-gold/20 rounded-full text-gold/70 hover:bg-gold/10 hover:border-gold/40 hover:text-gold transition-all duration-500"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              عرض المزيد
-            </motion.button>
-          </div>
-        )}
+        {/* Load More */}
+        <div className="mt-16 text-center">
+          <button className="px-8 py-4 border border-gold/30 text-gold rounded-full hover:bg-gold hover:text-black transition-all duration-300 tracking-wider text-sm font-medium">
+            عرض المزيد من الأعمال
+          </button>
+        </div>
       </div>
     </section>
   );

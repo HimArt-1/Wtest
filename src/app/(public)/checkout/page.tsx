@@ -1,509 +1,345 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useCartStore } from "@/stores/cartStore";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingBag, MapPin, CreditCard, CheckCircle2, ArrowRight, Trash2 } from "lucide-react";
-import Image from "next/image";
+import { ArrowRight, Check, Loader2, MapPin, Phone, User, CreditCard } from "lucide-react";
 import Link from "next/link";
-import { useCartStore } from "@/stores/cart-store";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { createOrder } from "@/app/actions/orders";
-import { useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 
-const SHIPPING_COST = 30;
-const TAX_RATE = 0.15;
+// Schema
+const addressSchema = z.object({
+    name: z.string().min(3, "الاسم مطلوب"),
+    phone: z.string().min(10, "رقم الهاتف مطلوب"),
+    line1: z.string().min(5, "العنوان مطلوب"),
+    line2: z.string().optional(),
+    city: z.string().min(2, "المدينة مطلوبة"),
+    postal_code: z.string().min(4, "الرمز البريدي مطلوب"),
+    country: z.string().min(2, "الدولة مطلوبة"),
+});
 
-type CheckoutStep = "review" | "shipping" | "confirm" | "success";
-
-interface ShippingForm {
-    name: string;
-    line1: string;
-    line2: string;
-    city: string;
-    postal_code: string;
-    phone: string;
-}
+type AddressFormValues = z.infer<typeof addressSchema>;
 
 export default function CheckoutPage() {
-    const { items, totalPrice, clearCart, removeItem } = useCartStore();
-    const { isSignedIn } = useUser();
-    const [step, setStep] = useState<CheckoutStep>("review");
+    const { items, getCartTotal, clearCart } = useCartStore();
+    const [isClient, setIsClient] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [orderNumber, setOrderNumber] = useState("");
-    const [orderTotal, setOrderTotal] = useState(0);
-    const [error, setError] = useState("");
+    const [error, setError] = useState<string | null>(null);
+    const [success, setSuccess] = useState<string | null>(null);
+    const router = useRouter();
 
-    const [shipping, setShipping] = useState<ShippingForm>({
-        name: "",
-        line1: "",
-        line2: "",
-        city: "",
-        postal_code: "",
-        phone: "",
+    const form = useForm<AddressFormValues>({
+        resolver: zodResolver(addressSchema),
+        defaultValues: {
+            name: "",
+            phone: "",
+            line1: "",
+            line2: "",
+            city: "",
+            postal_code: "",
+            country: "المملكة العربية السعودية",
+        },
     });
 
-    const subtotal = totalPrice();
-    const tax = subtotal * TAX_RATE;
-    const total = subtotal + SHIPPING_COST + tax;
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
 
-    const handleShippingChange = (field: keyof ShippingForm, value: string) => {
-        setShipping((prev) => ({ ...prev, [field]: value }));
-    };
+    if (!isClient) return null;
 
-    const isShippingValid = shipping.name && shipping.line1 && shipping.city && shipping.phone;
-
-    const handleSubmitOrder = async () => {
-        if (!isSignedIn) {
-            setError("يجب تسجيل الدخول لإتمام الطلب");
-            return;
-        }
-
-        setIsSubmitting(true);
-        setError("");
-
-        try {
-            const result = await createOrder(
-                items.map((item) => ({
-                    product_id: item.product_id,
-                    quantity: item.quantity,
-                    size: item.size,
-                    unit_price: item.price,
-                })),
-                {
-                    name: shipping.name,
-                    line1: shipping.line1,
-                    line2: shipping.line2 || undefined,
-                    city: shipping.city,
-                    postal_code: shipping.postal_code,
-                    country: "SA",
-                    phone: shipping.phone,
-                }
-            );
-
-            if (result.success && "order_number" in result) {
-                setOrderNumber(result.order_number || "");
-                setOrderTotal("total" in result ? (result.total || total) : total);
-                clearCart();
-                setStep("success");
-            } else {
-                setError(result.error || "حدث خطأ أثناء إنشاء الطلب");
-            }
-        } catch {
-            setError("حدث خطأ غير متوقع");
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
-    // Steps indicator
-    const steps = [
-        { key: "review", label: "المراجعة", icon: ShoppingBag },
-        { key: "shipping", label: "الشحن", icon: MapPin },
-        { key: "confirm", label: "التأكيد", icon: CreditCard },
-    ];
-
-    const currentStepIndex = steps.findIndex((s) => s.key === step);
-
-    if (items.length === 0 && step !== "success") {
+    if (items.length === 0 && !success) {
         return (
-            <section className="min-h-screen flex items-center justify-center px-4 pt-24">
-                <motion.div
-                    className="text-center"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
+            <div className="min-h-screen pt-32 pb-20 container-wusha flex flex-col items-center justify-center text-center">
+                <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-6">
+                    <ShoppingBagIcon className="w-10 h-10 text-white/20" />
+                </div>
+                <h1 className="text-2xl font-bold mb-4">سلة المشتريات فارغة</h1>
+                <p className="text-white/40 mb-8 max-w-md">
+                    لم تقم بإضافة أي منتجات للسلة بعد. تصفح المتجر واكتشف منتجاتنا الحصرية.
+                </p>
+                <Link
+                    href="/#store"
+                    className="btn-gold px-8 py-3 rounded-xl"
                 >
-                    <div className="w-20 h-20 mx-auto rounded-full bg-white/5 flex items-center justify-center mb-6">
-                        <ShoppingBag className="w-8 h-8 text-white/20" />
-                    </div>
-                    <h2 className="text-2xl font-bold text-white mb-2">السلة فارغة</h2>
-                    <p className="text-white/40 mb-8">أضف منتجات من المتجر لبدء التسوق</p>
-                    <Link href="/#store" className="btn-gold px-8 py-3">
-                        تصفح المتجر
-                    </Link>
+                    تصفح المتجر
+                </Link>
+            </div>
+        );
+    }
+
+    const subtotal = getCartTotal();
+    const shipping = 30;
+    const tax = subtotal * 0.15;
+    const total = subtotal + shipping + tax;
+
+    async function onSubmit(data: AddressFormValues) {
+        setIsSubmitting(true);
+        setError(null);
+
+        const orderItems = items.map((item) => ({
+            product_id: item.id,
+            quantity: item.quantity,
+            size: item.size || null,
+            unit_price: item.price,
+        }));
+
+        const result = await createOrder(orderItems, {
+            ...data,
+            state: "", // Optional
+        });
+
+        if (result.success) {
+            setSuccess(result.order_number || "#ORDER");
+            clearCart();
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        } else {
+            setError(result.error || "حدث خطأ أثناء إنشاء الطلب");
+        }
+
+        setIsSubmitting(false);
+    }
+
+    if (success) {
+        return (
+            <div className="min-h-screen pt-32 pb-20 container-wusha flex flex-col items-center justify-center text-center">
+                <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="w-24 h-24 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center mb-6 border border-green-500/30"
+                >
+                    <Check className="w-12 h-12" />
                 </motion.div>
-            </section>
+                <h1 className="text-3xl font-bold mb-2">تم استلام طلبك بنجاح!</h1>
+                <p className="text-white/60 mb-2">
+                    رقم الطلب: <span className="font-mono text-gold font-bold">{success}</span>
+                </p>
+                <p className="text-white/40 mb-8 max-w-md">
+                    شكراً لتسوقك معنا. سيتم إرسال تفاصيل الطلب إلى بريدك الإلكتروني قريباً.
+                </p>
+                <Link
+                    href="/"
+                    className="btn-gold px-8 py-3 rounded-xl"
+                >
+                    العودة للرئيسية
+                </Link>
+            </div>
         );
     }
 
     return (
-        <section className="min-h-screen pt-24 pb-16 px-4" dir="rtl">
-            <div className="container-wusha max-w-4xl">
-                {/* ═══ Steps Indicator ═══ */}
-                {step !== "success" && (
-                    <div className="flex items-center justify-center gap-2 mb-12">
-                        {steps.map((s, i) => {
-                            const Icon = s.icon;
-                            const isActive = i === currentStepIndex;
-                            const isDone = i < currentStepIndex;
-                            return (
-                                <div key={s.key} className="flex items-center gap-2">
-                                    <motion.div
-                                        className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${isActive
-                                            ? "bg-gold/20 text-gold border border-gold/30"
-                                            : isDone
-                                                ? "bg-green-500/10 text-green-400 border border-green-500/20"
-                                                : "bg-white/5 text-white/30 border border-white/10"
-                                            }`}
-                                        animate={isActive ? { scale: [1, 1.05, 1] } : {}}
-                                        transition={{ duration: 0.5 }}
-                                    >
-                                        {isDone ? (
-                                            <CheckCircle2 className="w-4 h-4" />
-                                        ) : (
-                                            <Icon className="w-4 h-4" />
+        <div className="min-h-screen pt-32 pb-20 bg-[#080808]">
+            <div className="container-wusha">
+                <h1 className="text-3xl md:text-4xl font-bold mb-8">إتمام الطلب</h1>
+
+                <div className="grid lg:grid-cols-12 gap-8 lg:gap-12">
+                    {/* Form Section */}
+                    <div className="lg:col-span-7 space-y-8">
+                        <div className="bg-surface border border-white/5 rounded-2xl p-6 md:p-8">
+                            <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+                                <MapPin className="text-gold w-5 h-5" />
+                                عنوان الشحن
+                            </h2>
+
+                            <form id="checkout-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                                <div className="grid md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="text-sm text-white/60">الاسم الكامل</label>
+                                        <div className="relative">
+                                            <input
+                                                {...form.register("name")}
+                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-gold focus:outline-none transition-colors pl-10"
+                                                placeholder="الاسم الثلاثي"
+                                            />
+                                            <User className="absolute left-3 top-3.5 w-4 h-4 text-white/20" />
+                                        </div>
+                                        {form.formState.errors.name && (
+                                            <p className="text-red-400 text-xs">{form.formState.errors.name.message}</p>
                                         )}
-                                        <span className="hidden sm:inline">{s.label}</span>
-                                    </motion.div>
-                                    {i < steps.length - 1 && (
-                                        <div className={`w-8 h-px ${isDone ? "bg-green-500/30" : "bg-white/10"}`} />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-sm text-white/60">رقم الهاتف</label>
+                                        <div className="relative">
+                                            <input
+                                                {...form.register("phone")}
+                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-gold focus:outline-none transition-colors pl-10 dir-ltr text-right"
+                                                placeholder="05xxxxxxxx"
+                                            />
+                                            <Phone className="absolute left-3 top-3.5 w-4 h-4 text-white/20" />
+                                        </div>
+                                        {form.formState.errors.phone && (
+                                            <p className="text-red-400 text-xs">{form.formState.errors.phone.message}</p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-sm text-white/60">العنوان</label>
+                                    <input
+                                        {...form.register("line1")}
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-gold focus:outline-none transition-colors"
+                                        placeholder="اسم الشارع، رقم المبنى"
+                                    />
+                                    {form.formState.errors.line1 && (
+                                        <p className="text-red-400 text-xs">{form.formState.errors.line1.message}</p>
                                     )}
                                 </div>
-                            );
-                        })}
+
+                                <div className="grid md:grid-cols-3 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="text-sm text-white/60">المدينة</label>
+                                        <input
+                                            {...form.register("city")}
+                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-gold focus:outline-none transition-colors"
+                                        />
+                                        {form.formState.errors.city && (
+                                            <p className="text-red-400 text-xs">{form.formState.errors.city.message}</p>
+                                        )}
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm text-white/60">الرمز البريدي</label>
+                                        <input
+                                            {...form.register("postal_code")}
+                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-gold focus:outline-none transition-colors"
+                                        />
+                                        {form.formState.errors.postal_code && (
+                                            <p className="text-red-400 text-xs">{form.formState.errors.postal_code.message}</p>
+                                        )}
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm text-white/60">الدولة</label>
+                                        <input
+                                            {...form.register("country")}
+                                            disabled
+                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white/50 cursor-not-allowed"
+                                        />
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div className="bg-surface border border-white/5 rounded-2xl p-6 md:p-8">
+                            <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+                                <CreditCard className="text-gold w-5 h-5" />
+                                طريقة الدفع
+                            </h2>
+
+                            <div className="p-4 rounded-xl border border-gold/30 bg-gold/5 flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-4 h-4 rounded-full border-[5px] border-gold bg-white"></div>
+                                    <span className="font-bold">الدفع عند الاستلام (COD)</span>
+                                </div>
+                                <span className="text-xs bg-gold/20 text-gold px-2 py-1 rounded">متاح حالياً</span>
+                            </div>
+                            <p className="text-xs text-white/40 mt-2 mr-2">
+                                * سنقوم بإضافة خيارات الدفع الإلكتروني (Apple Pay, Mada) قريباً.
+                            </p>
+                        </div>
                     </div>
-                )}
 
-                <AnimatePresence mode="wait">
-                    {/* ═══ Step 1: Review ═══ */}
-                    {step === "review" && (
-                        <motion.div
-                            key="review"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            className="space-y-6"
-                        >
-                            <h1 className="text-2xl sm:text-3xl font-bold text-white">مراجعة الطلب</h1>
+                    {/* Order Summary */}
+                    <div className="lg:col-span-5">
+                        <div className="bg-surface border border-white/5 rounded-2xl p-6 md:p-8 sticky top-32">
+                            <h2 className="text-xl font-bold mb-6">ملخص الطلب</h2>
 
-                            <div className="space-y-3">
+                            <div className="space-y-4 mb-6 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                                 {items.map((item) => (
-                                    <div
-                                        key={`${item.product_id}-${item.size}`}
-                                        className="glass-card p-4 flex gap-4 items-center"
-                                    >
-                                        <div className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-white/5">
+                                    <div key={`${item.id}-${item.size}`} className="flex gap-4">
+                                        <div className="relative w-16 h-16 bg-white/5 rounded-lg overflow-hidden shrink-0">
                                             <Image
                                                 src={item.image_url}
                                                 alt={item.title}
                                                 fill
                                                 className="object-cover"
-                                                sizes="64px"
                                             />
+                                            <span className="absolute bottom-0 right-0 bg-gold text-black text-[10px] font-bold px-1.5 rounded-tl-lg">
+                                                x{item.quantity}
+                                            </span>
                                         </div>
-                                        <div className="flex-1 min-w-0">
-                                            <h3 className="text-sm font-medium text-white truncate">{item.title}</h3>
-                                            <p className="text-xs text-white/40">{item.artist_name}</p>
-                                            {item.size && (
-                                                <span className="text-[10px] text-gold">{item.size}</span>
-                                            )}
+                                        <div>
+                                            <h4 className="font-medium text-sm line-clamp-1">{item.title}</h4>
+                                            <p className="text-white/40 text-xs">{item.artist_name}</p>
+                                            {item.size && <p className="text-white/40 text-xs mt-0.5">الحجم: {item.size}</p>}
+                                            <p className="text-gold text-sm font-bold mt-1">{(item.price * item.quantity).toLocaleString()} ر.س</p>
                                         </div>
-                                        <div className="text-left">
-                                            <span className="text-sm text-white/60">×{item.quantity}</span>
-                                            <p className="text-sm font-bold text-gold">
-                                                {(item.price * item.quantity).toFixed(2)} ر.س
-                                            </p>
-                                        </div>
-                                        <button
-                                            onClick={() => removeItem(item.product_id, item.size)}
-                                            className="p-2 text-white/30 hover:text-red-400 transition-colors"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
                                     </div>
                                 ))}
                             </div>
 
-                            {/* Summary */}
-                            <div className="glass-card p-5 space-y-3">
-                                <div className="flex justify-between text-sm text-white/50">
+                            <div className="space-y-3 border-t border-white/10 pt-6">
+                                <div className="flex justify-between text-white/60 text-sm">
                                     <span>المجموع الفرعي</span>
-                                    <span>{subtotal.toFixed(2)} ر.س</span>
+                                    <span>{subtotal.toLocaleString()} ر.س</span>
                                 </div>
-                                <div className="flex justify-between text-sm text-white/50">
+                                <div className="flex justify-between text-white/60 text-sm">
                                     <span>الشحن</span>
-                                    <span>{SHIPPING_COST.toFixed(2)} ر.س</span>
+                                    <span>{shipping.toLocaleString()} ر.س</span>
                                 </div>
-                                <div className="flex justify-between text-sm text-white/50">
+                                <div className="flex justify-between text-white/60 text-sm">
                                     <span>الضريبة (15%)</span>
-                                    <span>{tax.toFixed(2)} ر.س</span>
+                                    <span>{tax.toLocaleString()} ر.س</span>
                                 </div>
-                                <div className="flex justify-between font-bold text-white pt-3 border-t border-white/10">
+                                <div className="flex justify-between font-bold text-lg pt-4 border-t border-white/10 mt-4">
                                     <span>الإجمالي</span>
-                                    <span className="text-gold text-lg">{total.toFixed(2)} ر.س</span>
+                                    <span className="text-gold">{total.toLocaleString()} ر.س</span>
                                 </div>
-                            </div>
-
-                            <button
-                                onClick={() => setStep("shipping")}
-                                className="btn-gold w-full py-3.5 flex items-center justify-center gap-2"
-                            >
-                                <span>متابعة — عنوان الشحن</span>
-                                <ArrowRight className="w-4 h-4 rotate-180" />
-                            </button>
-                        </motion.div>
-                    )}
-
-                    {/* ═══ Step 2: Shipping ═══ */}
-                    {step === "shipping" && (
-                        <motion.div
-                            key="shipping"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            className="space-y-6"
-                        >
-                            <div className="flex items-center gap-3">
-                                <button
-                                    onClick={() => setStep("review")}
-                                    className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/5 transition-colors"
-                                >
-                                    <ArrowRight className="w-5 h-5" />
-                                </button>
-                                <h1 className="text-2xl sm:text-3xl font-bold text-white">عنوان الشحن</h1>
-                            </div>
-
-                            <div className="glass-card p-5 sm:p-8 space-y-5">
-                                {/* Name */}
-                                <div>
-                                    <label className="text-sm text-white/60 mb-1.5 block">الاسم الكامل *</label>
-                                    <input
-                                        type="text"
-                                        value={shipping.name}
-                                        onChange={(e) => handleShippingChange("name", e.target.value)}
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:border-gold/50 focus:ring-1 focus:ring-gold/20 outline-none transition-colors"
-                                        placeholder="أحمد محمد"
-                                    />
-                                </div>
-
-                                {/* Address Line 1 */}
-                                <div>
-                                    <label className="text-sm text-white/60 mb-1.5 block">العنوان *</label>
-                                    <input
-                                        type="text"
-                                        value={shipping.line1}
-                                        onChange={(e) => handleShippingChange("line1", e.target.value)}
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:border-gold/50 focus:ring-1 focus:ring-gold/20 outline-none transition-colors"
-                                        placeholder="الحي، الشارع، رقم المبنى"
-                                    />
-                                </div>
-
-                                {/* Address Line 2 */}
-                                <div>
-                                    <label className="text-sm text-white/60 mb-1.5 block">تفاصيل إضافية</label>
-                                    <input
-                                        type="text"
-                                        value={shipping.line2}
-                                        onChange={(e) => handleShippingChange("line2", e.target.value)}
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:border-gold/50 focus:ring-1 focus:ring-gold/20 outline-none transition-colors"
-                                        placeholder="شقة، طابق (اختياري)"
-                                    />
-                                </div>
-
-                                {/* City + Postal Code */}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="text-sm text-white/60 mb-1.5 block">المدينة *</label>
-                                        <input
-                                            type="text"
-                                            value={shipping.city}
-                                            onChange={(e) => handleShippingChange("city", e.target.value)}
-                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:border-gold/50 focus:ring-1 focus:ring-gold/20 outline-none transition-colors"
-                                            placeholder="الرياض"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-sm text-white/60 mb-1.5 block">الرمز البريدي</label>
-                                        <input
-                                            type="text"
-                                            value={shipping.postal_code}
-                                            onChange={(e) => handleShippingChange("postal_code", e.target.value)}
-                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:border-gold/50 focus:ring-1 focus:ring-gold/20 outline-none transition-colors"
-                                            placeholder="12345"
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Phone */}
-                                <div>
-                                    <label className="text-sm text-white/60 mb-1.5 block">رقم الهاتف *</label>
-                                    <input
-                                        type="tel"
-                                        value={shipping.phone}
-                                        onChange={(e) => handleShippingChange("phone", e.target.value)}
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:border-gold/50 focus:ring-1 focus:ring-gold/20 outline-none transition-colors"
-                                        placeholder="05xxxxxxxx"
-                                        dir="ltr"
-                                    />
-                                </div>
-                            </div>
-
-                            <button
-                                onClick={() => setStep("confirm")}
-                                disabled={!isShippingValid}
-                                className="btn-gold w-full py-3.5 flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
-                            >
-                                <span>متابعة — تأكيد الطلب</span>
-                                <ArrowRight className="w-4 h-4 rotate-180" />
-                            </button>
-                        </motion.div>
-                    )}
-
-                    {/* ═══ Step 3: Confirm ═══ */}
-                    {step === "confirm" && (
-                        <motion.div
-                            key="confirm"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            className="space-y-6"
-                        >
-                            <div className="flex items-center gap-3">
-                                <button
-                                    onClick={() => setStep("shipping")}
-                                    className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/5 transition-colors"
-                                >
-                                    <ArrowRight className="w-5 h-5" />
-                                </button>
-                                <h1 className="text-2xl sm:text-3xl font-bold text-white">تأكيد الطلب</h1>
-                            </div>
-
-                            {/* Order Summary */}
-                            <div className="glass-card p-5 space-y-4">
-                                <h3 className="text-sm font-medium text-white/60">المنتجات ({items.length})</h3>
-                                {items.map((item) => (
-                                    <div key={`${item.product_id}-${item.size}`} className="flex justify-between text-sm">
-                                        <span className="text-white/70">
-                                            {item.title} ×{item.quantity}
-                                            {item.size ? ` (${item.size})` : ""}
-                                        </span>
-                                        <span className="text-white">{(item.price * item.quantity).toFixed(2)} ر.س</span>
-                                    </div>
-                                ))}
-                                <div className="border-t border-white/10 pt-3 space-y-2">
-                                    <div className="flex justify-between text-sm text-white/50">
-                                        <span>المجموع الفرعي</span>
-                                        <span>{subtotal.toFixed(2)} ر.س</span>
-                                    </div>
-                                    <div className="flex justify-between text-sm text-white/50">
-                                        <span>الشحن</span>
-                                        <span>{SHIPPING_COST.toFixed(2)} ر.س</span>
-                                    </div>
-                                    <div className="flex justify-between text-sm text-white/50">
-                                        <span>الضريبة (15%)</span>
-                                        <span>{tax.toFixed(2)} ر.س</span>
-                                    </div>
-                                    <div className="flex justify-between font-bold text-white pt-2 border-t border-white/10">
-                                        <span>الإجمالي</span>
-                                        <span className="text-gold text-lg">{total.toFixed(2)} ر.س</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Shipping Address Summary */}
-                            <div className="glass-card p-5 space-y-2">
-                                <h3 className="text-sm font-medium text-white/60 flex items-center gap-2">
-                                    <MapPin className="w-4 h-4" />
-                                    عنوان الشحن
-                                </h3>
-                                <p className="text-sm text-white">{shipping.name}</p>
-                                <p className="text-sm text-white/60">{shipping.line1}</p>
-                                {shipping.line2 && <p className="text-sm text-white/60">{shipping.line2}</p>}
-                                <p className="text-sm text-white/60">{shipping.city} {shipping.postal_code}</p>
-                                <p className="text-sm text-white/60" dir="ltr">{shipping.phone}</p>
                             </div>
 
                             {error && (
-                                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-red-400 text-sm text-center">
+                                <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-sm p-4 rounded-xl mt-6">
                                     {error}
                                 </div>
                             )}
 
-                            {!isSignedIn && (
-                                <div className="bg-gold/5 border border-gold/20 rounded-xl p-4 text-gold text-sm text-center">
-                                    يجب تسجيل الدخول أولاً لإتمام الطلب
-                                </div>
-                            )}
-
                             <button
-                                onClick={handleSubmitOrder}
-                                disabled={isSubmitting || !isSignedIn}
-                                className="btn-gold w-full py-4 flex items-center justify-center gap-2 text-base font-bold disabled:opacity-40 disabled:cursor-not-allowed"
+                                type="submit"
+                                form="checkout-form"
+                                disabled={isSubmitting}
+                                className="w-full btn-gold py-4 text-base font-bold rounded-xl mt-8 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {isSubmitting ? (
-                                    <>
-                                        <motion.div
-                                            className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full"
-                                            animate={{ rotate: 360 }}
-                                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                                        />
-                                        <span>جاري إنشاء الطلب...</span>
-                                    </>
+                                    <Loader2 className="w-5 h-5 animate-spin" />
                                 ) : (
                                     <>
-                                        <CreditCard className="w-5 h-5" />
-                                        <span>تأكيد الطلب — {total.toFixed(2)} ر.س</span>
+                                        <span>تأكيد الطلب</span>
+                                        <ArrowRight className="w-5 h-5" />
                                     </>
                                 )}
                             </button>
-                        </motion.div>
-                    )}
 
-                    {/* ═══ Success ═══ */}
-                    {step === "success" && (
-                        <motion.div
-                            key="success"
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="text-center py-16 space-y-6"
-                        >
-                            <motion.div
-                                className="w-24 h-24 mx-auto rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center"
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                transition={{ type: "spring", delay: 0.2, damping: 10 }}
-                            >
-                                <CheckCircle2 className="w-10 h-10 text-green-400" />
-                            </motion.div>
-
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.4 }}
-                            >
-                                <h1 className="text-3xl font-bold text-white mb-2">تم الطلب بنجاح! 🎉</h1>
-                                <p className="text-white/50 mb-2">شكراً لك، طلبك قيد التجهيز</p>
-                            </motion.div>
-
-                            <motion.div
-                                className="glass-card inline-block px-8 py-5 space-y-3"
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.6 }}
-                            >
-                                <p className="text-sm text-white/40">رقم الطلب</p>
-                                <p className="text-2xl font-bold text-gold tracking-wider" dir="ltr">
-                                    {orderNumber}
-                                </p>
-                                <p className="text-sm text-white/50">
-                                    الإجمالي: <span className="text-white font-medium">{orderTotal.toFixed(2)} ر.س</span>
-                                </p>
-                            </motion.div>
-
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ delay: 0.8 }}
-                            >
-                                <Link
-                                    href="/"
-                                    className="btn-gold inline-flex items-center gap-2 px-8 py-3 mt-4"
-                                >
-                                    العودة للصفحة الرئيسية
-                                </Link>
-                            </motion.div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                            <p className="text-center text-white/30 text-xs mt-4">
+                                بإتمام الطلب، أنت توافق على شروط الاستخدام وسياسة الخصوصية.
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </section>
+        </div>
+    );
+}
+
+function ShoppingBagIcon({ className }: { className?: string }) {
+    return (
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={className}
+        >
+            <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+            <path d="M3 6h18" />
+            <path d="M16 10a4 4 0 0 1-8 0" />
+        </svg>
     );
 }

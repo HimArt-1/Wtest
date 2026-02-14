@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Wand2, RefreshCw, Heart } from "lucide-react";
+import Image from "next/image";
 
 const aiSuggestions = [
   {
@@ -252,10 +253,11 @@ export function AISection() {
                       whileHover={{ y: -5 }}
                     >
                       <div className="relative aspect-square">
-                        <img
+                        <Image
                           src={item.image}
                           alt={item.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                         <div className="absolute top-3 right-3 px-3 py-1 bg-gradient-to-r from-gold to-[#b8964f] text-[#0a0a0a] text-xs font-bold rounded-full">
                           تطابق {item.match}

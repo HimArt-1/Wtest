@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 interface ApparelPreviewProps {
     type: "tshirt" | "hoodie";
@@ -20,8 +21,8 @@ export function ApparelPreview({ type, designImage }: ApparelPreviewProps) {
                 {/* Apparel Base Image - Using Mock Colors for now to represent generic mockups */}
                 <div
                     className={`relative w-[80%] h-[80%] ${type === "tshirt"
-                            ? "bg-[#EAEAEA] rounded-[3rem_3rem_0_0] after:content-[''] after:absolute after:top-0 after:left-1/2 after:-translate-x-1/2 after:w-32 after:h-8 after:bg-black/5 after:rounded-b-full" // Very rough CSS t-shirt shape
-                            : "bg-[#D4D4D4] rounded-[4rem_4rem_2rem_2rem]" // Very rough CSS hoodie shape
+                        ? "bg-[#EAEAEA] rounded-[3rem_3rem_0_0] after:content-[''] after:absolute after:top-0 after:left-1/2 after:-translate-x-1/2 after:w-32 after:h-8 after:bg-black/5 after:rounded-b-full" // Very rough CSS t-shirt shape
+                        : "bg-[#D4D4D4] rounded-[4rem_4rem_2rem_2rem]" // Very rough CSS hoodie shape
                         } shadow-inner flex items-center justify-center overflow-hidden`}
                 >
                     {/* In a real app, I'd use an actual image here like: */}
@@ -39,10 +40,11 @@ export function ApparelPreview({ type, designImage }: ApparelPreviewProps) {
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ type: "spring", stiffness: 200 }}
                         >
-                            <img
+                            <Image
                                 src={designImage}
                                 alt="Design"
-                                className="w-full h-full object-contain"
+                                fill
+                                className="object-contain"
                             />
                         </motion.div>
                     )}

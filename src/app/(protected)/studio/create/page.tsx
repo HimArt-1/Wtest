@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Sparkles, Wand2, Image as ImageIcon, Loader2 } from "lucide-react";
+import Image from "next/image";
 
 export default function CreatePage() {
     const [prompt, setPrompt] = useState("");
@@ -90,12 +91,13 @@ export default function CreatePage() {
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="relative max-w-[90%] max-h-[90%] rounded-xl overflow-hidden shadow-2xl"
+                        className="relative w-full h-full max-w-[90%] max-h-[90%] rounded-xl overflow-hidden shadow-2xl"
                     >
-                        <img
+                        <Image
                             src={generatedImage}
                             alt="Generated Art"
-                            className="w-full h-full object-contain"
+                            fill
+                            className="object-contain"
                         />
                         <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
                             <div className="flex gap-2 justify-center">
