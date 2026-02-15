@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Palette, ShoppingBag, Search } from "lucide-react";
+import { Menu, X, Palette, ShoppingBag, Search, User } from "lucide-react";
 import { useCartStore } from "@/stores/cartStore";
 import { Logo } from "@/components/ui/Logo";
 import {
@@ -57,30 +57,30 @@ export function Header() {
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-8">
               {navItems.map((item, index) => (
-                <motion.a
-                  key={item.href}
-                  href={item.href}
-                  className="relative text-white/60 hover:text-gold transition-colors duration-300 text-sm font-medium"
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 + 0.3 }}
-                  whileHover={{ y: -2 }}
-                >
-                  {item.label}
+                <Link key={item.href} href={item.href}>
                   <motion.span
-                    className="absolute -bottom-1 right-0 h-0.5 bg-gold"
-                    initial={{ width: 0 }}
-                    whileHover={{ width: "100%" }}
-                    transition={{ duration: 0.3 }}
-                  />
-                </motion.a>
+                    className="relative text-white/60 hover:text-gold transition-colors duration-300 text-sm font-medium"
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 + 0.3 }}
+                    whileHover={{ y: -2 }}
+                  >
+                    {item.label}
+                    <motion.span
+                      className="absolute -bottom-1 right-0 h-0.5 bg-gold"
+                      initial={{ width: 0 }}
+                      whileHover={{ width: "100%" }}
+                      transition={{ duration: 0.3 }}
+                    />
+                  </motion.span>
+                </Link>
               ))}
             </nav>
 
             {/* Search + Cart + Auth Buttons */}
             <div className="hidden md:flex items-center gap-4">
               {/* Search Icon */}
-              <Link href="/search">
+              <Link href="/search" aria-label="البحث">
                 <motion.div
                   className="p-2 text-white/60 hover:text-gold transition-colors duration-300"
                   whileHover={{ scale: 1.1 }}
@@ -161,8 +161,13 @@ export function Header() {
               </SignedIn>
             </div>
 
-            {/* Mobile: Cart + Menu */}
+            {/* Mobile: Search + Cart + Menu */}
             <div className="flex md:hidden items-center gap-1">
+              <Link href="/search" aria-label="البحث">
+                <span className="p-3 text-white/80 inline-block">
+                  <Search className="w-5 h-5" />
+                </span>
+              </Link>
               <button
                 onClick={() => toggleCart(true)}
                 className="relative p-3 text-white/80"
@@ -203,18 +208,39 @@ export function Header() {
           >
             <div className="flex flex-col items-center justify-center h-full gap-6 sm:gap-8 pt-16 sm:pt-20 px-6">
               {navItems.map((item, index) => (
-                <motion.a
+                <motion.div
                   key={item.href}
-                  href={item.href}
-                  className="text-2xl sm:text-3xl font-bold text-white/80 hover:text-gold transition-colors py-2"
                   initial={{ opacity: 0, x: 50 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  {item.label}
-                </motion.a>
+                  <Link
+                    href={item.href}
+                    className="text-2xl sm:text-3xl font-bold text-white/80 hover:text-gold transition-colors py-2"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {item.label}
+                  </Link>
+                </motion.div>
               ))}
+
+              {/* Mobile: Account Link */}
+              <SignedIn>
+                <motion.div
+                  initial={{ opacity: 0, x: 50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.35 }}
+                >
+                  <Link
+                    href="/account"
+                    className="text-2xl sm:text-3xl font-bold text-white/80 hover:text-gold transition-colors py-2 flex items-center gap-3"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <User className="w-6 h-6" />
+                    حسابي
+                  </Link>
+                </motion.div>
+              </SignedIn>
 
               {/* Mobile Auth */}
               <SignedOut>

@@ -10,27 +10,27 @@ const footerLinks = [
   {
     title: "المنصة",
     links: [
-      { label: "المعرض", href: "#gallery" },
-      { label: "الفنانون", href: "#artists" },
-      { label: "المتجر", href: "#store" },
-      { label: "انضم إلينا", href: "#join" },
+      { label: "المعرض", href: "/gallery" },
+      { label: "المتجر", href: "/store" },
+      { label: "البحث", href: "/search" },
+      { label: "انضم إلينا", href: "/#join" },
     ],
   },
   {
     title: "الدعم",
     links: [
-      { label: "الأسئلة الشائعة", href: "#" },
-      { label: "الشحن والتوصيل", href: "#" },
-      { label: "سياسة الاسترجاع", href: "#" },
-      { label: "تواصل معنا", href: "#" },
+      { label: "الأسئلة الشائعة", href: "/#faq" },
+      { label: "الشحن والتوصيل", href: "/#shipping" },
+      { label: "سياسة الاسترجاع", href: "/#returns" },
+      { label: "تواصل معنا", href: "/#contact" },
     ],
   },
   {
     title: "القانونية",
     links: [
-      { label: "الشروط والأحكام", href: "#" },
-      { label: "سياسة الخصوصية", href: "#" },
-      { label: "حقوق الملكية", href: "#" },
+      { label: "الشروط والأحكام", href: "/#terms" },
+      { label: "سياسة الخصوصية", href: "/#privacy" },
+      { label: "حقوق الملكية", href: "/#copyright" },
     ],
   },
 ];

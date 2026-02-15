@@ -8,6 +8,14 @@
 import { createClient } from "@supabase/supabase-js";
 import { currentUser } from "@clerk/nextjs/server";
 
+function getAdminClient() {
+    return createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        { auth: { persistSession: false, autoRefreshToken: false } }
+    );
+}
+
 interface OrderItemInput {
     product_id: string;
     quantity: number;
@@ -29,14 +37,6 @@ interface ShippingAddressInput {
 const SHIPPING_COST = 30;
 const TAX_RATE = 0.15;
 
-function getAdminSupabase() {
-    return createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        { auth: { persistSession: false } }
-    );
-}
-
 export async function createOrder(
     items: OrderItemInput[],
     shippingAddress: ShippingAddressInput
@@ -47,7 +47,7 @@ export async function createOrder(
         return { success: false, error: "يجب تسجيل الدخول لإتمام الطلب" };
     }
 
-    const supabase = getAdminSupabase();
+    const supabase = getAdminClient();
 
     // 2. Get or create buyer's profile
     const { data: profile } = await supabase
@@ -140,7 +140,7 @@ export async function getUserOrders() {
     const user = await currentUser();
     if (!user) return { data: [], count: 0 };
 
-    const supabase = getAdminSupabase();
+    const supabase = getAdminClient();
 
     // Get profile
     const { data: profile } = await supabase

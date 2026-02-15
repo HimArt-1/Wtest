@@ -5,8 +5,7 @@
 
 "use server";
 
-import { getSupabaseServerClient } from "@/lib/supabase";
-import { unstable_noStore as noStore } from "next/cache";
+import { getSupabaseAdminClient } from "@/lib/supabase";
 
 // ─── Types ──────────────────────────────────────────────────
 
@@ -34,8 +33,7 @@ export async function globalSearch(
     page = 1,
     filters: SearchFilters = {}
 ): Promise<SearchResult> {
-    noStore();
-    const supabase = getSupabaseServerClient();
+    const supabase = getSupabaseAdminClient();
     const itemsPerPage = 12;
     const from = (page - 1) * itemsPerPage;
     const to = from + itemsPerPage - 1;
@@ -181,7 +179,7 @@ export async function globalSearch(
 // ─── Get Categories (for filter dropdown) ───────────────────
 
 export async function getCategories() {
-    const supabase = getSupabaseServerClient();
+    const supabase = getSupabaseAdminClient();
     const { data } = await supabase
         .from("categories")
         .select("id, name_ar, name_en, slug")
