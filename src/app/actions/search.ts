@@ -5,7 +5,16 @@
 
 "use server";
 
-import { getSupabaseAdminClient } from "@/lib/supabase";
+import { createClient } from "@supabase/supabase-js";
+
+// Use anon key for public search queries (no RLS bypass needed for published content)
+function getSearchClient() {
+    return createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        { auth: { persistSession: false, autoRefreshToken: false } }
+    );
+}
 
 // ─── Types ──────────────────────────────────────────────────
 
@@ -25,6 +34,12 @@ export interface SearchResult {
     artists: { data: any[]; count: number };
 }
 
+const emptyResult: SearchResult = {
+    artworks: { data: [], count: 0 },
+    products: { data: [], count: 0 },
+    artists: { data: [], count: 0 },
+};
+
 // ─── Global Search ──────────────────────────────────────────
 
 export async function globalSearch(
@@ -33,157 +48,159 @@ export async function globalSearch(
     page = 1,
     filters: SearchFilters = {}
 ): Promise<SearchResult> {
-    const supabase = getSupabaseAdminClient();
-    const itemsPerPage = 12;
-    const from = (page - 1) * itemsPerPage;
-    const to = from + itemsPerPage - 1;
-    const searchTerm = `%${query}%`;
+    try {
+        const supabase = getSearchClient();
+        const itemsPerPage = 12;
+        const from = (page - 1) * itemsPerPage;
+        const to = from + itemsPerPage - 1;
+        const searchTerm = `%${query}%`;
 
-    // Build results object
-    const result: SearchResult = {
-        artworks: { data: [], count: 0 },
-        products: { data: [], count: 0 },
-        artists: { data: [], count: 0 },
-    };
+        const result: SearchResult = { ...emptyResult };
 
-    // ─── Search Artworks ────────────────────────────────────
-    if (tab === "artworks" || !query) {
-        let artworkQuery = supabase
-            .from("artworks")
-            .select(`
-                *,
-                artist:profiles(id, display_name, username, avatar_url, is_verified),
-                category:categories(name_ar, slug)
-            `, { count: "exact" })
-            .eq("status", "published");
+        // ─── Search Artworks ────────────────────────────────────
+        if (tab === "artworks" || !query) {
+            let artworkQuery = supabase
+                .from("artworks")
+                .select(`
+                    *,
+                    artist:profiles(id, display_name, username, avatar_url, is_verified),
+                    category:categories(name_ar, slug)
+                `, { count: "exact" })
+                .eq("status", "published");
 
-        if (query) {
-            artworkQuery = artworkQuery.or(`title.ilike.${searchTerm},description.ilike.${searchTerm}`);
-        }
-
-        // Category filter
-        if (filters.category && filters.category !== "all") {
-            const { data: cat } = await supabase
-                .from("categories")
-                .select("id")
-                .eq("slug", filters.category)
-                .single();
-            if (cat) {
-                artworkQuery = artworkQuery.eq("category_id", (cat as any).id);
+            if (query) {
+                artworkQuery = artworkQuery.or(`title.ilike.${searchTerm},description.ilike.${searchTerm}`);
             }
+
+            if (filters.category && filters.category !== "all") {
+                const { data: cat } = await supabase
+                    .from("categories")
+                    .select("id")
+                    .eq("slug", filters.category)
+                    .single();
+                if (cat) {
+                    artworkQuery = artworkQuery.eq("category_id", (cat as any).id);
+                }
+            }
+
+            if (filters.minPrice !== undefined) {
+                artworkQuery = artworkQuery.gte("price", filters.minPrice);
+            }
+            if (filters.maxPrice !== undefined) {
+                artworkQuery = artworkQuery.lte("price", filters.maxPrice);
+            }
+
+            switch (filters.sortBy) {
+                case "oldest":
+                    artworkQuery = artworkQuery.order("created_at", { ascending: true });
+                    break;
+                case "price_asc":
+                    artworkQuery = artworkQuery.order("price", { ascending: true });
+                    break;
+                case "price_desc":
+                    artworkQuery = artworkQuery.order("price", { ascending: false });
+                    break;
+                case "popular":
+                    artworkQuery = artworkQuery.order("views_count", { ascending: false });
+                    break;
+                default:
+                    artworkQuery = artworkQuery.order("created_at", { ascending: false });
+            }
+
+            const { data, count, error } = await artworkQuery.range(from, to);
+            if (error) console.error("[Search] Artworks error:", error.message);
+            result.artworks = { data: (data as any[]) || [], count: count || 0 };
         }
 
-        // Price filter
-        if (filters.minPrice !== undefined) {
-            artworkQuery = artworkQuery.gte("price", filters.minPrice);
-        }
-        if (filters.maxPrice !== undefined) {
-            artworkQuery = artworkQuery.lte("price", filters.maxPrice);
+        // ─── Search Products ────────────────────────────────────
+        if (tab === "products" || !query) {
+            let productQuery = supabase
+                .from("products")
+                .select(`
+                    *,
+                    artist:profiles(id, display_name, username, avatar_url)
+                `, { count: "exact" })
+                .eq("in_stock", true);
+
+            if (query) {
+                productQuery = productQuery.or(`title.ilike.${searchTerm},description.ilike.${searchTerm}`);
+            }
+
+            if (filters.productType && filters.productType !== "all") {
+                productQuery = productQuery.eq("type", filters.productType);
+            }
+
+            if (filters.minPrice !== undefined) {
+                productQuery = productQuery.gte("price", filters.minPrice);
+            }
+            if (filters.maxPrice !== undefined) {
+                productQuery = productQuery.lte("price", filters.maxPrice);
+            }
+
+            switch (filters.sortBy) {
+                case "oldest":
+                    productQuery = productQuery.order("created_at", { ascending: true });
+                    break;
+                case "price_asc":
+                    productQuery = productQuery.order("price", { ascending: true });
+                    break;
+                case "price_desc":
+                    productQuery = productQuery.order("price", { ascending: false });
+                    break;
+                default:
+                    productQuery = productQuery.order("created_at", { ascending: false });
+            }
+
+            const { data, count, error } = await productQuery.range(from, to);
+            if (error) console.error("[Search] Products error:", error.message);
+            result.products = { data: (data as any[]) || [], count: count || 0 };
         }
 
-        // Sort
-        switch (filters.sortBy) {
-            case "oldest":
-                artworkQuery = artworkQuery.order("created_at", { ascending: true });
-                break;
-            case "price_asc":
-                artworkQuery = artworkQuery.order("price", { ascending: true });
-                break;
-            case "price_desc":
-                artworkQuery = artworkQuery.order("price", { ascending: false });
-                break;
-            case "popular":
-                artworkQuery = artworkQuery.order("views_count", { ascending: false });
-                break;
-            default:
-                artworkQuery = artworkQuery.order("created_at", { ascending: false });
+        // ─── Search Artists ─────────────────────────────────────
+        if (tab === "artists" || !query) {
+            let artistQuery = supabase
+                .from("profiles")
+                .select("id, display_name, username, bio, avatar_url, cover_url, is_verified, total_artworks, total_sales", { count: "exact" })
+                .eq("role", "artist");
+
+            if (query) {
+                artistQuery = artistQuery.or(`display_name.ilike.${searchTerm},username.ilike.${searchTerm},bio.ilike.${searchTerm}`);
+            }
+
+            switch (filters.sortBy) {
+                case "popular":
+                    artistQuery = artistQuery.order("total_sales", { ascending: false });
+                    break;
+                default:
+                    artistQuery = artistQuery.order("created_at", { ascending: false });
+            }
+
+            const { data, count, error } = await artistQuery.range(from, to);
+            if (error) console.error("[Search] Artists error:", error.message);
+            result.artists = { data: (data as any[]) || [], count: count || 0 };
         }
 
-        const { data, count } = await artworkQuery.range(from, to);
-        result.artworks = { data: (data as any[]) || [], count: count || 0 };
+        return result;
+    } catch (error) {
+        console.error("[Search] Fatal error:", error);
+        return emptyResult;
     }
-
-    // ─── Search Products ────────────────────────────────────
-    if (tab === "products" || !query) {
-        let productQuery = supabase
-            .from("products")
-            .select(`
-                *,
-                artist:profiles(id, display_name, username, avatar_url)
-            `, { count: "exact" })
-            .eq("in_stock", true);
-
-        if (query) {
-            productQuery = productQuery.or(`title.ilike.${searchTerm},description.ilike.${searchTerm}`);
-        }
-
-        // Product type filter
-        if (filters.productType && filters.productType !== "all") {
-            productQuery = productQuery.eq("type", filters.productType);
-        }
-
-        // Price filter
-        if (filters.minPrice !== undefined) {
-            productQuery = productQuery.gte("price", filters.minPrice);
-        }
-        if (filters.maxPrice !== undefined) {
-            productQuery = productQuery.lte("price", filters.maxPrice);
-        }
-
-        // Sort
-        switch (filters.sortBy) {
-            case "oldest":
-                productQuery = productQuery.order("created_at", { ascending: true });
-                break;
-            case "price_asc":
-                productQuery = productQuery.order("price", { ascending: true });
-                break;
-            case "price_desc":
-                productQuery = productQuery.order("price", { ascending: false });
-                break;
-            default:
-                productQuery = productQuery.order("created_at", { ascending: false });
-        }
-
-        const { data, count } = await productQuery.range(from, to);
-        result.products = { data: (data as any[]) || [], count: count || 0 };
-    }
-
-    // ─── Search Artists ─────────────────────────────────────
-    if (tab === "artists" || !query) {
-        let artistQuery = supabase
-            .from("profiles")
-            .select("id, display_name, username, bio, avatar_url, cover_url, is_verified, total_artworks, total_sales", { count: "exact" })
-            .eq("role", "artist");
-
-        if (query) {
-            artistQuery = artistQuery.or(`display_name.ilike.${searchTerm},username.ilike.${searchTerm},bio.ilike.${searchTerm}`);
-        }
-
-        // Sort
-        switch (filters.sortBy) {
-            case "popular":
-                artistQuery = artistQuery.order("total_sales", { ascending: false });
-                break;
-            default:
-                artistQuery = artistQuery.order("created_at", { ascending: false });
-        }
-
-        const { data, count } = await artistQuery.range(from, to);
-        result.artists = { data: (data as any[]) || [], count: count || 0 };
-    }
-
-    return result;
 }
 
 // ─── Get Categories (for filter dropdown) ───────────────────
 
 export async function getCategories() {
-    const supabase = getSupabaseAdminClient();
-    const { data } = await supabase
-        .from("categories")
-        .select("id, name_ar, name_en, slug")
-        .order("sort_order", { ascending: true });
+    try {
+        const supabase = getSearchClient();
+        const { data, error } = await supabase
+            .from("categories")
+            .select("id, name_ar, name_en, slug")
+            .order("sort_order", { ascending: true });
 
-    return (data as any[]) || [];
+        if (error) console.error("[Search] Categories error:", error.message);
+        return (data as any[]) || [];
+    } catch (error) {
+        console.error("[Search] Categories fatal error:", error);
+        return [];
+    }
 }
