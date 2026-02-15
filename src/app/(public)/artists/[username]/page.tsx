@@ -1,0 +1,203 @@
+import { getSupabaseServerClient } from "@/lib/supabase";
+import { notFound } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
+import { Metadata } from "next";
+import { Globe, ExternalLink } from "lucide-react";
+
+// ─── Fetch Artist by Username ───────────────────────────────
+
+async function getArtistByUsername(username: string) {
+    const supabase = getSupabaseServerClient();
+    const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("username", username)
+        .eq("role", "artist")
+        .single();
+
+    if (error) return null;
+    return data as any;
+}
+
+async function getArtistArtworksPublic(artistId: string) {
+    const supabase = getSupabaseServerClient();
+    const { data } = await supabase
+        .from("artworks")
+        .select(`*, category:categories(name_ar, slug)`)
+        .eq("artist_id", artistId)
+        .eq("status", "published")
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+    return (data as any[]) || [];
+}
+
+// ─── Dynamic Metadata ───────────────────────────────────────
+
+export async function generateMetadata({ params }: { params: Promise<{ username: string }> }): Promise<Metadata> {
+    const { username } = await params;
+    const artist = await getArtistByUsername(username);
+    if (!artist) return { title: "غير موجود — وشّى" };
+
+    return {
+        title: `${artist.display_name} — وشّى`,
+        description: artist.bio || `صفحة الفنان ${artist.display_name} على وشّى`,
+        openGraph: {
+            images: artist.avatar_url ? [artist.avatar_url] : [],
+        },
+    };
+}
+
+// ─── Social Icons Map ───────────────────────────────────────
+const socialLabels: Record<string, string> = {
+    instagram: "Instagram",
+    twitter: "X / Twitter",
+    youtube: "YouTube",
+    behance: "Behance",
+    dribbble: "Dribbble",
+};
+
+// ─── Page ───────────────────────────────────────────────────
+
+export default async function ArtistProfilePage({ params }: { params: Promise<{ username: string }> }) {
+    const { username } = await params;
+    const artist = await getArtistByUsername(username);
+    if (!artist) notFound();
+
+    const artworks = await getArtistArtworksPublic(artist.id);
+
+    const socialLinks = artist.social_links || {};
+    const activeSocials = Object.entries(socialLinks).filter(([, url]) => url);
+
+    return (
+        <div className="min-h-screen bg-bg" dir="rtl">
+            {/* ─── Hero / Cover ─── */}
+            <div className="relative h-64 md:h-80 bg-gradient-to-b from-gold/[0.05] to-transparent">
+                {artist.cover_url && (
+                    <Image
+                        src={artist.cover_url}
+                        alt=""
+                        fill
+                        className="object-cover opacity-40"
+                        priority
+                    />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-bg via-bg/50 to-transparent" />
+            </div>
+
+            <div className="max-w-5xl mx-auto px-6 -mt-20 relative z-10">
+                {/* ─── Profile Card ─── */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-end gap-6 mb-10">
+                    {/* Avatar */}
+                    <div className="w-32 h-32 rounded-3xl border-4 border-bg overflow-hidden bg-surface shrink-0 shadow-2xl">
+                        {artist.avatar_url ? (
+                            <Image src={artist.avatar_url} alt={artist.display_name} width={128} height={128} className="object-cover w-full h-full" />
+                        ) : (
+                            <div className="w-full h-full bg-gold/20 flex items-center justify-center text-gold text-4xl font-bold">
+                                {artist.display_name?.[0]}
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="flex-1">
+                        <h1 className="text-3xl md:text-4xl font-bold text-fg flex items-center gap-2">
+                            {artist.display_name}
+                            {artist.is_verified && <span className="text-gold text-lg">✦</span>}
+                        </h1>
+                        <p className="text-fg/30 text-sm mt-1">@{artist.username}</p>
+                        {artist.bio && (
+                            <p className="text-fg/50 text-sm mt-3 max-w-xl leading-relaxed">{artist.bio}</p>
+                        )}
+                    </div>
+
+                    {/* Stats */}
+                    <div className="flex gap-6">
+                        <div className="text-center">
+                            <span className="text-2xl font-bold text-fg">{artworks.length}</span>
+                            <span className="block text-[10px] text-fg/20 mt-0.5">عمل فني</span>
+                        </div>
+                        <div className="text-center">
+                            <span className="text-2xl font-bold text-fg">{artist.total_sales || 0}</span>
+                            <span className="block text-[10px] text-fg/20 mt-0.5">مبيعات</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* ─── Links ─── */}
+                {(artist.website || activeSocials.length > 0) && (
+                    <div className="flex flex-wrap gap-3 mb-12">
+                        {artist.website && (
+                            <a
+                                href={artist.website}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 px-4 py-2 bg-white/[0.03] border border-white/[0.06] rounded-xl text-xs text-fg/40 hover:text-gold hover:border-gold/30 transition-all"
+                            >
+                                <Globe className="w-3.5 h-3.5" />
+                                الموقع الشخصي
+                                <ExternalLink className="w-3 h-3" />
+                            </a>
+                        )}
+                        {activeSocials.map(([platform, url]) => (
+                            <a
+                                key={platform}
+                                href={url as string}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 px-4 py-2 bg-white/[0.03] border border-white/[0.06] rounded-xl text-xs text-fg/40 hover:text-gold hover:border-gold/30 transition-all"
+                            >
+                                {socialLabels[platform] || platform}
+                                <ExternalLink className="w-3 h-3" />
+                            </a>
+                        ))}
+                    </div>
+                )}
+
+                {/* ─── Artworks Grid ─── */}
+                <div className="mb-8">
+                    <h2 className="text-xl font-bold text-fg mb-6">الأعمال الفنية</h2>
+                </div>
+
+                {artworks.length > 0 ? (
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 pb-20">
+                        {artworks.map((artwork: any) => (
+                            <Link
+                                key={artwork.id}
+                                href={`/artworks/${artwork.id}`}
+                                className="group rounded-2xl border border-white/[0.06] overflow-hidden hover:border-gold/30 transition-all duration-500"
+                            >
+                                <div className="aspect-square relative overflow-hidden">
+                                    <Image
+                                        src={artwork.image_url}
+                                        alt={artwork.title}
+                                        fill
+                                        className="object-cover group-hover:scale-105 transition-transform duration-700"
+                                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                                    />
+                                    {artwork.category && (
+                                        <span className="absolute top-2 right-2 text-[9px] bg-black/40 backdrop-blur-sm text-white/70 px-2 py-0.5 rounded-full">
+                                            {artwork.category.name_ar}
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="p-3">
+                                    <h3 className="text-sm font-bold text-fg truncate group-hover:text-gold transition-colors">
+                                        {artwork.title}
+                                    </h3>
+                                    {artwork.price && (
+                                        <span className="text-xs text-gold mt-1 block">{Number(artwork.price).toLocaleString()} ر.س</span>
+                                    )}
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="text-center py-20">
+                        <p className="text-fg/20">لا توجد أعمال منشورة حالياً</p>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}

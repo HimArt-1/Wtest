@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Palette, ShoppingBag } from "lucide-react";
+import { Menu, X, Palette, ShoppingBag, Search } from "lucide-react";
 import { useCartStore } from "@/stores/cartStore";
 import { Logo } from "@/components/ui/Logo";
 import {
@@ -15,8 +15,8 @@ import {
 import Link from "next/link";
 
 const navItems = [
-  { label: "المعرض", href: "/#gallery" },
-  { label: "المتجر", href: "/#store" },
+  { label: "المعرض", href: "/gallery" },
+  { label: "المتجر", href: "/store" },
   { label: "انضم إلينا", href: "/#join" },
 ];
 
@@ -77,8 +77,18 @@ export function Header() {
               ))}
             </nav>
 
-            {/* Cart + Auth Buttons */}
+            {/* Search + Cart + Auth Buttons */}
             <div className="hidden md:flex items-center gap-4">
+              {/* Search Icon */}
+              <Link href="/search">
+                <motion.div
+                  className="p-2 text-white/60 hover:text-gold transition-colors duration-300"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <Search className="w-5 h-5" />
+                </motion.div>
+              </Link>
               {/* Cart Icon */}
               <motion.button
                 onClick={() => toggleCart(true)}

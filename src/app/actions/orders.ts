@@ -133,3 +133,42 @@ export async function createOrder(
         total,
     };
 }
+
+// ─── Get User Orders ────────────────────────────────────────
+
+export async function getUserOrders() {
+    const user = await currentUser();
+    if (!user) return { data: [], count: 0 };
+
+    const supabase = getAdminSupabase();
+
+    // Get profile
+    const { data: profile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("clerk_id", user.id)
+        .single();
+
+    if (!profile) return { data: [], count: 0 };
+
+    // Fetch orders
+    const { data, error, count } = await supabase
+        .from("orders")
+        .select(`
+            *,
+            items:order_items(
+                *,
+                product:products(id, title, image_url, type)
+            )
+        `, { count: "exact" })
+        .eq("buyer_id", profile.id)
+        .order("created_at", { ascending: false });
+
+    if (error) {
+        console.error("Error fetching user orders:", error);
+        return { data: [], count: 0 };
+    }
+
+    return { data: (data as any[]) || [], count: count || 0 };
+}
+

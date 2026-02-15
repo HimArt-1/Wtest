@@ -45,96 +45,118 @@ async function requireAdmin() {
 // ═══════════════════════════════════════════════════════════
 
 export async function getAdminOverview() {
-    noStore();
-    const { supabase } = await requireAdmin();
+    noStore(); // Opt out of static caching
 
-    // Run all queries in parallel for performance
-    const [
-        usersResult,
-        artistsResult,
-        buyersResult,
-        ordersResult,
-        revenueResult,
-        artworksResult,
-        productsResult,
-        pendingAppsResult,
-        subscribersResult,
-        recentOrdersResult,
-        pendingAppsListResult,
-    ] = await Promise.all([
-        // Total users
-        supabase.from("profiles").select("id", { count: "exact", head: true }),
-        // Total artists
-        supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "artist"),
-        // Total buyers
-        supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "buyer"),
-        // Total orders
-        supabase.from("orders").select("id", { count: "exact", head: true }),
-        // Total revenue
-        supabase.from("orders").select("total").in("payment_status", ["paid"]),
-        // Total artworks
-        supabase.from("artworks").select("id", { count: "exact", head: true }),
-        // Total products
-        supabase.from("products").select("id", { count: "exact", head: true }),
-        // Pending applications
-        supabase.from("applications").select("id", { count: "exact", head: true }).eq("status", "pending"),
-        // Newsletter subscribers
-        supabase.from("newsletter_subscribers").select("id", { count: "exact", head: true }).eq("is_active", true),
-        // Recent 5 orders
-        supabase.from("orders")
-            .select("id, order_number, total, status, payment_status, created_at, buyer:profiles(display_name)")
-            .order("created_at", { ascending: false })
-            .limit(5),
-        // Pending applications list (latest 5)
-        supabase.from("applications")
-            .select("id, full_name, email, art_style, created_at")
-            .eq("status", "pending")
-            .order("created_at", { ascending: false })
-            .limit(5),
-    ]);
+    try {
+        const { supabase } = await requireAdmin();
 
-    // Calculate total revenue
-    const revenueData = revenueResult.data as any[] || [];
-    const totalRevenue = revenueData.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+        // Run all queries with error handling (allSettled)
+        const results = await Promise.allSettled([
+            // 0: Total users
+            supabase.from("profiles").select("id", { count: "exact", head: true }),
+            // 1: Total artists
+            supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "artist"),
+            // 2: Total buyers
+            supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "buyer"),
+            // 3: Total orders
+            supabase.from("orders").select("id", { count: "exact", head: true }),
+            // 4: Total revenue
+            supabase.from("orders").select("total").in("payment_status", ["paid"]),
+            // 5: Total artworks
+            supabase.from("artworks").select("id", { count: "exact", head: true }),
+            // 6: Total products
+            supabase.from("products").select("id", { count: "exact", head: true }),
+            // 7: Pending applications
+            supabase.from("applications").select("id", { count: "exact", head: true }).eq("status", "pending"),
+            // 8: Newsletter subscribers
+            supabase.from("newsletter_subscribers").select("id", { count: "exact", head: true }).eq("is_active", true),
+            // 9: Recent 5 orders
+            supabase.from("orders")
+                .select("id, order_number, total, status, payment_status, created_at, buyer:profiles(display_name)")
+                .order("created_at", { ascending: false })
+                .limit(5),
+            // 10: Pending applications list (latest 5)
+            supabase.from("applications")
+                .select("id, full_name, email, art_style, created_at")
+                .eq("status", "pending")
+                .order("created_at", { ascending: false })
+                .limit(5),
+        ]);
 
-    // Month-over-month revenue comparison
-    const now = new Date();
-    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
+        // Helper to extract data safely
+        const getCount = (result: PromiseSettledResult<any>) =>
+            result.status === "fulfilled" && result.value.count ? result.value.count : 0;
 
-    const [thisMonthResult, lastMonthResult] = await Promise.all([
-        supabase.from("orders").select("total")
-            .gte("created_at", thisMonthStart)
-            .in("payment_status", ["paid"]),
-        supabase.from("orders").select("total")
-            .gte("created_at", lastMonthStart)
-            .lt("created_at", thisMonthStart)
-            .in("payment_status", ["paid"]),
-    ]);
+        const getData = (result: PromiseSettledResult<any>) =>
+            result.status === "fulfilled" && result.value.data ? result.value.data : [];
 
-    const thisMonthRevenue = ((thisMonthResult.data as any[]) || []).reduce((s, o) => s + (Number(o.total) || 0), 0);
-    const lastMonthRevenue = ((lastMonthResult.data as any[]) || []).reduce((s, o) => s + (Number(o.total) || 0), 0);
-    const revenueGrowth = lastMonthRevenue > 0
-        ? (((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100).toFixed(1)
-        : thisMonthRevenue > 0 ? "100" : "0";
+        // Log errors for debugging purposes
+        results.forEach((res, idx) => {
+            if (res.status === "rejected") {
+                console.error(`Query index ${idx} failed:`, res.reason);
+            } else if (res.value.error) {
+                console.error(`Query index ${idx} returned DB error:`, res.value.error);
+            }
+        });
 
-    return {
-        stats: {
-            totalUsers: usersResult.count || 0,
-            totalArtists: artistsResult.count || 0,
-            totalBuyers: buyersResult.count || 0,
-            totalOrders: ordersResult.count || 0,
-            totalRevenue,
-            thisMonthRevenue,
-            revenueGrowth: Number(revenueGrowth),
-            totalArtworks: artworksResult.count || 0,
-            totalProducts: productsResult.count || 0,
-            pendingApplications: pendingAppsResult.count || 0,
-            totalSubscribers: subscribersResult.count || 0,
-        },
-        recentOrders: (recentOrdersResult.data as any[]) || [],
-        pendingApplications: (pendingAppsListResult.data as any[]) || [],
-    };
+        // ─── Calculate Revenue ───
+        const revenueData = getData(results[4]) as any[];
+        const totalRevenue = revenueData.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+
+        // Month-over-month revenue (Safe Separate Try/Catch)
+        let thisMonthRevenue = 0;
+        let revenueGrowth = "0";
+        try {
+            const now = new Date();
+            const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+            const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
+
+            const [thisMonthResult, lastMonthResult] = await Promise.all([
+                supabase.from("orders").select("total").gte("created_at", thisMonthStart).in("payment_status", ["paid"]),
+                supabase.from("orders").select("total").gte("created_at", lastMonthStart).lt("created_at", thisMonthStart).in("payment_status", ["paid"]),
+            ]);
+
+            thisMonthRevenue = ((thisMonthResult.data as any[]) || []).reduce((s, o) => s + (Number(o.total) || 0), 0);
+            const lastMonthRevenue = ((lastMonthResult.data as any[]) || []).reduce((s, o) => s + (Number(o.total) || 0), 0);
+
+            revenueGrowth = lastMonthRevenue > 0
+                ? (((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100).toFixed(1)
+                : thisMonthRevenue > 0 ? "100" : "0";
+        } catch (e) {
+            console.error("Revenue calculation error:", e);
+        }
+
+        return {
+            stats: {
+                totalUsers: getCount(results[0]),
+                totalArtists: getCount(results[1]),
+                totalBuyers: getCount(results[2]),
+                totalOrders: getCount(results[3]),
+                totalRevenue,
+                thisMonthRevenue,
+                revenueGrowth: Number(revenueGrowth),
+                totalArtworks: getCount(results[5]),
+                totalProducts: getCount(results[6]),
+                pendingApplications: getCount(results[7]),
+                totalSubscribers: getCount(results[8]),
+            },
+            recentOrders: getData(results[9]),
+            pendingApplications: getData(results[10]),
+        };
+
+    } catch (err) {
+        console.error("FATAL: getAdminOverview crashed completely:", err);
+        // Return explicit empty/zero state instead of throwing 500
+        return {
+            stats: {
+                totalUsers: 0, totalArtists: 0, totalBuyers: 0, totalOrders: 0,
+                totalRevenue: 0, thisMonthRevenue: 0, revenueGrowth: 0,
+                totalArtworks: 0, totalProducts: 0, pendingApplications: 0, totalSubscribers: 0,
+            },
+            recentOrders: [],
+            pendingApplications: [],
+        };
+    }
 }
 
 // ═══════════════════════════════════════════════════════════
