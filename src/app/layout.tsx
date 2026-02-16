@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { IBM_Plex_Sans_Arabic } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { arSA } from "@clerk/localizations";
+import { FloatingJoinButton } from "@/components/ui/FloatingJoinButton";
 import "./globals.css";
 
 const ibmPlexArabic = IBM_Plex_Sans_Arabic({
@@ -66,6 +67,9 @@ export default function RootLayout({
 
           {/* Main Content */}
           {children}
+
+          {/* Floating Join Button */}
+          <FloatingJoinButton />
         </body>
       </html>
     </ClerkProvider>
