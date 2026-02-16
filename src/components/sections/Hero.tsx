@@ -3,6 +3,7 @@
 import { useRef, useState, useEffect } from "react";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { ArrowDown } from "lucide-react";
+import Image from "next/image";
 
 export function Hero() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -70,15 +71,21 @@ export function Hero() {
               transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
               className="relative"
             >
-              <motion.h2
-                className="text-6xl sm:text-7xl md:text-8xl font-bold text-gradient"
+              <motion.div
                 animate={{
                   filter: videoReady ? "blur(0px)" : ["blur(0px)", "blur(2px)", "blur(0px)"],
                 }}
                 transition={{ duration: 2, repeat: videoReady ? 0 : Infinity, ease: "easeInOut" }}
               >
-                وشّى
-              </motion.h2>
+                <Image
+                  src="/hero-logo.png"
+                  alt="وشّى"
+                  width={280}
+                  height={160}
+                  className="object-contain brightness-0 invert opacity-90 w-[180px] sm:w-[220px] md:w-[280px] h-auto"
+                  priority
+                />
+              </motion.div>
 
               {/* Gold shimmer line under logo */}
               <motion.div
@@ -188,14 +195,21 @@ export function Hero() {
         style={{ y, opacity, scale }}
       >
         {/* Main Title */}
-        <motion.h1
-          className="text-6xl sm:text-7xl md:text-9xl lg:text-[11rem] font-bold leading-none mb-4 sm:mb-6"
+        <motion.div
+          className="mb-4 sm:mb-6 flex justify-center"
           initial={{ opacity: 0, y: 60, filter: "blur(10px)" }}
           animate={curtainLifted ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
           transition={{ duration: 1.2, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
         >
-          <span className="text-gradient">وشّى</span>
-        </motion.h1>
+          <Image
+            src="/hero-logo.png"
+            alt="وشّى"
+            width={700}
+            height={400}
+            className="object-contain brightness-0 invert w-[280px] sm:w-[400px] md:w-[550px] lg:w-[700px] h-auto drop-shadow-[0_0_40px_rgba(212,175,55,0.15)]"
+            priority
+          />
+        </motion.div>
 
         {/* Subtitle */}
         <motion.p

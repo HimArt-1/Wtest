@@ -16,6 +16,13 @@ export const metadata: Metadata = {
   description: "منصة فنية رقمية تجمع المبدعين العرب. معرض، بورتفوليو، متجر، ونظام قبول ذكي.",
   keywords: ["فن", "معرض", "رقمي", "عربي", "بورتفوليو", "متجر فني"],
   authors: [{ name: "WUSHA" }],
+  icons: {
+    icon: [
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
   openGraph: {
     title: "منصة وشّى | WUSHA",
     description: "منصة فنية رقمية تجمع المبدعين العرب",
