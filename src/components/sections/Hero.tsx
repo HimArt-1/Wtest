@@ -196,7 +196,7 @@ export function Hero() {
       >
         {/* Main Title */}
         <motion.div
-          className="mb-4 sm:mb-6 flex justify-center"
+          className="mb-2 sm:mb-3 mt-16 sm:mt-20 md:mt-24 flex justify-center"
           initial={{ opacity: 0, y: 60, filter: "blur(10px)" }}
           animate={curtainLifted ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
           transition={{ duration: 1.2, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
@@ -204,9 +204,9 @@ export function Hero() {
           <Image
             src="/hero-logo.png"
             alt="وشّى"
-            width={700}
-            height={400}
-            className="object-contain brightness-0 invert w-[280px] sm:w-[400px] md:w-[550px] lg:w-[700px] h-auto drop-shadow-[0_0_40px_rgba(212,175,55,0.15)]"
+            width={450}
+            height={260}
+            className="object-contain brightness-0 invert w-[180px] sm:w-[250px] md:w-[350px] lg:w-[450px] h-auto drop-shadow-[0_0_40px_rgba(212,175,55,0.15)]"
             priority
           />
         </motion.div>
