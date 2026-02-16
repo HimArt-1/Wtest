@@ -4,12 +4,14 @@ import { useRef, useState, useEffect } from "react";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { ArrowDown } from "lucide-react";
 import Image from "next/image";
+import { JoinModal } from "@/components/ui/JoinModal";
 
 export function Hero() {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoReady, setVideoReady] = useState(false);
   const [curtainLifted, setCurtainLifted] = useState(false);
+  const [joinOpen, setJoinOpen] = useState(false);
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -248,11 +250,15 @@ export function Hero() {
             className="btn-secondary backdrop-blur-sm"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            onClick={() => setJoinOpen(true)}
           >
             انضم معنا
           </motion.button>
         </motion.div>
       </motion.div>
+
+      {/* Join Modal */}
+      <JoinModal isOpen={joinOpen} onClose={() => setJoinOpen(false)} />
 
       {/* Scroll Indicator */}
       <motion.div
