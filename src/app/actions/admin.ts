@@ -13,9 +13,13 @@ import { unstable_noStore as noStore, revalidatePath } from "next/cache";
 // ─── Admin Supabase Client ──────────────────────────────────
 
 function getAdminSupabase() {
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey) {
+        console.warn("[Admin] SUPABASE_SERVICE_ROLE_KEY is not set — falling back to anon key. Add it to Vercel env vars.");
+    }
     return createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        serviceKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         { auth: { persistSession: false } }
     );
 }
