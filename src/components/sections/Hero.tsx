@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { ArrowDown } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { JoinModal } from "@/components/ui/JoinModal";
 
 export function Hero() {
@@ -12,6 +13,28 @@ export function Hero() {
   const [videoReady, setVideoReady] = useState(false);
   const [curtainLifted, setCurtainLifted] = useState(false);
   const [joinOpen, setJoinOpen] = useState(false);
+  const router = useRouter();
+
+  // ─── Secret Admin Access: 5 rapid taps on logo ───
+  const tapCountRef = useRef(0);
+  const tapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleSecretTap = useCallback(() => {
+    tapCountRef.current += 1;
+
+    if (tapTimerRef.current) clearTimeout(tapTimerRef.current);
+
+    if (tapCountRef.current >= 5) {
+      tapCountRef.current = 0;
+      router.push("/dashboard");
+      return;
+    }
+
+    // Reset counter after 2 seconds of no taps
+    tapTimerRef.current = setTimeout(() => {
+      tapCountRef.current = 0;
+    }, 2000);
+  }, [router]);
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -198,10 +221,11 @@ export function Hero() {
       >
         {/* Main Title */}
         <motion.div
-          className="mb-2 sm:mb-3 mt-16 sm:mt-20 md:mt-24 flex justify-center"
+          className="mb-2 sm:mb-3 mt-16 sm:mt-20 md:mt-24 flex justify-center cursor-pointer select-none"
           initial={{ opacity: 0, y: 60, filter: "blur(10px)" }}
           animate={curtainLifted ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
           transition={{ duration: 1.2, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+          onClick={handleSecretTap}
         >
           <Image
             src="/hero-logo.png"
@@ -210,6 +234,7 @@ export function Hero() {
             height={260}
             className="object-contain brightness-0 invert w-[180px] sm:w-[250px] md:w-[350px] lg:w-[450px] h-auto drop-shadow-[0_0_40px_rgba(212,175,55,0.15)]"
             priority
+            draggable={false}
           />
         </motion.div>
 
