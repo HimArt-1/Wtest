@@ -2,29 +2,23 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Palette, ShoppingBag, Search, User } from "lucide-react";
-import { useCartStore } from "@/stores/cartStore";
+import { Menu, X, Palette, Search, User } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import {
   SignedIn,
   SignedOut,
   SignInButton,
-  SignUpButton,
   UserButton,
 } from "@clerk/nextjs";
 import Link from "next/link";
 
 const navItems = [
-  { label: "المعرض", href: "/gallery" },
-  { label: "المتجر", href: "/store" },
   { label: "انضم إلينا", href: "/#join" },
 ];
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { toggleCart, getCartCount } = useCartStore();
-  const itemCount = getCartCount();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -89,25 +83,6 @@ export function Header() {
                   <Search className="w-5 h-5" />
                 </motion.div>
               </Link>
-              {/* Cart Icon */}
-              <motion.button
-                onClick={() => toggleCart(true)}
-                className="relative p-2 text-white/60 hover:text-gold transition-colors duration-300 cursor-pointer"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                aria-label="سلة المشتريات"
-              >
-                <ShoppingBag className="w-5 h-5" />
-                {itemCount > 0 && (
-                  <motion.span
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="absolute -top-0.5 -right-0.5 w-4.5 h-4.5 bg-gold text-black text-[10px] font-bold rounded-full flex items-center justify-center min-w-[18px] h-[18px]"
-                  >
-                    {itemCount}
-                  </motion.span>
-                )}
-              </motion.button>
               <SignedOut>
                 <motion.div
                   className="flex items-center gap-3"
@@ -116,19 +91,10 @@ export function Header() {
                   transition={{ delay: 0.6 }}
                 >
                   <SignInButton mode="modal">
-                    <button className="text-sm font-medium text-white/60 hover:text-gold transition-colors duration-300 cursor-pointer">
+                    <button className="btn-gold text-sm py-3 px-6 cursor-pointer">
                       تسجيل الدخول
                     </button>
                   </SignInButton>
-                  <SignUpButton mode="modal">
-                    <motion.button
-                      className="btn-gold text-sm py-3 px-6 cursor-pointer"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      إنشاء حساب
-                    </motion.button>
-                  </SignUpButton>
                 </motion.div>
               </SignedOut>
 
@@ -168,18 +134,6 @@ export function Header() {
                   <Search className="w-5 h-5" />
                 </span>
               </Link>
-              <button
-                onClick={() => toggleCart(true)}
-                className="relative p-3 text-white/80"
-                aria-label="سلة المشتريات"
-              >
-                <ShoppingBag className="w-5 h-5" />
-                {itemCount > 0 && (
-                  <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-gold text-black text-[9px] font-bold rounded-full flex items-center justify-center">
-                    {itemCount}
-                  </span>
-                )}
-              </button>
               <button
                 className="p-3 -mr-2 text-white/80"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -251,15 +205,10 @@ export function Header() {
                   transition={{ delay: 0.4 }}
                 >
                   <SignInButton mode="modal">
-                    <button className="text-xl font-medium text-white/50 hover:text-gold cursor-pointer">
+                    <button className="btn-gold cursor-pointer">
                       تسجيل الدخول
                     </button>
                   </SignInButton>
-                  <SignUpButton mode="modal">
-                    <button className="btn-gold mt-2 cursor-pointer">
-                      إنشاء حساب
-                    </button>
-                  </SignUpButton>
                 </motion.div>
               </SignedOut>
 
