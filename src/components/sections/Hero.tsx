@@ -107,7 +107,7 @@ export function Hero() {
                   alt="وشّى"
                   width={280}
                   height={160}
-                  className="object-contain brightness-0 invert opacity-90 w-[180px] sm:w-[220px] md:w-[280px] h-auto"
+                  className="object-contain brightness-0 invert sepia saturate-[2] hue-rotate-[5deg] opacity-90 w-[180px] sm:w-[220px] md:w-[280px] h-auto"
                   priority
                 />
               </motion.div>
@@ -232,7 +232,7 @@ export function Hero() {
             alt="وشّى"
             width={450}
             height={260}
-            className="object-contain brightness-0 invert w-[180px] sm:w-[250px] md:w-[350px] lg:w-[450px] h-auto drop-shadow-[0_0_40px_rgba(212,175,55,0.15)]"
+            className="object-contain brightness-0 invert sepia saturate-[2] hue-rotate-[5deg] w-[180px] sm:w-[250px] md:w-[350px] lg:w-[450px] h-auto drop-shadow-[0_0_40px_rgba(206,174,127,0.25)]"
             priority
             draggable={false}
           />

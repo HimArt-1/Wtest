@@ -101,9 +101,9 @@ export function Store() {
                     </div>
                   </div>
 
-                  <h3 className="font-bold text-base mb-3 text-white/90 truncate">{product.title}</h3>
+                  <h3 className="font-bold text-sm sm:text-base mb-2 sm:mb-3 text-white/90 truncate">{product.title}</h3>
                   <div className="flex items-center justify-between mt-auto">
-                    <span className="text-lg font-bold text-gold">
+                    <span className="text-sm sm:text-lg font-bold text-gold">
                       {product.price} {product.currency}
                     </span>
                     <motion.button

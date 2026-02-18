@@ -47,7 +47,7 @@ export default async function DashboardLayout({
             <div className="flex min-h-screen bg-bg" dir="rtl">
                 <AdminSidebar pendingApps={pendingApps || 0} />
                 <main className="flex-1 overflow-y-auto">
-                    <div className="max-w-[1600px] mx-auto p-6 lg:p-8">
+                    <div className="max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8">
                         {children}
                     </div>
                 </main>

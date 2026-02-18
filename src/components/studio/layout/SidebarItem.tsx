@@ -24,10 +24,10 @@ export function SidebarItem({ icon: Icon, label, href, isCollapsed }: SidebarIte
                     "flex items-center gap-3 p-3 rounded-xl transition-all duration-300",
                     isActive
                         ? "bg-gold/10 text-gold"
-                        : "text-ink/60 hover:text-ink hover:bg-ink/5"
+                        : "text-fg/40 hover:text-fg/70 hover:bg-white/[0.03]"
                 )}
             >
-                <Icon className={clsx("w-5 h-5 transition-colors", isActive ? "text-gold" : "text-ink/60 group-hover:text-ink")} />
+                <Icon className={clsx("w-5 h-5 transition-colors", isActive ? "text-gold" : "text-fg/40 group-hover:text-fg/60")} />
 
                 {!isCollapsed && (
                     <motion.span

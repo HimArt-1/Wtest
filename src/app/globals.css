@@ -181,6 +181,18 @@ h6 {
     box-shadow: 0 20px 60px rgba(206, 174, 127, 0.1);
     transform: translateY(-4px);
   }
+
+  .card-dark {
+    @apply rounded-2xl bg-surface/50 backdrop-blur-sm border border-white/[0.06] transition-all duration-300;
+  }
+
+  .card-dark:hover {
+    @apply border-gold/20;
+  }
+
+  .input-dark {
+    @apply w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-gold focus:ring-1 focus:ring-gold/30 outline-none transition-all text-white/90 placeholder:text-white/20;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════

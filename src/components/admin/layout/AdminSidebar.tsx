@@ -13,6 +13,8 @@ import {
     ChevronRight,
     Shield,
     Sparkles,
+    Menu,
+    X,
 } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 
@@ -25,6 +27,7 @@ interface NavItem {
 
 export function AdminSidebar({ pendingApps = 0 }: { pendingApps?: number }) {
     const [isCollapsed, setIsCollapsed] = useState(false);
+    const [isMobileOpen, setIsMobileOpen] = useState(false);
     const pathname = usePathname();
 
     const navItems: NavItem[] = [
@@ -35,12 +38,8 @@ export function AdminSidebar({ pendingApps = 0 }: { pendingApps?: number }) {
         { icon: ImageIcon, label: "الأعمال الفنية", href: "/dashboard/artworks" },
     ];
 
-    return (
-        <motion.aside
-            className="h-screen bg-surface/80 backdrop-blur-2xl border-l border-white/[0.06] sticky top-0 flex flex-col z-50"
-            animate={{ width: isCollapsed ? 80 : 280 }}
-            transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-        >
+    const sidebarContent = (
+        <>
             {/* ─── Header ─── */}
             <div className="p-5 flex items-center justify-between border-b border-white/[0.06]">
                 <AnimatePresence>
@@ -62,14 +61,22 @@ export function AdminSidebar({ pendingApps = 0 }: { pendingApps?: number }) {
                     )}
                 </AnimatePresence>
 
+                {/* Desktop: Collapse toggle */}
                 <button
                     onClick={() => setIsCollapsed(!isCollapsed)}
-                    className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+                    className="p-2 hover:bg-white/5 rounded-lg transition-colors hidden md:block"
                 >
                     <ChevronRight
-                        className={`w-4 h-4 text-fg/40 transition-transform duration-300 ${isCollapsed ? "rotate-180" : ""
-                            }`}
+                        className={`w-4 h-4 text-fg/40 transition-transform duration-300 ${isCollapsed ? "rotate-180" : ""}`}
                     />
+                </button>
+
+                {/* Mobile: Close button */}
+                <button
+                    onClick={() => setIsMobileOpen(false)}
+                    className="p-2 hover:bg-white/5 rounded-lg transition-colors md:hidden"
+                >
+                    <X className="w-5 h-5 text-fg/40" />
                 </button>
             </div>
 
@@ -83,6 +90,7 @@ export function AdminSidebar({ pendingApps = 0 }: { pendingApps?: number }) {
                         <Link
                             key={item.href}
                             href={item.href}
+                            onClick={() => setIsMobileOpen(false)}
                             className={`
                                 relative flex items-center gap-3 px-3 py-2.5 rounded-xl
                                 transition-all duration-300 group
@@ -170,6 +178,56 @@ export function AdminSidebar({ pendingApps = 0 }: { pendingApps?: number }) {
                     )}
                 </AnimatePresence>
             </div>
-        </motion.aside>
+        </>
+    );
+
+    return (
+        <>
+            {/* Mobile Hamburger Button */}
+            <button
+                onClick={() => setIsMobileOpen(true)}
+                className="fixed top-4 right-4 z-50 md:hidden p-3 bg-surface/90 backdrop-blur-xl border border-white/[0.06] rounded-xl text-fg/60"
+                aria-label="فتح القائمة"
+            >
+                <Menu className="w-5 h-5" />
+            </button>
+
+            {/* Mobile Overlay */}
+            <AnimatePresence>
+                {isMobileOpen && (
+                    <motion.div
+                        className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setIsMobileOpen(false)}
+                    />
+                )}
+            </AnimatePresence>
+
+            {/* Desktop Sidebar */}
+            <motion.aside
+                className="h-screen bg-surface/80 backdrop-blur-2xl border-l border-white/[0.06] sticky top-0 flex-col z-50 hidden md:flex"
+                animate={{ width: isCollapsed ? 80 : 280 }}
+                transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+            >
+                {sidebarContent}
+            </motion.aside>
+
+            {/* Mobile Sidebar */}
+            <AnimatePresence>
+                {isMobileOpen && (
+                    <motion.aside
+                        className="fixed right-0 top-0 h-screen w-[280px] bg-surface/95 backdrop-blur-2xl border-l border-white/[0.06] flex flex-col z-50 md:hidden"
+                        initial={{ x: 280 }}
+                        animate={{ x: 0 }}
+                        exit={{ x: 280 }}
+                        transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                    >
+                        {sidebarContent}
+                    </motion.aside>
+                )}
+            </AnimatePresence>
+        </>
     );
 }

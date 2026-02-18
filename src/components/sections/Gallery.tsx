@@ -85,13 +85,13 @@ export function Gallery() {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
             {[1, 2, 3].map((i) => (
               <div key={i} className="aspect-[4/5] bg-white/5 rounded-2xl animate-pulse" />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
             <AnimatePresence mode="popLayout">
               {artworks.map((artwork) => (
                 <motion.div
