@@ -259,9 +259,10 @@ export function Hero() {
             className="btn-gold group relative overflow-hidden"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            onClick={() => router.push("/studio/design-piece")}
           >
             <span className="relative z-10 flex items-center gap-2">
-              استكشف منتجاتنا
+              ابدأ التصميم
               <motion.span
                 animate={{ x: [0, 5, 0] }}
                 transition={{ duration: 1.5, repeat: Infinity }}
