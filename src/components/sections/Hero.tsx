@@ -6,6 +6,7 @@ import { ArrowDown } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { JoinModal } from "@/components/ui/JoinModal";
+import { SignedIn, SignedOut } from "@clerk/nextjs";
 
 export function Hero() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -243,35 +244,38 @@ export function Hero() {
           animate={curtainLifted ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8, delay: 0.8 }}
         >
-          <motion.button
-            type="button"
-            className="btn-gold group relative overflow-hidden"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => router.push("/design")}
-            suppressHydrationWarning
-          >
-            <span className="relative z-10 flex items-center gap-2">
-              ابدأ التصميم
-              <motion.span
-                animate={{ x: [0, 5, 0] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-              >
-                ←
-              </motion.span>
-            </span>
-          </motion.button>
-
-          <motion.button
-            type="button"
-            className="btn-secondary backdrop-blur-sm"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setJoinOpen(true)}
-            suppressHydrationWarning
-          >
-            انضم معنا
-          </motion.button>
+          <SignedIn>
+            <motion.button
+              type="button"
+              className="btn-gold group relative overflow-hidden"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => router.push("/store")}
+              suppressHydrationWarning
+            >
+              <span className="relative z-10 flex items-center gap-2">
+                المتجر
+                <motion.span
+                  animate={{ x: [0, 5, 0] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                >
+                  ←
+                </motion.span>
+              </span>
+            </motion.button>
+          </SignedIn>
+          <SignedOut>
+            <motion.button
+              type="button"
+              className="btn-secondary backdrop-blur-sm"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setJoinOpen(true)}
+              suppressHydrationWarning
+            >
+              انضم معنا
+            </motion.button>
+          </SignedOut>
         </motion.div>
       </motion.div>
 

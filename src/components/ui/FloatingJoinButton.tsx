@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { UserPlus } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { SignedOut } from "@clerk/nextjs";
 
 export function FloatingJoinButton() {
     const pathname = usePathname();
@@ -22,6 +23,7 @@ export function FloatingJoinButton() {
     if (hidden) return null;
 
     return (
+        <SignedOut>
         <AnimatePresence>
             {visible && (
                 <motion.div
@@ -62,5 +64,6 @@ export function FloatingJoinButton() {
                 </motion.div>
             )}
         </AnimatePresence>
+        </SignedOut>
     );
 }

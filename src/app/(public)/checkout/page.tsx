@@ -9,9 +9,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { createOrder } from "@/app/actions/orders";
-import { createStripeCheckoutUrl, STRIPE_ENABLED } from "@/app/actions/checkout";
+import { STRIPE_ENABLED } from "@/app/actions/checkout";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
+import { StripePaymentForm } from "@/components/checkout/StripePaymentForm";
 
 // Schema
 const addressSchema = z.object({
@@ -25,8 +26,8 @@ const addressSchema = z.object({
 });
 
 type AddressFormValues = z.infer<typeof addressSchema>;
-
 type PaymentMethod = "cod" | "stripe";
+type CheckoutStep = "address" | "paying";
 
 function CheckoutContent() {
     const { items, getCartTotal, clearCart } = useCartStore();
@@ -36,6 +37,11 @@ function CheckoutContent() {
     const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cod");
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
+
+    // حالة الدفع المدمج
+    const [checkoutStep, setCheckoutStep] = useState<CheckoutStep>("address");
+    const [stripeClientSecret, setStripeClientSecret] = useState<string | null>(null);
+    const [pendingOrderNumber, setPendingOrderNumber] = useState<string | null>(null);
 
     useEffect(() => {
         const orderNum = searchParams.get("order");
@@ -112,28 +118,42 @@ function CheckoutContent() {
         }
 
         if (paymentMethod === "stripe" && result.order_id && result.order_number && result.total) {
-            const origin = typeof window !== "undefined" ? window.location.origin : "";
-            const checkoutResult = await createStripeCheckoutUrl({
-                orderId: result.order_id,
-                orderNumber: result.order_number,
-                total: result.total,
-                successUrl: `${origin}/checkout?success=1&order=${encodeURIComponent(result.order_number)}`,
-                cancelUrl: `${origin}/checkout`,
+            // إنشاء جلسة Checkout مدمجة (ui_mode: 'custom')
+            const response = await fetch("/api/stripe/checkout-session", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    orderId: result.order_id,
+                    orderNumber: result.order_number,
+                    total: result.total,
+                }),
             });
 
-            if (checkoutResult.success && checkoutResult.url) {
-                clearCart();
-                window.location.href = checkoutResult.url;
+            const json = await response.json();
+
+            if (!response.ok || !json.clientSecret) {
+                setError(json.error || "فشل في إنشاء جلسة الدفع");
+                setIsSubmitting(false);
                 return;
             }
-            setError(checkoutResult.error || "فشل في إنشاء جلسة الدفع");
+
+            setStripeClientSecret(json.clientSecret);
+            setPendingOrderNumber(result.order_number);
+            setCheckoutStep("paying");
         } else {
+            // الدفع عند الاستلام
             setSuccess(result.order_number || "#ORDER");
             clearCart();
             window.scrollTo({ top: 0, behavior: "smooth" });
         }
 
         setIsSubmitting(false);
+    }
+
+    function handlePaymentSuccess() {
+        clearCart();
+        setSuccess(pendingOrderNumber || "#ORDER");
+        window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
     if (success) {
@@ -163,6 +183,42 @@ function CheckoutContent() {
         );
     }
 
+    // ─── خطوة الدفع المدمج ────────────────────────────────────
+    if (checkoutStep === "paying" && stripeClientSecret && pendingOrderNumber) {
+        return (
+            <div className="min-h-screen pt-32 pb-20 bg-[#080808]">
+                <div className="container-wusha max-w-2xl">
+                    <button
+                        onClick={() => setCheckoutStep("address")}
+                        className="flex items-center gap-2 text-white/40 hover:text-white text-sm mb-8 transition-colors"
+                    >
+                        <ArrowRight className="w-4 h-4 rotate-180" />
+                        العودة للطلب
+                    </button>
+
+                    <h1 className="text-3xl md:text-4xl font-bold mb-8">إتمام الدفع</h1>
+
+                    <div className="mb-6 p-4 bg-white/[0.02] border border-white/5 rounded-xl flex justify-between text-sm">
+                        <span className="text-white/50">رقم الطلب</span>
+                        <span className="font-mono font-bold text-gold">{pendingOrderNumber}</span>
+                    </div>
+
+                    <StripePaymentForm
+                        clientSecret={stripeClientSecret}
+                        orderNumber={pendingOrderNumber}
+                        onSuccess={handlePaymentSuccess}
+                    />
+
+                    <div className="mt-4 p-4 bg-white/[0.02] border border-white/5 rounded-xl flex justify-between text-sm">
+                        <span className="text-white/50">الإجمالي</span>
+                        <span className="font-bold text-gold">{total.toLocaleString()} ر.س</span>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // ─── خطوة العنوان وطريقة الدفع ───────────────────────────
     return (
         <div className="min-h-screen pt-32 pb-20 bg-[#080808]">
             <div className="container-wusha">
@@ -374,7 +430,9 @@ function CheckoutContent() {
                                     <Loader2 className="w-5 h-5 animate-spin" />
                                 ) : (
                                     <>
-                                        <span>تأكيد الطلب</span>
+                                        <span>
+                                            {paymentMethod === "stripe" ? "متابعة للدفع" : "تأكيد الطلب"}
+                                        </span>
                                         <ArrowRight className="w-5 h-5" />
                                     </>
                                 )}
