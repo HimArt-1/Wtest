@@ -1,17 +1,8 @@
-import { Suspense } from "react";
 import { getAdminOverview } from "@/app/actions/admin";
 import { StatCard } from "@/components/admin/StatCard";
 import { StatusBadge } from "@/components/admin/StatusBadge";
-import {
-    Users,
-    Palette,
-    ShoppingCart,
-    DollarSign,
-    Package,
-    FileText,
-    Mail,
-    TrendingUp,
-} from "lucide-react";
+import { AdminHeader } from "@/components/admin/AdminHeader";
+import { AdminQuickActions } from "@/components/admin/AdminQuickActions";
 import Link from "next/link";
 
 export default async function AdminDashboardPage() {
@@ -21,17 +12,18 @@ export default async function AdminDashboardPage() {
     return (
         <div className="space-y-8">
             {/* ─── Header ─── */}
-            <div>
-                <h1 className="text-3xl font-bold text-fg">نظرة عامة</h1>
-                <p className="text-fg/40 mt-1">مرحباً بك في لوحة إدارة وشّى — إليك ملخص أداء المنصة.</p>
-            </div>
+            <AdminHeader
+                title="نظرة عامة"
+                subtitle="مرحباً بك في لوحة إدارة وشّى — ملخص أداء المنصة وأدوات سريعة."
+                actions={<AdminQuickActions pendingCount={stats.pendingApplications} />}
+            />
 
-            {/* ─── Stats Grid ─── */}
+            {/* ─── Stats Grid (Primary) ─── */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <StatCard
                     title="إجمالي الإيرادات"
                     value={`${stats.totalRevenue.toLocaleString()} ر.س`}
-                    icon={DollarSign}
+                    icon="DollarSign"
                     variant="gold"
                     growth={stats.revenueGrowth}
                     subtitle={`هذا الشهر: ${stats.thisMonthRevenue.toLocaleString()} ر.س`}
@@ -40,34 +32,38 @@ export default async function AdminDashboardPage() {
                 <StatCard
                     title="الطلبات"
                     value={stats.totalOrders}
-                    icon={ShoppingCart}
+                    icon="ShoppingCart"
                     variant="forest"
                     delay={0.05}
+                    href="/dashboard/orders"
                 />
                 <StatCard
-                    title="الفنانون"
+                    title="الوشّايون"
                     value={stats.totalArtists}
-                    icon={Palette}
+                    icon="Palette"
                     variant="accent"
                     subtitle={`من أصل ${stats.totalUsers} مستخدم`}
                     delay={0.1}
+                    href="/dashboard/users"
                 />
                 <StatCard
                     title="طلبات الانضمام"
                     value={stats.pendingApplications}
-                    icon={FileText}
+                    icon="FileText"
                     variant={stats.pendingApplications > 0 ? "gold" : "default"}
                     subtitle={stats.pendingApplications > 0 ? "بانتظار المراجعة" : "لا توجد طلبات معلقة"}
                     delay={0.15}
+                    href="/dashboard/applications"
                 />
             </div>
 
-            {/* ─── Secondary Stats ─── */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <StatCard title="المستخدمون" value={stats.totalUsers} icon={Users} delay={0.2} />
-                <StatCard title="المشترون" value={stats.totalBuyers} icon={Users} delay={0.25} />
-                <StatCard title="الأعمال الفنية" value={stats.totalArtworks} icon={Palette} delay={0.3} />
-                <StatCard title="المشتركون" value={stats.totalSubscribers} icon={Mail} delay={0.35} />
+            {/* ─── Secondary Stats (Clickable) ─── */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                <StatCard title="المستخدمون" value={stats.totalUsers} icon="Users" delay={0.2} href="/dashboard/users" />
+                <StatCard title="أعضاء المنصة" value={stats.totalBuyers} icon="Users" delay={0.25} href="/dashboard/users" />
+                <StatCard title="الأعمال الفنية" value={stats.totalArtworks} icon="Palette" delay={0.3} href="/dashboard/artworks" />
+                <StatCard title="المنتجات" value={stats.totalProducts} icon="Package" delay={0.35} href="/dashboard/products" />
+                <StatCard title="مشتركو النشرة" value={stats.totalSubscribers} icon="Mail" delay={0.4} href="/dashboard/newsletter" />
             </div>
 
             {/* ─── Bottom Grid: Recent Orders + Pending Apps ─── */}
@@ -85,7 +81,7 @@ export default async function AdminDashboardPage() {
                             <thead>
                                 <tr className="border-b border-white/[0.04]">
                                     <th className="text-right px-6 py-3 text-fg/30 font-medium text-xs">رقم الطلب</th>
-                                    <th className="text-right px-4 py-3 text-fg/30 font-medium text-xs">المشتري</th>
+                                    <th className="text-right px-4 py-3 text-fg/30 font-medium text-xs">المشترك</th>
                                     <th className="text-right px-4 py-3 text-fg/30 font-medium text-xs">المبلغ</th>
                                     <th className="text-right px-4 py-3 text-fg/30 font-medium text-xs">الحالة</th>
                                     <th className="text-right px-6 py-3 text-fg/30 font-medium text-xs">التاريخ</th>

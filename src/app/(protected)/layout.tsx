@@ -1,14 +1,10 @@
-import { Header } from "@/components/layout/Header";
+import { ensureProfile } from "@/lib/ensure-profile";
 
-export default function ProtectedLayout({
+export default async function ProtectedLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
-    return (
-        <>
-            <Header />
-            {children}
-        </>
-    );
+    await ensureProfile();
+    return <>{children}</>;
 }

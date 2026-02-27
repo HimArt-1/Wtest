@@ -33,7 +33,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     const relatedProducts = related.data?.filter((p: any) => p.id !== product.id).slice(0, 4) || [];
 
     return (
-        <div className="min-h-screen bg-bg pt-24 pb-20" dir="rtl">
+        <div className="min-h-[60vh] bg-bg pt-6 sm:pt-8 pb-12 sm:pb-16" dir="rtl">
             <div className="max-w-7xl mx-auto px-6">
                 {/* ─── Breadcrumb ─── */}
                 <nav className="flex items-center gap-2 text-xs text-fg/30 mb-8">

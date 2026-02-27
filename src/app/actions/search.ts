@@ -161,7 +161,7 @@ export async function globalSearch(
             let artistQuery = supabase
                 .from("profiles")
                 .select("id, display_name, username, bio, avatar_url, cover_url, is_verified, total_artworks, total_sales", { count: "exact" })
-                .eq("role", "artist");
+                .eq("role", "wushsha");
 
             if (query) {
                 artistQuery = artistQuery.or(`display_name.ilike.${searchTerm},username.ilike.${searchTerm},bio.ilike.${searchTerm}`);

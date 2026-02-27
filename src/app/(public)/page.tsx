@@ -4,7 +4,7 @@ import { AISection } from "@/components/sections/AISection";
 
 export default function Home() {
     return (
-        <main>
+        <main className="relative">
             <Hero />
             <AISection />
             <JoinSection />

@@ -15,25 +15,9 @@ export function Hero() {
   const [joinOpen, setJoinOpen] = useState(false);
   const router = useRouter();
 
-  // ─── Secret Admin Access: 5 rapid taps on logo ───
-  const tapCountRef = useRef(0);
-  const tapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const handleSecretTap = useCallback(() => {
-    tapCountRef.current += 1;
-
-    if (tapTimerRef.current) clearTimeout(tapTimerRef.current);
-
-    if (tapCountRef.current >= 5) {
-      tapCountRef.current = 0;
-      router.push("/dashboard");
-      return;
-    }
-
-    // Reset counter after 2 seconds of no taps
-    tapTimerRef.current = setTimeout(() => {
-      tapCountRef.current = 0;
-    }, 2000);
+  // ─── تسجيل دخول سري للأدمن: نقرة على الشعار → تسجيل دخول ثم لوحة الإدارة ───
+  const handleAdminSignIn = useCallback(() => {
+    router.push("/sign-in?redirect_url=/dashboard");
   }, [router]);
 
   const { scrollYProgress } = useScroll({
@@ -102,14 +86,16 @@ export function Hero() {
                 }}
                 transition={{ duration: 2, repeat: videoReady ? 0 : Infinity, ease: "easeInOut" }}
               >
-                <Image
-                  src="/hero-logo.png"
-                  alt="وشّى"
-                  width={280}
-                  height={160}
-                  className="object-contain brightness-0 invert sepia saturate-[2] hue-rotate-[5deg] opacity-90 w-[180px] sm:w-[220px] md:w-[280px] h-auto"
-                  priority
-                />
+                <div className="relative w-[180px] sm:w-[220px] md:w-[280px] aspect-[280/160]">
+                  <Image
+                    src="/hero-logo.png"
+                    alt="وشّى"
+                    fill
+                    sizes="(max-width: 640px) 180px, (max-width: 768px) 220px, 280px"
+                    className="object-contain brightness-0 invert sepia saturate-[2] hue-rotate-[5deg] opacity-90"
+                    priority
+                  />
+                </div>
               </motion.div>
 
               {/* Gold shimmer line under logo */}
@@ -225,17 +211,19 @@ export function Hero() {
           initial={{ opacity: 0, y: 60, filter: "blur(10px)" }}
           animate={curtainLifted ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
           transition={{ duration: 1.2, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-          onClick={handleSecretTap}
+          onClick={handleAdminSignIn}
         >
-          <Image
-            src="/hero-logo.png"
-            alt="وشّى"
-            width={450}
-            height={260}
-            className="object-contain brightness-0 invert sepia saturate-[2] hue-rotate-[5deg] w-[180px] sm:w-[250px] md:w-[350px] lg:w-[450px] h-auto drop-shadow-[0_0_40px_rgba(206,174,127,0.25)]"
-            priority
-            draggable={false}
-          />
+          <div className="relative w-[180px] sm:w-[250px] md:w-[350px] lg:w-[450px] aspect-[450/260]">
+            <Image
+              src="/hero-logo.png"
+              alt="وشّى"
+              fill
+              sizes="(max-width: 640px) 180px, (max-width: 768px) 250px, (max-width: 1024px) 350px, 450px"
+              className="object-contain brightness-0 invert sepia saturate-[2] hue-rotate-[5deg] drop-shadow-[0_0_40px_rgba(206,174,127,0.25)]"
+              priority
+              draggable={false}
+            />
+          </div>
         </motion.div>
 
         {/* Subtitle */}
@@ -256,10 +244,12 @@ export function Hero() {
           transition={{ duration: 0.8, delay: 0.8 }}
         >
           <motion.button
+            type="button"
             className="btn-gold group relative overflow-hidden"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => router.push("/studio/design-piece")}
+            onClick={() => router.push("/design")}
+            suppressHydrationWarning
           >
             <span className="relative z-10 flex items-center gap-2">
               ابدأ التصميم
@@ -273,10 +263,12 @@ export function Hero() {
           </motion.button>
 
           <motion.button
+            type="button"
             className="btn-secondary backdrop-blur-sm"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setJoinOpen(true)}
+            suppressHydrationWarning
           >
             انضم معنا
           </motion.button>

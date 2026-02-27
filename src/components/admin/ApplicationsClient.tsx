@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { StatusBadge } from "@/components/admin/StatusBadge";
-import { reviewApplication } from "@/app/actions/admin";
+import { reviewApplication, acceptApplicationAndCreateUser } from "@/app/actions/admin";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     CheckCircle2,
@@ -15,6 +15,8 @@ import {
     Clock,
     Palette,
     Phone,
+    X,
+    UserPlus,
 } from "lucide-react";
 
 interface ApplicationsClientProps {
@@ -36,6 +38,8 @@ export function ApplicationsClient({ applications, count, currentStatus }: Appli
     const [isPending, startTransition] = useTransition();
     const [reviewingId, setReviewingId] = useState<string | null>(null);
     const [reviewNotes, setReviewNotes] = useState("");
+    const [showAcceptModal, setShowAcceptModal] = useState<string | null>(null);
+    const [createClerkOnlyId, setCreateClerkOnlyId] = useState<string | null>(null);
 
     const navigate = (status: string) => {
         const sp = new URLSearchParams();
@@ -54,6 +58,10 @@ export function ApplicationsClient({ applications, count, currentStatus }: Appli
         setReviewingId(null);
         setReviewNotes("");
         router.refresh();
+    };
+
+    const handleAcceptAndCreate = (id: string) => {
+        setShowAcceptModal(id);
     };
 
     return (
@@ -160,33 +168,66 @@ export function ApplicationsClient({ applications, count, currentStatus }: Appli
                                     className="w-full p-3 bg-white/[0.02] border border-white/[0.06] rounded-xl text-sm text-fg placeholder:text-fg/20 resize-none focus:outline-none focus:border-gold/20 transition-colors"
                                     rows={2}
                                 />
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={() => handleReview(app.id, "accepted")}
-                                        disabled={reviewingId === app.id && !!reviewingId}
-                                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-forest/10 text-forest border border-forest/20 rounded-xl text-sm font-bold hover:bg-forest/20 transition-all disabled:opacity-50"
-                                    >
-                                        {reviewingId === app.id ? (
-                                            <Loader2 className="w-4 h-4 animate-spin" />
-                                        ) : (
+                                <div className="space-y-2">
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => handleAcceptAndCreate(app.id)}
+                                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gold/10 text-gold border border-gold/20 rounded-xl text-sm font-bold hover:bg-gold/20 transition-all"
+                                        >
                                             <CheckCircle2 className="w-4 h-4" />
-                                        )}
-                                        قبول
-                                    </button>
-                                    <button
-                                        onClick={() => handleReview(app.id, "rejected")}
-                                        disabled={reviewingId === app.id && !!reviewingId}
-                                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-red-500/10 text-red-400 border border-red-500/20 rounded-xl text-sm font-bold hover:bg-red-500/20 transition-all disabled:opacity-50"
-                                    >
-                                        <XCircle className="w-4 h-4" />
-                                        رفض
-                                    </button>
+                                            قبول وإنشاء مستخدم
+                                        </button>
+                                        <button
+                                            onClick={() => handleReview(app.id, "accepted")}
+                                            disabled={reviewingId === app.id}
+                                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-forest/10 text-forest border border-forest/20 rounded-xl text-sm font-bold hover:bg-forest/20 transition-all disabled:opacity-50"
+                                        >
+                                            {reviewingId === app.id ? (
+                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                            ) : (
+                                                <CheckCircle2 className="w-4 h-4" />
+                                            )}
+                                            قبول فقط
+                                        </button>
+                                        <button
+                                            onClick={() => handleReview(app.id, "rejected")}
+                                            disabled={reviewingId === app.id}
+                                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-red-500/10 text-red-400 border border-red-500/20 rounded-xl text-sm font-bold hover:bg-red-500/20 transition-all disabled:opacity-50"
+                                        >
+                                            <XCircle className="w-4 h-4" />
+                                            رفض
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         ) : (
-                            <p className="text-fg/20 text-xs text-center mt-2">
-                                {new Date(app.updated_at || app.created_at).toLocaleDateString("ar-SA", { year: "numeric", month: "long", day: "numeric" })}
-                            </p>
+                            <div className="space-y-3">
+                                <p className="text-fg/20 text-xs text-center">
+                                    {new Date(app.updated_at || app.created_at).toLocaleDateString("ar-SA", { year: "numeric", month: "long", day: "numeric" })}
+                                </p>
+                                {app.status === "accepted" && (
+                                    <div className="flex gap-2 justify-center">
+                                        {!app.hasProfile && (
+                                            <button
+                                                onClick={() => handleAcceptAndCreate(app.id)}
+                                                className="flex items-center gap-2 px-4 py-2.5 bg-gold/10 text-gold border border-gold/20 rounded-xl text-sm font-bold hover:bg-gold/20 transition-all"
+                                            >
+                                                <UserPlus className="w-4 h-4" />
+                                                إنشاء حساب
+                                            </button>
+                                        )}
+                                        {app.hasProfile && !app.hasClerkAccount && app.email && (
+                                            <button
+                                                onClick={() => setCreateClerkOnlyId(app.id)}
+                                                className="flex items-center gap-2 px-4 py-2.5 bg-forest/10 text-forest border border-forest/20 rounded-xl text-sm font-bold hover:bg-forest/20 transition-all"
+                                            >
+                                                <UserPlus className="w-4 h-4" />
+                                                إنشاء حساب في Clerk
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
                         )}
                     </motion.div>
                 ))}
@@ -205,6 +246,318 @@ export function ApplicationsClient({ applications, count, currentStatus }: Appli
             {count > 0 && (
                 <p className="text-xs text-fg/30">{count} طلب</p>
             )}
+
+            {/* ─── Accept & Create User Modal ─── */}
+            {showAcceptModal && (
+                <AcceptAndCreateModal
+                    applicationId={showAcceptModal}
+                    application={applications.find((a) => a.id === showAcceptModal)}
+                    onClose={() => setShowAcceptModal(null)}
+                    onSuccess={() => {
+                        setShowAcceptModal(null);
+                        router.refresh();
+                    }}
+                />
+            )}
+
+            {/* ─── Create Clerk Only Modal (للمقبولين بدون حساب Clerk) ─── */}
+            {createClerkOnlyId && (
+                <CreateClerkOnlyModal
+                    applicationId={createClerkOnlyId}
+                    application={applications.find((a) => a.id === createClerkOnlyId)}
+                    onClose={() => setCreateClerkOnlyId(null)}
+                    onSuccess={() => {
+                        setCreateClerkOnlyId(null);
+                        router.refresh();
+                    }}
+                />
+            )}
+        </div>
+    );
+}
+
+function CreateClerkOnlyModal({
+    applicationId,
+    application,
+    onClose,
+    onSuccess,
+}: {
+    applicationId: string;
+    application: any;
+    onClose: () => void;
+    onSuccess: () => void;
+}) {
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [tempPassword, setTempPassword] = useState<string | null>(null);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!application?.email) return;
+        setLoading(true);
+        setError(null);
+        setTempPassword(null);
+        const res = await acceptApplicationAndCreateUser(applicationId, {
+            createInClerk: true,
+        });
+        setLoading(false);
+        if (res.success) {
+            if (res.tempPassword) setTempPassword(res.tempPassword);
+            else onSuccess();
+        } else {
+            setError(res.error || "فشل إنشاء الحساب");
+        }
+    };
+
+    if (!application) return null;
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-md rounded-2xl border border-white/[0.08] bg-bg shadow-2xl"
+            >
+                <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
+                    <h2 className="text-lg font-bold text-fg flex items-center gap-2">
+                        <UserPlus className="w-5 h-5 text-forest" />
+                        إنشاء حساب في Clerk
+                    </h2>
+                    <button onClick={tempPassword ? onSuccess : onClose} className="p-2 rounded-lg hover:bg-white/5 text-fg/40">
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
+                {tempPassword ? (
+                    <div className="p-6 space-y-4">
+                        <div className="p-4 rounded-xl bg-forest/10 border border-forest/20 text-forest">
+                            <p className="text-sm font-medium mb-2">تم إنشاء الحساب بنجاح ✓</p>
+                            <p className="text-xs text-fg/70 mb-3">انسخ كلمة المرور وأرسلها للمستخدم:</p>
+                            <div className="flex items-center gap-2">
+                                <code className="flex-1 px-3 py-2 bg-black/30 rounded-lg text-sm font-mono break-all select-all" dir="ltr">
+                                    {tempPassword}
+                                </code>
+                                <button
+                                    type="button"
+                                    onClick={() => navigator.clipboard.writeText(tempPassword)}
+                                    className="px-3 py-2 rounded-lg bg-gold/20 text-gold text-xs font-bold hover:bg-gold/30"
+                                >
+                                    نسخ
+                                </button>
+                            </div>
+                            <p className="text-[10px] text-fg/40 mt-2">البريد: {application.email}</p>
+                        </div>
+                        <button type="button" onClick={onSuccess} className="w-full py-2.5 rounded-xl bg-gold/20 text-gold font-bold hover:bg-gold/30">
+                            تم
+                        </button>
+                    </div>
+                ) : (
+                    <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                        <p className="text-fg/60 text-sm">
+                            سيتم إنشاء حساب Clerk لـ <strong className="text-fg">{application.full_name}</strong> بالبريد {application.email}
+                        </p>
+                        {error && (
+                            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">{error}</div>
+                        )}
+                        <div className="flex gap-3 pt-2">
+                            <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-white/[0.08] text-fg/60 hover:bg-white/[0.03]">
+                                إلغاء
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="flex-1 py-2.5 rounded-xl bg-forest/20 text-forest font-bold hover:bg-forest/30 disabled:opacity-50 flex items-center justify-center gap-2"
+                            >
+                                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
+                                إنشاء
+                            </button>
+                        </div>
+                    </form>
+                )}
+            </motion.div>
+        </div>
+    );
+}
+
+function AcceptAndCreateModal({
+    applicationId,
+    application,
+    onClose,
+    onSuccess,
+}: {
+    applicationId: string;
+    application: any;
+    onClose: () => void;
+    onSuccess: () => void;
+}) {
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [role, setRole] = useState<"wushsha" | "subscriber">("wushsha");
+    const [wushshaLevel, setWushshaLevel] = useState(1);
+    const [clerkId, setClerkId] = useState("");
+    const [createInClerk, setCreateInClerk] = useState(true);
+    const [tempPassword, setTempPassword] = useState<string | null>(null);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setError(null);
+        setTempPassword(null);
+        const res = await acceptApplicationAndCreateUser(applicationId, {
+            role,
+            wushsha_level: role === "wushsha" ? wushshaLevel : undefined,
+            clerk_id: !createInClerk ? (clerkId.trim() || undefined) : undefined,
+            createInClerk: createInClerk && !!application?.email,
+        });
+        setLoading(false);
+        if (res.success) {
+            if (res.tempPassword) {
+                setTempPassword(res.tempPassword);
+            } else {
+                onSuccess();
+            }
+        } else {
+            setError(res.error || "فشل إنشاء المستخدم");
+        }
+    };
+
+    const handleCloseAfterPassword = () => {
+        setTempPassword(null);
+        onSuccess();
+    };
+
+    if (!application) return null;
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-md rounded-2xl border border-white/[0.08] bg-bg shadow-2xl"
+            >
+                <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
+                    <h2 className="text-lg font-bold text-fg flex items-center gap-2">
+                        <UserPlus className="w-5 h-5 text-gold" />
+                        قبول وإنشاء مستخدم
+                    </h2>
+                    <button onClick={tempPassword ? handleCloseAfterPassword : onClose} className="p-2 rounded-lg hover:bg-white/5 text-fg/40">
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
+
+                {tempPassword ? (
+                    <div className="p-6 space-y-4">
+                        <div className="p-4 rounded-xl bg-forest/10 border border-forest/20 text-forest">
+                            <p className="text-sm font-medium mb-2">تم إنشاء الحساب بنجاح ✓</p>
+                            <p className="text-xs text-fg/70 mb-3">المستخدم يمكنه تسجيل الدخول بالبريد وكلمة المرور التالية. انسخها وأرسلها له:</p>
+                            <div className="flex items-center gap-2">
+                                <code className="flex-1 px-3 py-2 bg-black/30 rounded-lg text-sm font-mono break-all select-all" dir="ltr">
+                                    {tempPassword}
+                                </code>
+                                <button
+                                    type="button"
+                                    onClick={() => navigator.clipboard.writeText(tempPassword)}
+                                    className="px-3 py-2 rounded-lg bg-gold/20 text-gold text-xs font-bold hover:bg-gold/30"
+                                >
+                                    نسخ
+                                </button>
+                            </div>
+                            <p className="text-[10px] text-fg/40 mt-2">البريد: {application.email}</p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={handleCloseAfterPassword}
+                            className="w-full py-2.5 rounded-xl bg-gold/20 text-gold font-bold hover:bg-gold/30"
+                        >
+                            تم
+                        </button>
+                    </div>
+                ) : (
+                    <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                        <p className="text-fg/60 text-sm">
+                            سيتم إنشاء مستخدم جديد من طلب <strong className="text-fg">{application.full_name}</strong>
+                            {application.email && <span className="block text-fg/40 mt-1">البريد: {application.email}</span>}
+                        </p>
+                        {error && (
+                            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+                                {error}
+                            </div>
+                        )}
+                        <label className="flex items-center gap-3 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={createInClerk}
+                                onChange={(e) => setCreateInClerk(e.target.checked)}
+                                className="rounded border-white/20"
+                            />
+                            <span className="text-sm text-fg/80">إنشاء حساب في Clerk (ليتمكن من تسجيل الدخول)</span>
+                        </label>
+                        {createInClerk && application.email && (
+                            <p className="text-[10px] text-fg/40">سيُنشأ حساب بالبريد أعلاه وكلمة مرور مؤقتة تُعرض بعد الإنشاء</p>
+                        )}
+                        {!createInClerk && (
+                            <p className="text-[10px] text-amber-400/80">بدون Clerk لن يتمكن المستخدم من تسجيل الدخول — استخدم إن كان لديه حساب مسبقاً</p>
+                        )}
+                        <div>
+                            <label className="block text-xs font-medium text-fg/50 mb-1.5">الدور</label>
+                            <select
+                                value={role}
+                                onChange={(e) => setRole(e.target.value as "wushsha" | "subscriber")}
+                                className="w-full px-4 py-2.5 bg-white/[0.03] border border-white/[0.08] rounded-xl text-sm text-fg focus:outline-none focus:border-gold/30"
+                            >
+                                <option value="wushsha">وشّاي</option>
+                                <option value="subscriber">مشترك</option>
+                            </select>
+                        </div>
+                        {role === "wushsha" && (
+                            <div>
+                                <label className="block text-xs font-medium text-fg/50 mb-1.5">مستوى الوشّاي</label>
+                                <select
+                                    value={wushshaLevel}
+                                    onChange={(e) => setWushshaLevel(Number(e.target.value))}
+                                    className="w-full px-4 py-2.5 bg-white/[0.03] border border-white/[0.08] rounded-xl text-sm text-fg focus:outline-none focus:border-gold/30"
+                                >
+                                    {[1, 2, 3, 4, 5].map((l) => (
+                                        <option key={l} value={l}>المستوى {l}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
+                        {!createInClerk && (
+                            <div>
+                                <label className="block text-xs font-medium text-fg/50 mb-1.5">معرف Clerk (اختياري)</label>
+                                <input
+                                    type="text"
+                                    value={clerkId}
+                                    onChange={(e) => setClerkId(e.target.value)}
+                                    placeholder="user_xxx — اتركه فارغاً للإنشاء التلقائي"
+                                    className="w-full px-4 py-2.5 bg-white/[0.03] border border-white/[0.08] rounded-xl text-sm text-fg placeholder:text-fg/20 focus:outline-none focus:border-gold/30"
+                                    dir="ltr"
+                                />
+                                <p className="text-[10px] text-fg/30 mt-1">إن تركت فارغاً سيُستخدم معرف مؤقت حتى يسجّل المستخدم</p>
+                            </div>
+                        )}
+                        <div className="flex gap-3 pt-2">
+                            <button
+                                type="button"
+                                onClick={onClose}
+                                className="flex-1 py-2.5 rounded-xl border border-white/[0.08] text-fg/60 hover:bg-white/[0.03] transition-colors"
+                            >
+                                إلغاء
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={loading || (createInClerk && !application?.email)}
+                                className="flex-1 py-2.5 rounded-xl bg-gold/20 text-gold font-bold hover:bg-gold/30 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                            >
+                                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
+                                إنشاء وقبول
+                            </button>
+                        </div>
+                    </form>
+                )}
+            </motion.div>
         </div>
     );
 }

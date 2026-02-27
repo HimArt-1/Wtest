@@ -1,15 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useCartStore } from "@/stores/cartStore";
-import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Check, Loader2, MapPin, Phone, User, CreditCard } from "lucide-react";
+import { motion } from "framer-motion";
+import { ArrowRight, Check, Loader2, MapPin, Phone, User, CreditCard, Smartphone } from "lucide-react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { createOrder } from "@/app/actions/orders";
-import { useRouter } from "next/navigation";
+import { createStripeCheckoutUrl, STRIPE_ENABLED } from "@/app/actions/checkout";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 
 // Schema
@@ -25,13 +26,24 @@ const addressSchema = z.object({
 
 type AddressFormValues = z.infer<typeof addressSchema>;
 
-export default function CheckoutPage() {
+type PaymentMethod = "cod" | "stripe";
+
+function CheckoutContent() {
     const { items, getCartTotal, clearCart } = useCartStore();
+    const searchParams = useSearchParams();
     const [isClient, setIsClient] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cod");
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
-    const router = useRouter();
+
+    useEffect(() => {
+        const orderNum = searchParams.get("order");
+        if (searchParams.get("success") === "1" && orderNum) {
+            setSuccess(orderNum);
+            clearCart();
+        }
+    }, [searchParams, clearCart]);
 
     const form = useForm<AddressFormValues>({
         resolver: zodResolver(addressSchema),
@@ -88,17 +100,37 @@ export default function CheckoutPage() {
             unit_price: item.price,
         }));
 
-        const result = await createOrder(orderItems, {
-            ...data,
-            state: "", // Optional
+        const address = { ...data, state: "" };
+        const result = await createOrder(orderItems, address, {
+            paymentMethod: paymentMethod === "stripe" ? "stripe" : "cod",
         });
 
-        if (result.success) {
+        if (!result.success) {
+            setError(result.error || "حدث خطأ أثناء إنشاء الطلب");
+            setIsSubmitting(false);
+            return;
+        }
+
+        if (paymentMethod === "stripe" && result.order_id && result.order_number && result.total) {
+            const origin = typeof window !== "undefined" ? window.location.origin : "";
+            const checkoutResult = await createStripeCheckoutUrl({
+                orderId: result.order_id,
+                orderNumber: result.order_number,
+                total: result.total,
+                successUrl: `${origin}/checkout?success=1&order=${encodeURIComponent(result.order_number)}`,
+                cancelUrl: `${origin}/checkout`,
+            });
+
+            if (checkoutResult.success && checkoutResult.url) {
+                clearCart();
+                window.location.href = checkoutResult.url;
+                return;
+            }
+            setError(checkoutResult.error || "فشل في إنشاء جلسة الدفع");
+        } else {
             setSuccess(result.order_number || "#ORDER");
             clearCart();
             window.scrollTo({ top: 0, behavior: "smooth" });
-        } else {
-            setError(result.error || "حدث خطأ أثناء إنشاء الطلب");
         }
 
         setIsSubmitting(false);
@@ -229,16 +261,52 @@ export default function CheckoutPage() {
                                 طريقة الدفع
                             </h2>
 
-                            <div className="p-4 rounded-xl border border-gold/30 bg-gold/5 flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-4 h-4 rounded-full border-[5px] border-gold bg-white"></div>
-                                    <span className="font-bold">الدفع عند الاستلام (COD)</span>
-                                </div>
-                                <span className="text-xs bg-gold/20 text-gold px-2 py-1 rounded">متاح حالياً</span>
+                            <div className="space-y-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setPaymentMethod("cod")}
+                                    className={`w-full p-4 rounded-xl border flex items-center justify-between transition-all text-right ${
+                                        paymentMethod === "cod"
+                                            ? "border-gold/40 bg-gold/10"
+                                            : "border-white/10 bg-white/[0.02] hover:border-white/20"
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                                            paymentMethod === "cod" ? "border-gold bg-gold" : "border-white/30"
+                                        }`}>
+                                            {paymentMethod === "cod" && <div className="w-1.5 h-1.5 rounded-full bg-black" />}
+                                        </div>
+                                        <span className="font-bold">الدفع عند الاستلام</span>
+                                    </div>
+                                    <span className="text-xs bg-gold/20 text-gold px-2 py-1 rounded">متاح</span>
+                                </button>
+
+                                {STRIPE_ENABLED && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setPaymentMethod("stripe")}
+                                        className={`w-full p-4 rounded-xl border flex items-center justify-between transition-all text-right ${
+                                            paymentMethod === "stripe"
+                                                ? "border-gold/40 bg-gold/10"
+                                                : "border-white/10 bg-white/[0.02] hover:border-white/20"
+                                        }`}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                                                paymentMethod === "stripe" ? "border-gold bg-gold" : "border-white/30"
+                                            }`}>
+                                                {paymentMethod === "stripe" && <div className="w-1.5 h-1.5 rounded-full bg-black" />}
+                                            </div>
+                                            <span className="font-bold">الدفع الإلكتروني</span>
+                                        </div>
+                                        <span className="text-xs text-fg/50 flex items-center gap-1">
+                                            <Smartphone className="w-3.5 h-3.5" />
+                                            Visa · Mada · Apple Pay
+                                        </span>
+                                    </button>
+                                )}
                             </div>
-                            <p className="text-xs text-white/40 mt-2 mr-2">
-                                * سنقوم بإضافة خيارات الدفع الإلكتروني (Apple Pay, Mada) قريباً.
-                            </p>
                         </div>
                     </div>
 
@@ -320,6 +388,18 @@ export default function CheckoutPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function CheckoutPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen pt-32 pb-20 flex items-center justify-center">
+                <Loader2 className="w-10 h-10 text-gold animate-spin" />
+            </div>
+        }>
+            <CheckoutContent />
+        </Suspense>
     );
 }
 

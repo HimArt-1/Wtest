@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
     LayoutDashboard,
     Users,
+    UserCheck,
     ShoppingCart,
     FileText,
     Image as ImageIcon,
@@ -36,13 +37,14 @@ export function AdminSidebar({ pendingApps = 0 }: { pendingApps?: number }) {
 
     const navItems: NavItem[] = [
         { icon: LayoutDashboard, label: "نظرة عامة", href: "/dashboard" },
+        { icon: UserCheck, label: "مستخدمي Clerk", href: "/dashboard/users-clerk" },
         { icon: Users, label: "المستخدمون", href: "/dashboard/users" },
         { icon: ShoppingCart, label: "الطلبات", href: "/dashboard/orders" },
         { icon: FileText, label: "طلبات الانضمام", href: "/dashboard/applications", badge: pendingApps },
         { icon: ImageIcon, label: "الأعمال الفنية", href: "/dashboard/artworks" },
         { icon: Tag, label: "الفئات", href: "/dashboard/categories" },
         { icon: Package, label: "المنتجات", href: "/dashboard/products" },
-        { icon: Mail, label: "المشتركون", href: "/dashboard/newsletter" },
+        { icon: Mail, label: "النشرة البريدية", href: "/dashboard/newsletter" },
         { icon: Settings, label: "الإعدادات", href: "/dashboard/settings" },
     ];
 
@@ -215,7 +217,7 @@ export function AdminSidebar({ pendingApps = 0 }: { pendingApps?: number }) {
 
             {/* Desktop Sidebar */}
             <motion.aside
-                className="h-screen bg-surface/80 backdrop-blur-2xl border-l border-white/[0.06] sticky top-0 flex-col z-50 hidden md:flex"
+                className="h-screen bg-surface/90 backdrop-blur-2xl border-l border-white/[0.08] sticky top-0 flex flex-col z-50 hidden md:flex shadow-[0_0_60px_-20px_rgba(206,174,127,0.08)]"
                 animate={{ width: isCollapsed ? 80 : 280 }}
                 transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
             >

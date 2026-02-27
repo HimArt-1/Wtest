@@ -4,6 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { Metadata } from "next";
 import { Globe, ExternalLink } from "lucide-react";
+import { FollowArtistButton } from "@/components/artist/FollowArtistButton";
+import { getArtistFollowersCount } from "@/app/actions/social";
 
 // ─── Fetch Artist by Username ───────────────────────────────
 
@@ -13,7 +15,7 @@ async function getArtistByUsername(username: string) {
         .from("profiles")
         .select("*")
         .eq("username", username)
-        .eq("role", "artist")
+        .eq("role", "wushsha")
         .single();
 
     if (error) return null;
@@ -65,7 +67,10 @@ export default async function ArtistProfilePage({ params }: { params: Promise<{ 
     const artist = await getArtistByUsername(username);
     if (!artist) notFound();
 
-    const artworks = await getArtistArtworksPublic(artist.id);
+    const [artworks, followersCount] = await Promise.all([
+        getArtistArtworksPublic(artist.id),
+        getArtistFollowersCount(artist.id),
+    ]);
 
     const socialLinks = artist.social_links || {};
     const activeSocials = Object.entries(socialLinks).filter(([, url]) => url);
@@ -109,6 +114,13 @@ export default async function ArtistProfilePage({ params }: { params: Promise<{ 
                         {artist.bio && (
                             <p className="text-fg/50 text-sm mt-3 max-w-xl leading-relaxed">{artist.bio}</p>
                         )}
+                        <div className="flex items-center gap-4 mt-4">
+                            <FollowArtistButton
+                                artistId={artist.id}
+                                artistUsername={artist.username}
+                                followersCount={followersCount}
+                            />
+                        </div>
                     </div>
 
                     {/* Stats */}

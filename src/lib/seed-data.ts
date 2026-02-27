@@ -1,118 +1,23 @@
 // ═══════════════════════════════════════════════════════════
 //  وشّى | WUSHA — Data Seeding Script
-//  بيانات أولية للتجربة (فنانين، أعمال، منتجات)
+//  بيانات أولية (فئات فقط). تم إزالة الحسابات التجريبية للفنانين.
 // ═══════════════════════════════════════════════════════════
 
 import { createClient } from "@supabase/supabase-js";
 
-const ARTISTS = [
-    {
-        clerk_id: "user_test_artist_1",
-        display_name: "نورة الشمري",
-        username: "nora_art",
-        bio: "فنانة تشكيلية متخصصة في رسم الطبيعة الصحراوية بأسلوب معاصر.",
-        role: "artist",
-        avatar_url: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&q=80",
-        is_verified: true,
-    },
-    {
-        clerk_id: "user_test_artist_2",
-        display_name: "يوسف الغامدي",
-        username: "yousef_design",
-        bio: "مصمم جرافيك وفنان رقمي، أدمج بين الخط العربي والفن التجريدي.",
-        role: "artist",
-        avatar_url: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&q=80",
-        is_verified: true,
-    },
-    {
-        clerk_id: "user_test_artist_3",
-        display_name: "فاطمة الدوسري",
-        username: "fatima_abstract",
-        bio: "أحب الألوان والحرية في التعبير. أعمالي تعكس التراث برؤية حديثة.",
-        role: "artist",
-        avatar_url: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&q=80",
-        is_verified: false,
-    },
-];
+/** لا توجد حسابات فنانين تجريبية — يتم إضافتها من لوحة الإدارة أو طلبات الانضمام */
+const ARTISTS: Array<{
+    clerk_id: string;
+    display_name: string;
+    username: string;
+    bio?: string;
+    role: string;
+    avatar_url?: string;
+    is_verified?: boolean;
+}> = [];
 
-const ARTWORKS = [
-    {
-        title: "صحراء الأحلام",
-        category_slug: "digital",
-        image_url: "https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=800&q=80",
-        price: 2500,
-        artist_idx: 0,
-        is_featured: true,
-    },
-    {
-        title: "بوابة الزمن",
-        category_slug: "photography",
-        image_url: "https://images.unsplash.com/photo-1518998053901-5348d3969105?w=800&q=80",
-        price: 1800,
-        artist_idx: 1,
-        is_featured: true,
-    },
-    {
-        title: "حروف عربية",
-        category_slug: "calligraphy",
-        image_url: "https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?w=800&q=80",
-        price: 3200,
-        artist_idx: 1,
-        is_featured: false,
-    },
-    {
-        title: "روح التراث",
-        category_slug: "traditional",
-        image_url: "https://images.unsplash.com/photo-1578926288207-a90a5366759d?w=800&q=80",
-        price: 5500,
-        artist_idx: 2,
-        is_featured: true,
-    },
-    {
-        title: "أزرق سماوي",
-        category_slug: "abstract",
-        image_url: "https://images.unsplash.com/photo-1549490349-8643362247b5?w=800&q=80",
-        price: 2900,
-        artist_idx: 2,
-        is_featured: false,
-    },
-    {
-        title: "هدوء الليل",
-        category_slug: "digital",
-        image_url: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80",
-        price: 1200,
-        artist_idx: 0,
-        is_featured: true,
-    },
-];
-
-const PRODUCTS = [
-    {
-        title: "طباعة قماشية - صحراء الأحلام",
-        type: "print",
-        price: 450,
-        image_url: "https://images.unsplash.com/photo-1579783483458-83d02161294e?w=600&q=80",
-        artist_idx: 0,
-        is_featured: true,
-    },
-    {
-        title: "هودي وشّى - إصدار محدود",
-        type: "apparel",
-        price: 280,
-        image_url: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=600&q=80",
-        artist_idx: 1,
-        is_featured: true,
-    },
-    {
-        title: "NFT #882 - Future Art",
-        type: "nft",
-        price: 1500, // Converted roughly
-        currency: "ETH",
-        image_url: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&q=80",
-        artist_idx: 2,
-        is_featured: false,
-    },
-];
+const ARTWORKS: Array<{ title: string; category_slug: string; image_url: string; price: number; artist_idx: number; is_featured?: boolean }> = [];
+const PRODUCTS: Array<{ title: string; type: string; price: number; image_url: string; artist_idx: number; is_featured?: boolean; currency?: string }> = [];
 
 export async function seedData() {
     console.log("🌱 Starting seed...");
@@ -131,7 +36,7 @@ export async function seedData() {
     }
     const categoryMap = Object.fromEntries(categories.map((c) => [c.slug, c.id]));
 
-    // 2. Create Artists
+    // 2. Create Artists (فارغ — لا حسابات تجريبية)
     const createdArtistIds: string[] = [];
 
     for (const artist of ARTISTS) {

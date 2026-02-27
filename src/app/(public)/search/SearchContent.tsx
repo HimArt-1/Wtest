@@ -256,7 +256,7 @@ export default function SearchContent() {
     const totalPages = currentData ? Math.ceil(currentData.count / 12) : 0;
 
     return (
-        <div className="min-h-screen bg-bg pt-24 pb-20" dir="rtl">
+        <div className="min-h-[60vh] bg-bg pt-6 sm:pt-8 pb-12 sm:pb-16" dir="rtl">
             {/* ─── Hero Search ─── */}
             <div className="relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-b from-gold/[0.03] via-transparent to-transparent" />

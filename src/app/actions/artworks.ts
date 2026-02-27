@@ -5,9 +5,12 @@
 
 "use server";
 
-import { getSupabaseServerClient } from "@/lib/supabase";
+import { getSupabaseServerClient, getSupabaseAdminClient } from "@/lib/supabase";
 import { unstable_noStore as noStore, revalidatePath } from "next/cache";
 import { currentUser } from "@clerk/nextjs/server";
+
+const MAX_ARTWORK_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ALLOWED_ARTWORK_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
 // ─── READ ACTIONS ────────────────────────────────────────────
 
@@ -140,6 +143,56 @@ export async function getArtistArtworks(page = 1) {
     }
 
     return { data, count: count || 0 };
+}
+
+// ─── UPLOAD ARTWORK IMAGE (Server-side, bypasses RLS) ────────
+
+export async function uploadArtworkImage(formData: FormData): Promise<{ success: true; url: string } | { success: false; error: string }> {
+    const user = await currentUser();
+    if (!user) return { success: false, error: "يجب تسجيل الدخول أولاً" };
+
+    const supabaseServer = getSupabaseServerClient();
+    const { data: profile } = await supabaseServer
+        .from("profiles")
+        .select("id")
+        .eq("clerk_id", user.id)
+        .single();
+
+    if (!profile) return { success: false, error: "الملف الشخصي غير موجود" };
+
+    const file = formData.get("file") as File | null;
+    if (!file || !(file instanceof File)) {
+        return { success: false, error: "لم يتم اختيار ملف" };
+    }
+    if (file.size > MAX_ARTWORK_FILE_SIZE) {
+        return { success: false, error: "حجم الملف يجب أن لا يتجاوز 5 ميجابايت" };
+    }
+    if (!ALLOWED_ARTWORK_TYPES.includes(file.type)) {
+        return { success: false, error: "نوع الملف غير مدعوم (PNG, JPG, WebP, GIF فقط)" };
+    }
+
+    const adminSupabase = getSupabaseAdminClient();
+    const ext = file.name.split(".").pop() || "jpg";
+    const fileName = `uploads/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    const { data, error } = await adminSupabase.storage
+        .from("artworks")
+        .upload(fileName, buffer, {
+            cacheControl: "3600",
+            upsert: false,
+            contentType: file.type,
+        });
+
+    if (error) {
+        console.error("[uploadArtworkImage]", error);
+        return { success: false, error: error.message };
+    }
+
+    const { data: { publicUrl } } = adminSupabase.storage.from("artworks").getPublicUrl(data.path);
+    return { success: true, url: publicUrl };
 }
 
 // ─── WRITE ACTIONS ───────────────────────────────────────────

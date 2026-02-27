@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:fix": "bash scripts/dev.sh",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -12,6 +13,7 @@
     "@clerk/localizations": "^3.35.3",
     "@clerk/nextjs": "^6.37.3",
     "@hookform/resolvers": "^5.2.2",
+    "@stripe/stripe-js": "^8.8.0",
     "@studio-freight/react-lenis": "^0.0.47",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.95.3",
@@ -24,6 +26,8 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.71.1",
+    "resend": "^6.9.2",
+    "stripe": "^20.4.0",
     "tailwind-merge": "^2.3.0",
     "uuid": "^13.0.0",
     "zod": "^4.3.6",

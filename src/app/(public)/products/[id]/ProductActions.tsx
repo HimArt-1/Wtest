@@ -1,15 +1,50 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useCartStore } from "@/stores/cartStore";
-import { ShoppingBag, Share2 } from "lucide-react";
+import { ShoppingBag, Share2, Heart, Bookmark } from "lucide-react";
 import { motion } from "framer-motion";
+import {
+    addToWishlist,
+    removeFromWishlist,
+    isInWishlist,
+    likeProduct,
+    unlikeProduct,
+    isProductLiked,
+    getProductLikesCount,
+} from "@/app/actions/social";
+import { useRouter } from "next/navigation";
+import { SignedIn, SignedOut } from "@clerk/nextjs";
+import Link from "next/link";
 
 export function ProductActions({ product }: { product: any }) {
     const addItem = useCartStore((s) => s.addItem);
-    const [selectedSize, setSelectedSize] = useState<string>(
-        product.sizes?.[0] || ""
-    );
+    const router = useRouter();
+    const [selectedSize, setSelectedSize] = useState<string>(product.sizes?.[0] || "");
+    const [inWishlist, setInWishlist] = useState(false);
+    const [liked, setLiked] = useState(false);
+    const [likesCount, setLikesCount] = useState(0);
+    const [loadingWishlist, setLoadingWishlist] = useState(false);
+    const [loadingLike, setLoadingLike] = useState(false);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    useEffect(() => {
+        if (mounted && product.id) {
+            Promise.all([
+                isInWishlist(product.id),
+                isProductLiked(product.id),
+                getProductLikesCount(product.id),
+            ]).then(([w, l, c]) => {
+                setInWishlist(w);
+                setLiked(l);
+                setLikesCount(c);
+            });
+        }
+    }, [mounted, product.id]);
 
     const handleShare = async () => {
         if (navigator.share) {
@@ -21,6 +56,29 @@ export function ProductActions({ product }: { product: any }) {
         } else {
             await navigator.clipboard.writeText(window.location.href);
             alert("تم نسخ الرابط!");
+        }
+    };
+
+    const handleWishlist = async () => {
+        if (loadingWishlist) return;
+        setLoadingWishlist(true);
+        const result = inWishlist ? await removeFromWishlist(product.id) : await addToWishlist(product.id);
+        setLoadingWishlist(false);
+        if (result.success) {
+            setInWishlist(!inWishlist);
+            router.refresh();
+        }
+    };
+
+    const handleLike = async () => {
+        if (loadingLike) return;
+        setLoadingLike(true);
+        const result = liked ? await unlikeProduct(product.id) : await likeProduct(product.id);
+        setLoadingLike(false);
+        if (result.success) {
+            setLiked(!liked);
+            setLikesCount((c) => (liked ? c - 1 : c + 1));
+            router.refresh();
         }
     };
 
@@ -68,11 +126,58 @@ export function ProductActions({ product }: { product: any }) {
                     <ShoppingBag className="w-4 h-4" />
                     {product.in_stock ? "أضف للسلة" : "غير متوفر"}
                 </motion.button>
+
+                <SignedIn>
+                    <motion.button
+                        onClick={handleWishlist}
+                        disabled={loadingWishlist}
+                        className={`p-3.5 border rounded-2xl transition-colors ${
+                            inWishlist ? "border-gold/40 bg-gold/10 text-gold" : "border-white/[0.08] text-fg/40 hover:text-gold hover:border-gold/30"
+                        }`}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        title={inWishlist ? "إزالة من المحفوظات" : "إضافة للمحفوظات"}
+                    >
+                        <Bookmark className={`w-5 h-5 ${inWishlist ? "fill-current" : ""}`} />
+                    </motion.button>
+                    <motion.button
+                        onClick={handleLike}
+                        disabled={loadingLike}
+                        className={`p-3.5 border rounded-2xl transition-colors flex items-center gap-1 ${
+                            liked ? "border-red-500/40 bg-red-500/10 text-red-400" : "border-white/[0.08] text-fg/40 hover:text-red-400 hover:border-red-500/20"
+                        }`}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        title={liked ? "إلغاء الإعجاب" : "إعجاب"}
+                    >
+                        <Heart className={`w-5 h-5 ${liked ? "fill-current" : ""}`} />
+                        {likesCount > 0 && <span className="text-xs">{likesCount}</span>}
+                    </motion.button>
+                </SignedIn>
+                <SignedOut>
+                    <Link
+                        href={`/sign-in?redirect_url=/products/${product.id}`}
+                        className="p-3.5 border border-white/[0.08] rounded-2xl text-fg/40 hover:text-gold hover:border-gold/30 transition-colors inline-block"
+                        title="إضافة للمحفوظات"
+                    >
+                        <Bookmark className="w-5 h-5" />
+                    </Link>
+                    <Link
+                        href={`/sign-in?redirect_url=/products/${product.id}`}
+                        className="p-3.5 border border-white/[0.08] rounded-2xl text-fg/40 hover:text-red-400 hover:border-red-500/20 transition-colors inline-flex items-center gap-1"
+                        title="إعجاب"
+                    >
+                        <Heart className="w-5 h-5" />
+                        {likesCount > 0 && <span className="text-xs">{likesCount}</span>}
+                    </Link>
+                </SignedOut>
+
                 <motion.button
                     onClick={handleShare}
                     className="p-3.5 border border-white/[0.08] rounded-2xl text-fg/40 hover:text-gold hover:border-gold/30 transition-colors"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
+                    title="مشاركة الرابط"
                 >
                     <Share2 className="w-5 h-5" />
                 </motion.button>

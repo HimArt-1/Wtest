@@ -5,18 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingBag, X, Plus, Minus, Trash2, ArrowRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-
 export function CartSheet() {
     const { items, isOpen, toggleCart, removeItem, updateQuantity, getCartTotal } = useCartStore();
-    const [isMounted, setIsMounted] = useState(false);
-
-    // Prevent hydration mismatch
-    useEffect(() => {
-        setIsMounted(true);
-    }, []);
-
-    if (!isMounted) return null;
 
     return (
         <AnimatePresence>

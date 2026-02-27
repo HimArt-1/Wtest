@@ -1,5 +1,6 @@
-import { getAdminProducts } from "@/app/actions/settings";
+import { getAdminProducts, getAdminArtistsForSelect } from "@/app/actions/settings";
 import { ProductsClient } from "./ProductsClient";
+import { AdminHeader } from "@/components/admin/AdminHeader";
 
 interface PageProps {
     searchParams: Promise<{ page?: string; type?: string }>;
@@ -10,14 +11,17 @@ export default async function AdminProductsPage({ searchParams }: PageProps) {
     const page = Number(params.page) || 1;
     const type = params.type || "all";
 
-    const { data: products, count, totalPages } = await getAdminProducts(page, type);
+    const [{ data: products, count, totalPages }, artists] = await Promise.all([
+        getAdminProducts(page, type),
+        getAdminArtistsForSelect(),
+    ]);
 
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold text-fg">إدارة المنتجات</h1>
-                <p className="text-fg/40 mt-1">عرض وتعديل المنتجات والأسعار والمخزون.</p>
-            </div>
+            <AdminHeader
+                title="إدارة المنتجات"
+                subtitle="عرض وإضافة وتعديل وحذف المنتجات والأسعار والمخزون."
+            />
 
             <ProductsClient
                 products={products}
@@ -25,6 +29,7 @@ export default async function AdminProductsPage({ searchParams }: PageProps) {
                 totalPages={totalPages}
                 currentPage={page}
                 currentType={type}
+                artists={artists}
             />
         </div>
     );

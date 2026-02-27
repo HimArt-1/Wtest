@@ -5,7 +5,9 @@
 
 // ─── Enums ───────────────────────────────────────────────
 
-export type UserRole = "admin" | "artist" | "buyer" | "guest";
+export type UserRole = "admin" | "wushsha" | "subscriber";
+/** مستويات الوشّاي (1–5) */
+export type WushshaLevel = 1 | 2 | 3 | 4 | 5;
 export type ArtworkStatus = "draft" | "pending" | "published" | "rejected" | "archived";
 export type ProductType = "print" | "apparel" | "digital" | "nft" | "original";
 export type OrderStatus = "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled" | "refunded";
@@ -31,6 +33,7 @@ export interface Profile extends Timestamps {
     avatar_url: string | null;
     cover_url: string | null;
     role: UserRole;
+    wushsha_level?: WushshaLevel | null;  // 1–5 للوشّاي فقط
     website: string | null;
     social_links: SocialLinks | null;
     is_verified: boolean;
@@ -164,6 +167,33 @@ export interface Application extends Timestamps {
 export interface ArtworkLike {
     user_id: string;              // FK → profiles.id
     artwork_id: string;           // FK → artworks.id
+    created_at: string;
+}
+
+// ─── Artist Follows ───────────────────────────────────────
+
+export interface ArtistFollow {
+    id: string;
+    follower_id: string;
+    artist_id: string;
+    created_at: string;
+}
+
+// ─── Product Wishlist ────────────────────────────────────
+
+export interface ProductWishlistItem {
+    id: string;
+    user_id: string;
+    product_id: string;
+    created_at: string;
+}
+
+// ─── Product Likes ───────────────────────────────────────
+
+export interface ProductLike {
+    id: string;
+    user_id: string;
+    product_id: string;
     created_at: string;
 }
 

@@ -1,15 +1,16 @@
 import { getCategories } from "@/app/actions/settings";
 import { CategoriesClient } from "./CategoriesClient";
+import { AdminHeader } from "@/components/admin/AdminHeader";
 
 export default async function AdminCategoriesPage() {
     const { data: categories } = await getCategories();
 
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold text-fg">إدارة الفئات</h1>
-                <p className="text-fg/40 mt-1">إضافة وتعديل وحذف فئات الأعمال الفنية.</p>
-            </div>
+            <AdminHeader
+                title="إدارة الفئات"
+                subtitle="إضافة وتعديل وحذف فئات الأعمال الفنية."
+            />
 
             <CategoriesClient categories={categories} />
         </div>

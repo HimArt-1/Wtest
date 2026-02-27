@@ -7,6 +7,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { currentUser } from "@clerk/nextjs/server";
+import { sendOrderConfirmationEmail } from "@/lib/email";
 
 function getAdminClient() {
     return createClient(
@@ -39,7 +40,8 @@ const TAX_RATE = 0.15;
 
 export async function createOrder(
     items: OrderItemInput[],
-    shippingAddress: ShippingAddressInput
+    shippingAddress: ShippingAddressInput,
+    options?: { paymentMethod?: "cod" | "stripe" }
 ) {
     // 1. Verify authenticated user
     const user = await currentUser();
@@ -66,9 +68,9 @@ export async function createOrder(
             .from("profiles")
             .insert({
                 clerk_id: user.id,
-                display_name: user.firstName || user.username || "مشتري",
+                display_name: user.firstName || user.username || "مشترك",
                 username: user.username || `user_${user.id.slice(-8)}`,
-                role: "buyer",
+                role: "subscriber",
             })
             .select("id")
             .single();
@@ -84,7 +86,11 @@ export async function createOrder(
     const tax = subtotal * TAX_RATE;
     const total = subtotal + SHIPPING_COST + tax;
 
+    const isCod = options?.paymentMethod !== "stripe";
+
     // 4. Create order
+    // COD: مؤكد — الدفع عند الاستلام
+    // Stripe: معلق — ينتظر تأكيد الدفع عبر Webhook
     const { data: order, error: orderError } = await supabase
         .from("orders")
         .insert({
@@ -95,6 +101,8 @@ export async function createOrder(
             total,
             currency: "SAR",
             shipping_address: shippingAddress,
+            status: isCod ? "confirmed" : "pending",
+            payment_status: isCod ? "pending" : "pending",
         })
         .select("id, order_number")
         .single();
@@ -123,15 +131,64 @@ export async function createOrder(
         return {
             success: true,
             order_number: order.order_number,
+            order_id: order.id,
+            total,
             warning: "تم إنشاء الطلب لكن بعض العناصر لم تُسجل",
         };
+    }
+
+    if (isCod) {
+        const email = user.emailAddresses?.[0]?.emailAddress;
+        const name = shippingAddress.name || user.firstName || "عميل";
+        if (email) {
+            sendOrderConfirmationEmail(email, name, order.order_number, total).catch(console.error);
+        }
     }
 
     return {
         success: true,
         order_number: order.order_number,
+        order_id: order.id,
         total,
     };
+}
+
+// ─── Confirm Order Payment (Stripe webhook) ──────────────────
+
+export async function confirmOrderPayment(
+    orderId: string,
+    options?: { customerEmail?: string }
+) {
+    const supabase = getAdminClient();
+
+    const { data: order } = await supabase
+        .from("orders")
+        .select("order_number, total, shipping_address")
+        .eq("id", orderId)
+        .single();
+
+    const { error } = await supabase
+        .from("orders")
+        .update({
+            payment_status: "paid",
+            status: "confirmed",
+            updated_at: new Date().toISOString(),
+        })
+        .eq("id", orderId);
+
+    if (error) {
+        console.error("[confirmOrderPayment]", error);
+        return { success: false };
+    }
+
+    const ord = order as { order_number: string; total: number; shipping_address?: { name?: string } } | null;
+    const email = options?.customerEmail;
+    if (ord && email) {
+        const name = ord.shipping_address?.name || "عميل";
+        sendOrderConfirmationEmail(email, name, ord.order_number, ord.total).catch(console.error);
+    }
+
+    return { success: true };
 }
 
 // ─── Get User Orders ────────────────────────────────────────

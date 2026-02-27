@@ -1,16 +1,33 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useTransition, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { StatusBadge } from "@/components/admin/StatusBadge";
-import { updateUserRole } from "@/app/actions/admin";
-import { motion } from "framer-motion";
+import {
+    updateUserRole,
+    updateUserWushshaLevel,
+    deleteUser,
+    deleteUsers,
+    createUser,
+    updateUser,
+} from "@/app/actions/admin";
+import { motion, AnimatePresence } from "framer-motion";
 import {
     Search,
     ChevronLeft,
     ChevronRight,
     Shield,
     Loader2,
+    Plus,
+    Pencil,
+    Trash2,
+    Users,
+    Palette,
+    UserCheck,
+    UserX,
+    X,
+    AlertTriangle,
 } from "lucide-react";
 
 interface UsersClientProps {
@@ -20,15 +37,22 @@ interface UsersClientProps {
     currentPage: number;
     currentRole: string;
     currentSearch: string;
+    stats?: { total: number; wushsha: number; subscriber: number; admin: number };
 }
 
 const roles = [
     { value: "all", label: "الكل" },
-    { value: "admin", label: "مسؤول" },
-    { value: "artist", label: "فنان" },
-    { value: "buyer", label: "مشتري" },
-    { value: "guest", label: "زائر" },
+    { value: "admin", label: "مشرف" },
+    { value: "wushsha", label: "وشّاي" },
+    { value: "subscriber", label: "مشترك" },
 ];
+
+const roleOptions = [
+    { value: "admin", label: "مشرف" },
+    { value: "wushsha", label: "وشّاي" },
+    { value: "subscriber", label: "مشترك" },
+];
+const ROLE_VALUES = new Set(roleOptions.map((r) => r.value));
 
 export function UsersClient({
     users,
@@ -37,11 +61,19 @@ export function UsersClient({
     currentPage,
     currentRole,
     currentSearch,
+    stats = { total: 0, wushsha: 0, subscriber: 0, admin: 0 },
 }: UsersClientProps) {
     const router = useRouter();
     const [search, setSearch] = useState(currentSearch);
     const [isPending, startTransition] = useTransition();
     const [changingRole, setChangingRole] = useState<string | null>(null);
+    const [changingLevel, setChangingLevel] = useState<string | null>(null);
+    const [deletingId, setDeletingId] = useState<string | null>(null);
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [editingUser, setEditingUser] = useState<any | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [success, setSuccess] = useState<string | null>(null);
 
     const navigate = (params: Record<string, string>) => {
         const sp = new URLSearchParams();
@@ -59,31 +91,149 @@ export function UsersClient({
     };
 
     const handleRoleChange = async (userId: string, newRole: string) => {
-        if (!confirm(`هل أنت متأكد من تغيير الدور إلى "${newRole}"؟`)) return;
         setChangingRole(userId);
-        await updateUserRole(userId, newRole);
+        setError(null);
+        const res = await updateUserRole(userId, newRole);
         setChangingRole(null);
+        if (res.success) {
+            setSuccess("تم تغيير الدور بنجاح");
+            setTimeout(() => setSuccess(null), 3000);
+            router.refresh();
+        } else {
+            setError(res.error || "فشل تغيير الدور");
+        }
+    };
+
+    const handleLevelChange = async (userId: string, level: number) => {
+        setChangingLevel(userId);
+        await updateUserWushshaLevel(userId, level);
+        setChangingLevel(null);
         router.refresh();
+    };
+
+    const handleDelete = async (user: any) => {
+        if (!confirm(`هل أنت متأكد من حذف المستخدم "${user.display_name}"؟\n\nسيتم حذف جميع بياناته المرتبطة (أعمال، منتجات، طلبات).`)) return;
+        setDeletingId(user.id);
+        setError(null);
+        const res = await deleteUser(user.id);
+        setDeletingId(null);
+        if (res.success) {
+            setSuccess("تم حذف المستخدم بنجاح");
+            setTimeout(() => setSuccess(null), 3000);
+            router.refresh();
+        } else {
+            setError(res.error || "فشل الحذف");
+        }
+    };
+
+    const toggleSelect = (id: string) => {
+        setSelectedIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
+    };
+
+    const toggleSelectAll = () => {
+        if (selectedIds.size === users.length) {
+            setSelectedIds(new Set());
+        } else {
+            setSelectedIds(new Set(users.map((u) => u.id)));
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        if (selectedIds.size === 0) return;
+        if (!confirm(`هل أنت متأكد من حذف ${selectedIds.size} مستخدم؟\n\nسيتم حذف جميع بياناتهم المرتبطة.`)) return;
+        setError(null);
+        const res = await deleteUsers(Array.from(selectedIds));
+        setSelectedIds(new Set());
+        if (res.success) {
+            setSuccess(`تم حذف ${res.deleted} مستخدم بنجاح`);
+            setTimeout(() => setSuccess(null), 3000);
+            router.refresh();
+        } else {
+            setError(res.error || "فشل الحذف");
+        }
+    };
+
+    const clearFeedback = () => {
+        setError(null);
+        setSuccess(null);
     };
 
     return (
         <div className="space-y-6">
-            {/* ─── Filters ─── */}
+            {/* ─── Stats Cards ─── */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {[
+                    { label: "إجمالي المستخدمين", value: stats.total, icon: Users, color: "from-gold/20 to-gold/5" },
+                    { label: "الوشّايون", value: stats.wushsha, icon: Palette, color: "from-accent/20 to-accent/5" },
+                    { label: "المشتركون", value: stats.subscriber, icon: UserCheck, color: "from-forest/20 to-forest/5" },
+                    { label: "المشرفون", value: stats.admin, icon: UserX, color: "from-gray-500/20 to-gray-500/5" },
+                ].map((s, i) => (
+                    <motion.div
+                        key={s.label}
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                        className="rounded-2xl border border-white/[0.06] bg-surface/50 backdrop-blur-sm p-5"
+                    >
+                        <div className={`inline-flex p-2.5 rounded-xl bg-gradient-to-br ${s.color} mb-3`}>
+                            <s.icon className="w-5 h-5 text-fg/70" />
+                        </div>
+                        <p className="text-fg/40 text-xs font-medium">{s.label}</p>
+                        <p className="text-2xl font-bold text-fg mt-0.5">{s.value}</p>
+                    </motion.div>
+                ))}
+            </div>
+
+            {/* ─── Toolbar ─── */}
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-                {/* Role Tabs */}
-                <div className="flex gap-1 p-1 bg-surface/50 rounded-xl border border-white/[0.06]">
-                    {roles.map((r) => (
-                        <button
-                            key={r.value}
-                            onClick={() => navigate({ role: r.value, search, page: "1" })}
-                            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${currentRole === r.value
+                <div className="flex flex-wrap items-center gap-3">
+                    <Link
+                        href="/dashboard/users-clerk"
+                        className="flex items-center gap-2 px-4 py-2.5 text-fg/50 hover:text-gold border border-white/[0.06] hover:border-gold/20 rounded-xl text-sm font-medium transition-all"
+                    >
+                        <UserCheck className="w-4 h-4" />
+                        مستخدمي Clerk
+                    </Link>
+                    {/* Role Tabs */}
+                    <div className="flex gap-1 p-1 bg-surface/50 rounded-xl border border-white/[0.06]">
+                        {roles.map((r) => (
+                            <button
+                                key={r.value}
+                                onClick={() => navigate({ role: r.value, search, page: "1" })}
+                                className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${currentRole === r.value
                                     ? "bg-gold/10 text-gold"
                                     : "text-fg/40 hover:text-fg/60 hover:bg-white/[0.03]"
-                                }`}
+                                    }`}
+                            >
+                                {r.label}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Add User */}
+                    <button
+                        onClick={() => { setShowAddModal(true); clearFeedback(); }}
+                        className="flex items-center gap-2 px-4 py-2.5 bg-gold/10 text-gold border border-gold/20 rounded-xl text-sm font-bold hover:bg-gold/20 transition-all"
+                    >
+                        <Plus className="w-4 h-4" />
+                        إضافة مستخدم
+                    </button>
+
+                    {/* Bulk Delete */}
+                    {selectedIds.size > 0 && (
+                        <button
+                            onClick={handleBulkDelete}
+                            className="flex items-center gap-2 px-4 py-2.5 bg-red-500/10 text-red-400 border border-red-500/20 rounded-xl text-sm font-bold hover:bg-red-500/20 transition-all"
                         >
-                            {r.label}
+                            <Trash2 className="w-4 h-4" />
+                            حذف المحدد ({selectedIds.size})
                         </button>
-                    ))}
+                    )}
                 </div>
 
                 {/* Search */}
@@ -93,11 +243,42 @@ export function UsersClient({
                         type="text"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        placeholder="بحث بالاسم..."
+                        placeholder="بحث بالاسم أو اسم المستخدم..."
                         className="w-64 pl-4 pr-10 py-2.5 bg-surface/50 border border-white/[0.06] rounded-xl text-sm text-fg placeholder:text-fg/20 focus:outline-none focus:border-gold/30 transition-colors"
                     />
                 </form>
             </div>
+
+            {/* ─── Feedback Messages ─── */}
+            <AnimatePresence>
+                {error && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0 }}
+                        className="flex items-center gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400"
+                    >
+                        <AlertTriangle className="w-5 h-5 shrink-0" />
+                        <span className="text-sm">{error}</span>
+                        <button onClick={() => setError(null)} className="mr-auto p-1 hover:bg-red-500/20 rounded">
+                            <X className="w-4 h-4" />
+                        </button>
+                    </motion.div>
+                )}
+                {success && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0 }}
+                        className="flex items-center gap-3 p-4 rounded-xl bg-forest/10 border border-forest/20 text-forest"
+                    >
+                        <span className="text-sm">{success}</span>
+                        <button onClick={() => setSuccess(null)} className="mr-auto p-1 hover:bg-forest/20 rounded">
+                            <X className="w-4 h-4" />
+                        </button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* ─── Table ─── */}
             <div className="rounded-2xl border border-white/[0.06] bg-surface/50 backdrop-blur-sm overflow-hidden">
@@ -110,12 +291,20 @@ export function UsersClient({
                     <table className="w-full text-sm">
                         <thead>
                             <tr className="border-b border-white/[0.06]">
+                                <th className="text-right px-4 py-3.5">
+                                    <input
+                                        type="checkbox"
+                                        checked={users.length > 0 && selectedIds.size === users.length}
+                                        onChange={toggleSelectAll}
+                                        className="rounded border-white/20"
+                                    />
+                                </th>
                                 <th className="text-right px-6 py-3.5 text-fg/30 font-medium text-xs">المستخدم</th>
                                 <th className="text-right px-4 py-3.5 text-fg/30 font-medium text-xs">اسم المستخدم</th>
                                 <th className="text-right px-4 py-3.5 text-fg/30 font-medium text-xs">الدور</th>
                                 <th className="text-right px-4 py-3.5 text-fg/30 font-medium text-xs">التحقق</th>
                                 <th className="text-right px-4 py-3.5 text-fg/30 font-medium text-xs">تاريخ الانضمام</th>
-                                <th className="text-right px-6 py-3.5 text-fg/30 font-medium text-xs">إجراء</th>
+                                <th className="text-right px-6 py-3.5 text-fg/30 font-medium text-xs">إجراءات</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -124,22 +313,50 @@ export function UsersClient({
                                     key={user.id}
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
-                                    transition={{ delay: i * 0.03 }}
-                                    className="border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors"
+                                    transition={{ delay: i * 0.02 }}
+                                    className="border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors group"
                                 >
+                                    <td className="px-4 py-3.5">
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedIds.has(user.id)}
+                                            onChange={() => toggleSelect(user.id)}
+                                            className="rounded border-white/20"
+                                        />
+                                    </td>
                                     <td className="px-6 py-3.5">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-gold/10 flex items-center justify-center text-gold text-xs font-bold shrink-0">
+                                            <div className="w-10 h-10 rounded-xl bg-gold/10 flex items-center justify-center text-gold text-sm font-bold shrink-0">
                                                 {user.display_name?.[0] || "؟"}
                                             </div>
-                                            <span className="font-medium text-fg truncate max-w-[160px]">{user.display_name}</span>
+                                            <div>
+                                                <span className="font-medium text-fg truncate max-w-[140px] block">{user.display_name}</span>
+                                                <span className="text-fg/30 text-[10px] font-mono truncate max-w-[120px] block">{user.clerk_id?.slice(0, 16)}…</span>
+                                            </div>
                                         </div>
                                     </td>
                                     <td className="px-4 py-3.5 text-fg/50 font-mono text-xs">@{user.username}</td>
-                                    <td className="px-4 py-3.5"><StatusBadge status={user.role} type="role" /></td>
+                                    <td className="px-4 py-3.5">
+                                        <div className="flex items-center gap-2">
+                                            <StatusBadge status={user.role} type="role" />
+                                            {user.role === "wushsha" && (
+                                                <select
+                                                    value={user.wushsha_level ?? 1}
+                                                    onChange={(e) => handleLevelChange(user.id, Number(e.target.value))}
+                                                    disabled={changingLevel === user.id}
+                                                    className="bg-white/[0.03] border border-white/[0.08] rounded-lg px-2 py-1 text-[10px] text-fg focus:outline-none focus:border-gold/30 disabled:opacity-50 cursor-pointer w-12"
+                                                    title="مستوى الوشّاي"
+                                                >
+                                                    {[1, 2, 3, 4, 5].map((l) => (
+                                                        <option key={l} value={l}>م{l}</option>
+                                                    ))}
+                                                </select>
+                                            )}
+                                        </div>
+                                    </td>
                                     <td className="px-4 py-3.5">
                                         {user.is_verified ? (
-                                            <Shield className="w-4 h-4 text-gold" />
+                                            <span title="موثق"><Shield className="w-4 h-4 text-gold" /></span>
                                         ) : (
                                             <span className="text-fg/20 text-xs">—</span>
                                         )}
@@ -148,24 +365,63 @@ export function UsersClient({
                                         {new Date(user.created_at).toLocaleDateString("ar-SA")}
                                     </td>
                                     <td className="px-6 py-3.5">
-                                        <select
-                                            value={user.role}
-                                            onChange={(e) => handleRoleChange(user.id, e.target.value)}
-                                            disabled={changingRole === user.id}
-                                            className="bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-1.5 text-xs text-fg focus:outline-none focus:border-gold/30 disabled:opacity-50 cursor-pointer"
-                                        >
-                                            <option value="admin">مسؤول</option>
-                                            <option value="artist">فنان</option>
-                                            <option value="buyer">مشتري</option>
-                                            <option value="guest">زائر</option>
-                                        </select>
+                                        <div className="flex items-center gap-2">
+                                            <select
+                                                value={user.role}
+                                                onChange={(e) => {
+                                                    const v = e.target.value;
+                                                    if (v === "__custom__") {
+                                                        const custom = prompt("أدخل الدور المطلوب:");
+                                                        if (custom?.trim()) handleRoleChange(user.id, custom.trim());
+                                                    } else {
+                                                        handleRoleChange(user.id, v);
+                                                    }
+                                                }}
+                                                disabled={changingRole === user.id}
+                                                className="bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-1.5 text-xs text-fg focus:outline-none focus:border-gold/30 disabled:opacity-50 cursor-pointer min-w-[100px]"
+                                            >
+                                                {roleOptions.map((r) => (
+                                                    <option key={r.value} value={r.value}>{r.label}</option>
+                                                ))}
+                                                {user.role && !ROLE_VALUES.has(user.role) && (
+                                                    <option value={user.role}>{user.role}</option>
+                                                )}
+                                                <option value="__custom__">— أدخل دوراً —</option>
+                                            </select>
+                                            <button
+                                                onClick={() => { setEditingUser(user); clearFeedback(); }}
+                                                className="p-2 rounded-lg text-fg/40 hover:text-gold hover:bg-gold/10 transition-all"
+                                                title="تعديل"
+                                            >
+                                                <Pencil className="w-4 h-4" />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(user)}
+                                                disabled={deletingId === user.id}
+                                                className="p-2 rounded-lg text-fg/40 hover:text-red-400 hover:bg-red-500/10 transition-all disabled:opacity-50"
+                                                title="حذف"
+                                            >
+                                                {deletingId === user.id ? (
+                                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                                ) : (
+                                                    <Trash2 className="w-4 h-4" />
+                                                )}
+                                            </button>
+                                        </div>
                                     </td>
                                 </motion.tr>
                             ))}
                             {users.length === 0 && (
                                 <tr>
-                                    <td colSpan={6} className="text-center py-16 text-fg/20 text-sm">
-                                        لا توجد نتائج
+                                    <td colSpan={7} className="text-center py-20 text-fg/20">
+                                        <Users className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                                        <p className="text-sm">لا يوجد مستخدمون</p>
+                                        <button
+                                            onClick={() => setShowAddModal(true)}
+                                            className="mt-3 text-gold hover:text-gold-light text-sm font-medium"
+                                        >
+                                            إضافة أول مستخدم
+                                        </button>
                                     </td>
                                 </tr>
                             )}
@@ -199,6 +455,373 @@ export function UsersClient({
                     </div>
                 </div>
             )}
+
+            {/* ─── Add User Modal ─── */}
+            <AddUserModal
+                open={showAddModal}
+                onClose={() => setShowAddModal(false)}
+                onSuccess={() => {
+                    setShowAddModal(false);
+                    setSuccess("تم إضافة المستخدم بنجاح");
+                    setTimeout(() => setSuccess(null), 3000);
+                    router.refresh();
+                }}
+                onError={(msg) => setError(msg)}
+            />
+
+            {/* ─── Edit User Modal ─── */}
+            <EditUserModal
+                user={editingUser}
+                onClose={() => setEditingUser(null)}
+                onSuccess={() => {
+                    setEditingUser(null);
+                    setSuccess("تم تحديث المستخدم بنجاح");
+                    setTimeout(() => setSuccess(null), 3000);
+                    router.refresh();
+                }}
+                onError={(msg) => setError(msg)}
+            />
+        </div>
+    );
+}
+
+// ─── Add User Modal ─────────────────────────────────────────
+
+function AddUserModal({
+    open,
+    onClose,
+    onSuccess,
+    onError,
+}: {
+    open: boolean;
+    onClose: () => void;
+    onSuccess: () => void;
+    onError: (msg: string) => void;
+}) {
+    const [loading, setLoading] = useState(false);
+    const [form, setForm] = useState({
+        clerk_id: "",
+        display_name: "",
+        username: "",
+        role: "subscriber",
+        bio: "",
+        wushsha_level: 1,
+    });
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!form.clerk_id.trim() || !form.display_name.trim() || !form.username.trim()) {
+            onError("جميع الحقول المطلوبة يجب تعبئتها");
+            return;
+        }
+        setLoading(true);
+        onError("");
+        const res = await createUser({
+            clerk_id: form.clerk_id,
+            display_name: form.display_name,
+            username: form.username,
+            role: form.role,
+            bio: form.bio || undefined,
+            wushsha_level: form.role === "wushsha" ? form.wushsha_level : undefined,
+        });
+        setLoading(false);
+        if (res.success) {
+            setForm({ clerk_id: "", display_name: "", username: "", role: "subscriber", bio: "", wushsha_level: 1 });
+            onSuccess();
+        } else {
+            onError(res.error || "فشل الإضافة");
+        }
+    };
+
+    if (!open) return null;
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-lg rounded-2xl border border-white/[0.08] bg-bg shadow-2xl"
+            >
+                <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
+                    <h2 className="text-lg font-bold text-fg">إضافة مستخدم جديد</h2>
+                    <button onClick={onClose} className="p-2 rounded-lg hover:bg-white/5 text-fg/40">
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
+                <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                    <div>
+                        <label className="block text-xs font-medium text-fg/50 mb-1.5">معرف Clerk (clerk_id) *</label>
+                        <input
+                            type="text"
+                            value={form.clerk_id}
+                            onChange={(e) => setForm((f) => ({ ...f, clerk_id: e.target.value }))}
+                            placeholder="user_xxxxxxxx"
+                            className="w-full px-4 py-2.5 bg-white/[0.03] border border-white/[0.08] rounded-xl text-sm text-fg placeholder:text-fg/20 focus:outline-none focus:border-gold/30"
+                            dir="ltr"
+                        />
+                        <p className="text-[10px] text-fg/30 mt-1">من Clerk Dashboard → Users → User ID</p>
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-fg/50 mb-1.5">الاسم *</label>
+                        <input
+                            type="text"
+                            value={form.display_name}
+                            onChange={(e) => setForm((f) => ({ ...f, display_name: e.target.value }))}
+                            placeholder="الاسم المعروض"
+                            className="w-full px-4 py-2.5 bg-white/[0.03] border border-white/[0.08] rounded-xl text-sm text-fg placeholder:text-fg/20 focus:outline-none focus:border-gold/30"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-fg/50 mb-1.5">اسم المستخدم *</label>
+                        <input
+                            type="text"
+                            value={form.username}
+                            onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))}
+                            placeholder="username"
+                            className="w-full px-4 py-2.5 bg-white/[0.03] border border-white/[0.08] rounded-xl text-sm text-fg placeholder:text-fg/20 focus:outline-none focus:border-gold/30"
+                            dir="ltr"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-fg/50 mb-1.5">الدور</label>
+                        <input
+                            type="text"
+                            value={form.role}
+                            onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}
+                            list="add-role-list"
+                            placeholder="مثال: subscriber, wushsha, admin..."
+                            className="w-full px-4 py-2.5 bg-white/[0.03] border border-white/[0.08] rounded-xl text-sm text-fg placeholder:text-fg/20 focus:outline-none focus:border-gold/30"
+                        />
+                        <datalist id="add-role-list">
+                            {roleOptions.map((r) => (
+                                <option key={r.value} value={r.value} />
+                            ))}
+                        </datalist>
+                        <p className="text-[10px] text-fg/30 mt-1">أدخل أي دور — أو اختر من القائمة المقترحة</p>
+                    </div>
+                    {form.role === "wushsha" && (
+                        <div>
+                            <label className="block text-xs font-medium text-fg/50 mb-1.5">مستوى الوشّاي</label>
+                            <select
+                                value={form.wushsha_level}
+                                onChange={(e) => setForm((f) => ({ ...f, wushsha_level: Number(e.target.value) }))}
+                                className="w-full px-4 py-2.5 bg-white/[0.03] border border-white/[0.08] rounded-xl text-sm text-fg focus:outline-none focus:border-gold/30"
+                            >
+                                {[1, 2, 3, 4, 5].map((l) => (
+                                    <option key={l} value={l}>المستوى {l}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
+                    <div>
+                        <label className="block text-xs font-medium text-fg/50 mb-1.5">نبذة (اختياري)</label>
+                        <textarea
+                            value={form.bio}
+                            onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))}
+                            placeholder="نبذة قصيرة..."
+                            rows={2}
+                            className="w-full px-4 py-2.5 bg-white/[0.03] border border-white/[0.08] rounded-xl text-sm text-fg placeholder:text-fg/20 focus:outline-none focus:border-gold/30 resize-none"
+                        />
+                    </div>
+                    <div className="flex gap-3 pt-2">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="flex-1 py-2.5 rounded-xl border border-white/[0.08] text-fg/60 hover:bg-white/[0.03] transition-colors"
+                        >
+                            إلغاء
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="flex-1 py-2.5 rounded-xl bg-gold/20 text-gold font-bold hover:bg-gold/30 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                        >
+                            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                            إضافة
+                        </button>
+                    </div>
+                </form>
+            </motion.div>
+        </div>
+    );
+}
+
+// ─── Edit User Modal ───────────────────────────────────────
+
+function EditUserModal({
+    user,
+    onClose,
+    onSuccess,
+    onError,
+}: {
+    user: any | null;
+    onClose: () => void;
+    onSuccess: () => void;
+    onError: (msg: string) => void;
+}) {
+    const [loading, setLoading] = useState(false);
+    const [form, setForm] = useState({
+        display_name: "",
+        username: "",
+        bio: "",
+        role: "",
+        wushsha_level: 1,
+        is_verified: false,
+        website: "",
+    });
+
+    useEffect(() => {
+        if (user) {
+            setForm({
+                display_name: user.display_name || "",
+                username: user.username || "",
+                bio: user.bio || "",
+                role: user.role || "subscriber",
+                wushsha_level: user.wushsha_level ?? 1,
+                is_verified: user.is_verified ?? false,
+                website: user.website || "",
+            });
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user?.id]);
+
+    if (!user) return null;
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        onError("");
+        const res = await updateUser(user.id, {
+            display_name: form.display_name,
+            username: form.username,
+            bio: form.bio || undefined,
+            role: form.role,
+            wushsha_level: form.role === "wushsha" ? form.wushsha_level : null,
+            is_verified: form.is_verified,
+            website: form.website || null,
+        });
+        setLoading(false);
+        if (res.success) {
+            onSuccess();
+        } else {
+            onError(res.error || "فشل التحديث");
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-lg rounded-2xl border border-white/[0.08] bg-bg shadow-2xl"
+            >
+                <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
+                    <h2 className="text-lg font-bold text-fg">تعديل المستخدم</h2>
+                    <button onClick={onClose} className="p-2 rounded-lg hover:bg-white/5 text-fg/40">
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
+                <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                    <div>
+                        <label className="block text-xs font-medium text-fg/50 mb-1.5">الاسم *</label>
+                        <input
+                            type="text"
+                            value={form.display_name}
+                            onChange={(e) => setForm((f) => ({ ...f, display_name: e.target.value }))}
+                            className="w-full px-4 py-2.5 bg-white/[0.03] border border-white/[0.08] rounded-xl text-sm text-fg focus:outline-none focus:border-gold/30"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-fg/50 mb-1.5">اسم المستخدم *</label>
+                        <input
+                            type="text"
+                            value={form.username}
+                            onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))}
+                            className="w-full px-4 py-2.5 bg-white/[0.03] border border-white/[0.08] rounded-xl text-sm text-fg focus:outline-none focus:border-gold/30"
+                            dir="ltr"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-fg/50 mb-1.5">الدور</label>
+                        <input
+                            type="text"
+                            value={form.role}
+                            onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}
+                            list="edit-role-list"
+                            placeholder="مثال: subscriber, wushsha, admin..."
+                            className="w-full px-4 py-2.5 bg-white/[0.03] border border-white/[0.08] rounded-xl text-sm text-fg placeholder:text-fg/20 focus:outline-none focus:border-gold/30"
+                        />
+                        <datalist id="edit-role-list">
+                            {roleOptions.map((r) => (
+                                <option key={r.value} value={r.value} />
+                            ))}
+                        </datalist>
+                        <p className="text-[10px] text-fg/30 mt-1">أدخل أي دور — أو اختر من القائمة المقترحة</p>
+                    </div>
+                    {form.role === "wushsha" && (
+                        <div>
+                            <label className="block text-xs font-medium text-fg/50 mb-1.5">مستوى الوشّاي</label>
+                            <select
+                                value={form.wushsha_level}
+                                onChange={(e) => setForm((f) => ({ ...f, wushsha_level: Number(e.target.value) }))}
+                                className="w-full px-4 py-2.5 bg-white/[0.03] border border-white/[0.08] rounded-xl text-sm text-fg focus:outline-none focus:border-gold/30"
+                            >
+                                {[1, 2, 3, 4, 5].map((l) => (
+                                    <option key={l} value={l}>المستوى {l}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
+                    <div>
+                        <label className="block text-xs font-medium text-fg/50 mb-1.5">الموقع (اختياري)</label>
+                        <input
+                            type="url"
+                            value={form.website}
+                            onChange={(e) => setForm((f) => ({ ...f, website: e.target.value }))}
+                            placeholder="https://..."
+                            className="w-full px-4 py-2.5 bg-white/[0.03] border border-white/[0.08] rounded-xl text-sm text-fg placeholder:text-fg/20 focus:outline-none focus:border-gold/30"
+                            dir="ltr"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-fg/50 mb-1.5">نبذة</label>
+                        <textarea
+                            value={form.bio}
+                            onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))}
+                            rows={3}
+                            className="w-full px-4 py-2.5 bg-white/[0.03] border border-white/[0.08] rounded-xl text-sm text-fg focus:outline-none focus:border-gold/30 resize-none"
+                        />
+                    </div>
+                    <label className="flex items-center gap-3 cursor-pointer">
+                        <input
+                            type="checkbox"
+                            checked={form.is_verified}
+                            onChange={(e) => setForm((f) => ({ ...f, is_verified: e.target.checked }))}
+                            className="rounded border-white/20"
+                        />
+                        <span className="text-sm text-fg/70">حساب موثق</span>
+                    </label>
+                    <div className="flex gap-3 pt-2">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="flex-1 py-2.5 rounded-xl border border-white/[0.08] text-fg/60 hover:bg-white/[0.03] transition-colors"
+                        >
+                            إلغاء
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="flex-1 py-2.5 rounded-xl bg-gold/20 text-gold font-bold hover:bg-gold/30 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                        >
+                            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Pencil className="w-4 h-4" />}
+                            حفظ
+                        </button>
+                    </div>
+                </form>
+            </motion.div>
         </div>
     );
 }

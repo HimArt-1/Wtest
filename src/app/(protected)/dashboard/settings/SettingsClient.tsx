@@ -10,7 +10,14 @@ import { updateSiteSetting } from "@/app/actions/settings";
 
 interface SettingsProps {
     settings: {
-        visibility: Record<string, boolean>;
+        visibility: {
+            gallery?: boolean;
+            store?: boolean;
+            signup?: boolean;
+            join?: boolean;
+            join_artist?: boolean;
+            ai_section?: boolean;
+        };
         site_info: Record<string, string>;
         shipping: Record<string, number>;
     };
@@ -88,7 +95,14 @@ function Field({
 // ═══════════════════════════════════════════════════════════
 
 export function SettingsClient({ settings }: SettingsProps) {
-    const [visibility, setVisibility] = useState(settings.visibility);
+    const [visibility, setVisibility] = useState({
+        gallery: settings.visibility.gallery ?? false,
+        store: settings.visibility.store ?? false,
+        signup: settings.visibility.signup ?? false,
+        join: settings.visibility.join ?? true,
+        join_artist: settings.visibility.join_artist ?? true,
+        ai_section: settings.visibility.ai_section ?? true,
+    });
     const [siteInfo, setSiteInfo] = useState(settings.site_info);
     const [shipping, setShipping] = useState(settings.shipping);
 
@@ -147,6 +161,11 @@ export function SettingsClient({ settings }: SettingsProps) {
                         label="انضم إلينا (Join Section)"
                         checked={visibility.join}
                         onChange={(v) => setVisibility({ ...visibility, join: v })}
+                    />
+                    <Toggle
+                        label="زر «انضم كفنان» في حساب المشترك"
+                        checked={visibility.join_artist ?? true}
+                        onChange={(v) => setVisibility({ ...visibility, join_artist: v })}
                     />
                     <Toggle
                         label="قسم الذكاء الاصطناعي (AI)"

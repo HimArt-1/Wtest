@@ -1,11 +1,21 @@
 /** @type {import('next').NextConfig} */
+const supabaseHost = process.env.NEXT_PUBLIC_SUPABASE_URL
+  ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname
+  : '';
+
 const nextConfig = {
   images: {
-    domains: ['images.unsplash.com', 'plus.unsplash.com', 'placeholder.com'],
+    domains: [
+      'images.unsplash.com',
+      'plus.unsplash.com',
+      'placeholder.com',
+      'img.clerk.com',
+      ...(supabaseHost ? [supabaseHost] : []),
+    ],
   },
   experimental: {
     serverActions: {
-      bodySizeLimit: '2mb',
+      bodySizeLimit: '10mb',
     },
   },
 };

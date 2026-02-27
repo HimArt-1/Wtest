@@ -41,7 +41,7 @@ export async function getSiteSettings() {
     if (error || !data) {
         // Return defaults if table doesn't exist yet
         return {
-            visibility: { gallery: false, store: false, signup: false, join: true, ai_section: true },
+            visibility: { gallery: false, store: false, signup: false, join: true, join_artist: true, ai_section: true },
             site_info: { name: "وشّى", description: "منصة الفن العربي الأصيل", email: "", phone: "", instagram: "", twitter: "", tiktok: "" },
             shipping: { flat_rate: 30, free_above: 500, tax_rate: 15 },
         };
@@ -52,10 +52,39 @@ export async function getSiteSettings() {
         settings[row.key] = row.value;
     }
 
+    const v = settings.visibility || {};
     return {
-        visibility: settings.visibility || { gallery: false, store: false, signup: false, join: true, ai_section: true },
+        visibility: {
+            gallery: v.gallery ?? false,
+            store: v.store ?? false,
+            signup: v.signup ?? false,
+            join: v.join ?? true,
+            join_artist: v.join_artist ?? true,
+            ai_section: v.ai_section ?? true,
+        },
         site_info: settings.site_info || { name: "وشّى", description: "", email: "", phone: "", instagram: "", twitter: "", tiktok: "" },
         shipping: settings.shipping || { flat_rate: 30, free_above: 500, tax_rate: 15 },
+    };
+}
+
+// ─── Public visibility (للصفحات العامة — بدون صلاحية أدمن) ───
+
+export async function getPublicVisibility() {
+    const supabase = getAdminSupabase();
+    const { data } = await supabase
+        .from("site_settings")
+        .select("value")
+        .eq("key", "visibility")
+        .maybeSingle();
+
+    const visibility = (data as { value?: Record<string, boolean> } | null)?.value;
+    return {
+        gallery: visibility?.gallery ?? false,
+        store: visibility?.store ?? false,
+        signup: visibility?.signup ?? false,
+        join: visibility?.join ?? true,
+        join_artist: visibility?.join_artist ?? true,
+        ai_section: visibility?.ai_section ?? true,
     };
 }
 
@@ -80,6 +109,8 @@ export async function updateSiteSetting(key: string, value: Record<string, any>)
 
     revalidatePath("/dashboard/settings");
     revalidatePath("/");
+    revalidatePath("/account");
+    revalidatePath("/studio");
     return { success: true };
 }
 
@@ -164,7 +195,7 @@ export async function getAdminProducts(page = 1, type = "all") {
 
     let query = supabase
         .from("products")
-        .select("*, artist:profiles!artist_id(display_name, username)", { count: "exact" })
+        .select("*, artist:profiles!artist_id(id, display_name, username)", { count: "exact" })
         .order("created_at", { ascending: false })
         .range((page - 1) * perPage, page * perPage - 1);
 
@@ -182,13 +213,24 @@ export async function getAdminProducts(page = 1, type = "all") {
 }
 
 export async function updateProduct(id: string, updates: Partial<{
+    title: string;
+    description: string | null;
+    type: string;
     price: number;
+    image_url: string;
+    artist_id: string;
     in_stock: boolean;
     is_featured: boolean;
-    stock_quantity: number;
+    stock_quantity: number | null;
+    badge: string | null;
 }>) {
     await requireAdmin();
     const supabase = getAdminSupabase();
+
+    const validTypes = ["print", "apparel", "digital", "nft", "original"];
+    if (updates.type && !validTypes.includes(updates.type)) {
+        return { success: false, error: "نوع المنتج غير صالح" };
+    }
 
     const { error } = await supabase
         .from("products")
@@ -198,7 +240,125 @@ export async function updateProduct(id: string, updates: Partial<{
     if (error) return { success: false, error: error.message };
 
     revalidatePath("/dashboard/products");
+    revalidatePath("/store");
     return { success: true };
+}
+
+export async function deleteProduct(id: string) {
+    await requireAdmin();
+    const supabase = getAdminSupabase();
+
+    const { error } = await supabase
+        .from("products")
+        .delete()
+        .eq("id", id);
+
+    if (error) return { success: false, error: error.message };
+
+    revalidatePath("/dashboard/products");
+    revalidatePath("/store");
+    return { success: true };
+}
+
+export async function createProductAdmin(data: {
+    artist_id: string;
+    title: string;
+    description?: string;
+    type: string;
+    price: number;
+    image_url: string;
+    sizes?: string[];
+    in_stock?: boolean;
+    stock_quantity?: number;
+}) {
+    await requireAdmin();
+    const supabase = getAdminSupabase();
+
+    const validTypes = ["print", "apparel", "digital", "nft", "original"];
+    if (!validTypes.includes(data.type)) {
+        return { success: false, error: "نوع المنتج غير صالح" };
+    }
+
+    const { data: created, error } = await supabase
+        .from("products")
+        .insert({
+            artist_id: data.artist_id,
+            title: data.title.trim(),
+            description: data.description?.trim() || null,
+            type: data.type,
+            price: Number(data.price),
+            image_url: data.image_url.trim(),
+            sizes: data.sizes || null,
+            in_stock: data.in_stock ?? true,
+            stock_quantity: data.stock_quantity ?? null,
+            currency: "SAR",
+        })
+        .select("id")
+        .single();
+
+    if (error) return { success: false, error: error.message };
+
+    revalidatePath("/dashboard/products");
+    revalidatePath("/store");
+    return { success: true, productId: created?.id };
+}
+
+export async function getAdminArtistsForSelect() {
+    await requireAdmin();
+    const supabase = getAdminSupabase();
+
+    const { data, error } = await supabase
+        .from("profiles")
+        .select("id, display_name, username")
+        .in("role", ["wushsha", "admin"])
+        .order("display_name");
+
+    if (error) return [];
+    return (data || []) as { id: string; display_name: string; username: string }[];
+}
+
+// ═══════════════════════════════════════════════════════════
+//  PRODUCT IMAGE UPLOAD — Supabase Storage
+// ═══════════════════════════════════════════════════════════
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+
+export async function uploadProductImage(formData: FormData): Promise<{ success: true; url: string } | { success: false; error: string }> {
+    await requireAdmin();
+    const file = formData.get("file") as File | null;
+    if (!file || !(file instanceof File)) {
+        return { success: false, error: "لم يتم اختيار ملف" };
+    }
+    if (file.size > MAX_FILE_SIZE) {
+        return { success: false, error: "حجم الملف يجب أن لا يتجاوز 5 ميجابايت" };
+    }
+    if (!ALLOWED_TYPES.includes(file.type)) {
+        return { success: false, error: "نوع الملف غير مدعوم (PNG, JPG, WebP, GIF فقط)" };
+    }
+
+    const supabase = getAdminSupabase();
+    const ext = file.name.split(".").pop() || "jpg";
+    const fileName = `products/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    const { data, error } = await supabase.storage
+        .from("products")
+        .upload(fileName, buffer, {
+            cacheControl: "3600",
+            upsert: false,
+            contentType: file.type,
+        });
+
+    if (error) {
+        console.error("[uploadProductImage]", error);
+        return { success: false, error: error.message };
+    }
+
+    const { data: { publicUrl } } = supabase.storage.from("products").getPublicUrl(data.path);
+    return { success: true, url: publicUrl };
 }
 
 // ═══════════════════════════════════════════════════════════

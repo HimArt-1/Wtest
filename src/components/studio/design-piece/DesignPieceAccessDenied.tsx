@@ -24,35 +24,27 @@ export function DesignPieceAccessDenied() {
                 </motion.div>
 
                 <h1 className="text-2xl sm:text-3xl font-bold text-fg mb-3">
-                    تصميم قطعة متاح للمعتمدين فقط
+                    سجّل دخولك لتصمّم قطعتك
                 </h1>
                 <p className="text-fg/60 text-base leading-relaxed mb-8">
-                    هذه الأداة مخصّصة لأعضاء وشّى المعتمدين. قدّم طلب انضمام، وبعد الموافقة
-                    ستتمكن من تصميم قطعك وتوليد ملفات PDF جاهزة للطباعة.
+                    سجّل حسابك مجاناً وابدأ بتصميم تيشيرت أو هودي بالذكاء الاصطناعي فوراً.
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                     <Link
-                        href="/join"
+                        href="/sign-up"
                         className="btn-gold inline-flex items-center gap-2 w-full sm:w-auto justify-center"
                     >
-                        <FileCheck className="w-5 h-5" />
-                        تقديم طلب الانضمام
+                        <Sparkles className="w-5 h-5" />
+                        إنشاء حساب مجاني
                     </Link>
                     <Link
-                        href="/studio"
+                        href="/sign-in?redirect_url=/design"
                         className="btn-secondary inline-flex items-center gap-2 w-full sm:w-auto justify-center"
                     >
                         <ArrowLeft className="w-5 h-5" />
-                        العودة للاستوديو
+                        تسجيل الدخول
                     </Link>
-                </div>
-
-                <div className="mt-12 pt-8 border-t border-white/10">
-                    <p className="text-fg/40 text-sm flex items-center justify-center gap-2">
-                        <Sparkles className="w-4 h-4 text-gold" />
-                        بعد الموافقة ستظهر لك أداة «تصميم قطعة» تلقائياً
-                    </p>
                 </div>
             </div>
         </motion.div>

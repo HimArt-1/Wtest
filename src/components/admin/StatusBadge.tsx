@@ -29,16 +29,15 @@ const statusConfig: Record<string, Record<string, { label: string; color: string
         rejected: { label: "مرفوض", color: "bg-red-500/10 text-red-400 border-red-500/20" },
     },
     role: {
-        admin: { label: "مسؤول", color: "bg-gold/10 text-gold border-gold/20" },
-        artist: { label: "فنان", color: "bg-accent/10 text-accent border-accent/20" },
-        buyer: { label: "مشتري", color: "bg-forest/10 text-forest border-forest/20" },
-        guest: { label: "زائر", color: "bg-gray-500/10 text-gray-400 border-gray-500/20" },
+        admin: { label: "مشرف", color: "bg-gold/10 text-gold border-gold/20" },
+        wushsha: { label: "وشّاي", color: "bg-accent/10 text-accent border-accent/20" },
+        subscriber: { label: "مشترك", color: "bg-forest/10 text-forest border-forest/20" },
     },
 };
 
 export function StatusBadge({ status, type = "order" }: StatusBadgeProps) {
-    const config = statusConfig[type]?.[status] || {
-        label: status,
+    const config = statusConfig[type]?.[status] ?? {
+        label: status || "—",
         color: "bg-gray-500/10 text-gray-400 border-gray-500/20",
     };
 

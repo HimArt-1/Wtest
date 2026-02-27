@@ -3,9 +3,10 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { profileSchema, type ProfileFormData } from "@/lib/validations";
-import { updateProfile } from "@/app/actions/profile";
+import { updateProfile, uploadProfileImage } from "@/app/actions/profile";
 import { useState, useTransition } from "react";
-import { Loader2, Save, AtSign, Globe, Instagram, Twitter, Youtube, Dribbble } from "lucide-react";
+import { Loader2, Save, AtSign, Globe, Instagram, Twitter, Youtube, Dribbble, ImagePlus, X } from "lucide-react";
+import Image from "next/image";
 
 interface ProfileFormProps {
     initialData?: Partial<ProfileFormData>;
@@ -14,6 +15,10 @@ interface ProfileFormProps {
 export function ProfileForm({ initialData }: ProfileFormProps) {
     const [isPending, startTransition] = useTransition();
     const [state, setState] = useState<{ message?: string; success?: boolean; errors?: any }>({});
+    const [avatarUrl, setAvatarUrl] = useState(initialData?.avatar_url || "");
+    const [coverUrl, setCoverUrl] = useState(initialData?.cover_url || "");
+    const [uploadingAvatar, setUploadingAvatar] = useState(false);
+    const [uploadingCover, setUploadingCover] = useState(false);
 
     const {
         register,
@@ -46,8 +51,8 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
 
             if (data.bio) formData.append("bio", data.bio);
             if (data.website) formData.append("website", data.website);
-            // Handling Avatar/Cover typically involves file upload first, then updating URL. 
-            // For this form, we assume URLs are handled or just text inputs for testing.
+            if (avatarUrl) formData.append("avatar_url", avatarUrl);
+            if (coverUrl) formData.append("cover_url", coverUrl);
 
             if (data.social_links?.instagram) formData.append("social.instagram", data.social_links.instagram);
             if (data.social_links?.twitter) formData.append("social.twitter", data.social_links.twitter);
@@ -68,6 +73,107 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
                     {state.message}
                 </div>
             )}
+
+            {/* Avatar & Cover */}
+            <div className="bg-white p-6 rounded-2xl border border-ink/5 shadow-sm space-y-6">
+                <h3 className="text-lg font-bold border-b border-ink/5 pb-4">الصور</h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label className="block text-sm font-medium text-ink/80 mb-2">صورة الملف الشخصي</label>
+                        <div className="flex items-center gap-4">
+                            <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-ink/10 bg-sand/20 flex items-center justify-center shrink-0">
+                                {avatarUrl ? (
+                                    <Image src={avatarUrl} alt="" width={96} height={96} className="object-cover w-full h-full" />
+                                ) : (
+                                    <ImagePlus className="w-10 h-10 text-ink/30" />
+                                )}
+                            </div>
+                            <div className="flex flex-col gap-2">
+                                <label className="cursor-pointer">
+                                    <input
+                                        type="file"
+                                        accept="image/jpeg,image/png,image/webp,image/gif"
+                                        className="hidden"
+                                        disabled={uploadingAvatar}
+                                        onChange={async (e) => {
+                                            const file = e.target.files?.[0];
+                                            if (!file) return;
+                                            setUploadingAvatar(true);
+                                            const fd = new FormData();
+                                            fd.append("file", file);
+                                            const res = await uploadProfileImage(fd, "avatar");
+                                            setUploadingAvatar(false);
+                                            if (res.success) setAvatarUrl(res.url);
+                                            else setState({ success: false, message: res.error });
+                                        }}
+                                    />
+                                    <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gold/10 text-gold text-sm font-medium hover:bg-gold/20 transition-colors">
+                                        {uploadingAvatar ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImagePlus className="w-4 h-4" />}
+                                        {uploadingAvatar ? "جاري الرفع..." : "رفع صورة"}
+                                    </span>
+                                </label>
+                                {avatarUrl && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setAvatarUrl("")}
+                                        className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-700"
+                                    >
+                                        <X className="w-3 h-3" /> إزالة
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-ink/80 mb-2">صورة الغلاف</label>
+                        <div className="flex items-center gap-4">
+                            <div className="w-full max-w-[180px] h-24 rounded-2xl overflow-hidden border-2 border-ink/10 bg-sand/20 flex items-center justify-center shrink-0">
+                                {coverUrl ? (
+                                    <Image src={coverUrl} alt="" width={180} height={96} className="object-cover w-full h-full" />
+                                ) : (
+                                    <ImagePlus className="w-10 h-10 text-ink/30" />
+                                )}
+                            </div>
+                            <div className="flex flex-col gap-2">
+                                <label className="cursor-pointer">
+                                    <input
+                                        type="file"
+                                        accept="image/jpeg,image/png,image/webp,image/gif"
+                                        className="hidden"
+                                        disabled={uploadingCover}
+                                        onChange={async (e) => {
+                                            const file = e.target.files?.[0];
+                                            if (!file) return;
+                                            setUploadingCover(true);
+                                            const fd = new FormData();
+                                            fd.append("file", file);
+                                            const res = await uploadProfileImage(fd, "cover");
+                                            setUploadingCover(false);
+                                            if (res.success) setCoverUrl(res.url);
+                                            else setState({ success: false, message: res.error });
+                                        }}
+                                    />
+                                    <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gold/10 text-gold text-sm font-medium hover:bg-gold/20 transition-colors">
+                                        {uploadingCover ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImagePlus className="w-4 h-4" />}
+                                        {uploadingCover ? "جاري الرفع..." : "رفع غلاف"}
+                                    </span>
+                                </label>
+                                {coverUrl && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setCoverUrl("")}
+                                        className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-700"
+                                    >
+                                        <X className="w-3 h-3" /> إزالة
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             {/* Basic Info */}
             <div className="bg-white p-6 rounded-2xl border border-ink/5 shadow-sm space-y-6">

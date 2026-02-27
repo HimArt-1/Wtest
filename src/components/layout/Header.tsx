@@ -2,127 +2,136 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Palette, Search, User } from "lucide-react";
+import { Menu, X, Palette, Search, User, ShoppingBag } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
-import {
-  SignedIn,
-  UserButton,
-} from "@clerk/nextjs";
+import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 
 const navItems = [
-  { label: "انضم إلينا", href: "/#join" },
+  { label: "المعرض", href: "/gallery" },
+  { label: "المتجر", href: "/store" },
+  { label: "صمّم قطعتك", href: "/design" },
 ];
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-    };
+    const handleScroll = () => setIsScrolled(window.scrollY > 50);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  if (!mounted) return null;
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isMobileMenuOpen]);
+
+  const headerBg =
+    isScrolled || isMobileMenuOpen
+      ? "bg-[#080808]/95 backdrop-blur-xl border-b border-gold/10"
+      : "bg-transparent";
 
   return (
     <>
-      <motion.header
-        className={`fixed top-0 right-0 left-0 z-50 transition-all duration-700 ${isScrolled
-          ? "bg-[#080808]/80 backdrop-blur-xl border-b border-gold/10"
-          : "bg-transparent"
-          }`}
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      {/* ─── Header Bar ───────────────────────────────────────── */}
+      <header
+        className={`fixed top-0 right-0 left-0 z-[100] isolate transition-all duration-500 ease-out ${headerBg}`}
       >
         <div className="container-wusha">
-          <div className="flex items-center justify-between h-16 sm:h-20">
-            {/* Logo */}
-            <Logo size="sm" />
+          <div className="flex items-center justify-between h-16 sm:h-[72px] min-h-[64px]">
+            {/* Logo — دائماً ظاهر وواضح */}
+            <div className="relative z-[110] flex-shrink-0">
+              <Logo size="sm" className="block" />
+            </div>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-8">
+            <nav className="hidden md:flex items-center justify-center gap-6 lg:gap-8 flex-1">
               {navItems.map((item, index) => (
-                <Link key={item.href} href={item.href}>
+                <Link key={item.href} href={item.href} className="group">
                   <motion.span
-                    className="relative text-white/60 hover:text-gold transition-colors duration-300 text-sm font-medium"
-                    initial={{ opacity: 0, y: -20 }}
+                    className="relative inline-block text-white/70 group-hover:text-gold transition-colors duration-300 text-sm font-medium py-2"
+                    initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 + 0.3 }}
-                    whileHover={{ y: -2 }}
+                    transition={{ delay: index * 0.08 + 0.2 }}
+                    whileHover={{ y: -1 }}
                   >
                     {item.label}
-                    <motion.span
-                      className="absolute -bottom-1 right-0 h-0.5 bg-gold"
-                      initial={{ width: 0 }}
-                      whileHover={{ width: "100%" }}
-                      transition={{ duration: 0.3 }}
-                    />
+                    <span className="absolute bottom-0 right-0 left-0 h-px bg-gold scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
                   </motion.span>
                 </Link>
               ))}
             </nav>
 
-            {/* Search + Cart + Auth Buttons */}
-            <div className="hidden md:flex items-center gap-4">
-              {/* Search Icon */}
+            {/* Desktop: Search + Auth */}
+            <div className="hidden md:flex items-center gap-3 flex-shrink-0">
               <Link href="/search" aria-label="البحث">
                 <motion.div
-                  className="p-2 text-white/60 hover:text-gold transition-colors duration-300"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
+                  className="p-2.5 rounded-xl text-white/60 hover:text-gold hover:bg-white/5 transition-all duration-300"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
                   <Search className="w-5 h-5" />
                 </motion.div>
               </Link>
 
-
               <SignedIn>
-                <motion.div
-                  className="flex items-center gap-4"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.6 }}
-                >
-                  <Link href="/studio">
+                <div className="flex items-center gap-3">
+                  <Link href="/account">
                     <motion.button
-                      className="btn-gold text-sm py-3 px-6 flex items-center gap-2 cursor-pointer"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                      className="btn-gold text-sm py-2.5 px-5 flex items-center gap-2 cursor-pointer"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                     >
-                      <Palette className="w-4 h-4" />
-                      الاستوديو
+                      <User className="w-4 h-4" />
+                      حسابي
                     </motion.button>
                   </Link>
-                  <UserButton
-                    afterSignOutUrl="/"
-                    appearance={{
-                      elements: {
-                        avatarBox: "w-10 h-10 border-2 border-gold/30 hover:border-gold transition-colors duration-300 ring-2 ring-gold/10",
-                      },
-                    }}
-                  />
-                </motion.div>
+                  <div className="[&_.cl-userButtonBox]:flex [&_.cl-userButtonTrigger]:rounded-xl">
+                    <UserButton
+                      afterSignOutUrl="/"
+                      appearance={{
+                        elements: {
+                          avatarBox: "w-10 h-10 border-2 border-gold/30 hover:border-gold transition-colors duration-300",
+                        },
+                      }}
+                    />
+                  </div>
+                </div>
               </SignedIn>
+              <SignedOut>
+                <Link href="/sign-in">
+                  <motion.button
+                    className="btn-gold text-sm py-2.5 px-5 flex items-center gap-2 cursor-pointer"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <User className="w-4 h-4" />
+                    تسجيل الدخول
+                  </motion.button>
+                </Link>
+              </SignedOut>
             </div>
 
-            {/* Mobile: Search + Cart + Menu */}
-            <div className="flex md:hidden items-center gap-1">
+            {/* Mobile: Search + Menu Toggle */}
+            <div className="flex md:hidden items-center gap-0.5">
               <Link href="/search" aria-label="البحث">
-                <span className="p-3 text-white/80 inline-block">
+                <span className="p-3 text-white/80 hover:text-gold transition-colors inline-block">
                   <Search className="w-5 h-5" />
                 </span>
               </Link>
               <button
-                className="p-3 -mr-2 text-white/80"
+                className="relative z-[110] p-3 -mr-1 text-white/90 hover:text-gold transition-colors rounded-xl hover:bg-white/5"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                aria-label="القائمة"
+                aria-label={isMobileMenuOpen ? "إغلاق القائمة" : "فتح القائمة"}
+                aria-expanded={isMobileMenuOpen}
               >
                 {isMobileMenuOpen ? (
                   <X className="w-6 h-6" />
@@ -133,29 +142,43 @@ export function Header() {
             </div>
           </div>
         </div>
-      </motion.header>
+      </header>
 
-      {/* Mobile Menu — Dark Glass */}
+      {/* ─── Mobile Menu Overlay ───────────────────────────────── */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
-            className="fixed inset-0 z-40 bg-[#080808]/95 backdrop-blur-xl md:hidden"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
+            className="fixed inset-0 z-[90] md:hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
           >
-            <div className="flex flex-col items-center justify-center h-full gap-6 sm:gap-8 pt-16 sm:pt-20 px-6">
+            {/* Backdrop */}
+            <div
+              className="absolute inset-0 bg-[#080808]/90 backdrop-blur-xl"
+              onClick={() => setIsMobileMenuOpen(false)}
+              aria-hidden="true"
+            />
+
+            {/* Menu Content — تحت الهيدر */}
+            <motion.div
+              className="relative flex flex-col items-center justify-center min-h-full pt-20 pb-12 px-6"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            >
               {navItems.map((item, index) => (
                 <motion.div
                   key={item.href}
-                  initial={{ opacity: 0, x: 50 }}
+                  initial={{ opacity: 0, x: 24 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
+                  transition={{ delay: index * 0.06 + 0.1 }}
                 >
                   <Link
                     href={item.href}
-                    className="text-2xl sm:text-3xl font-bold text-white/80 hover:text-gold transition-colors py-2"
+                    className="block text-2xl sm:text-3xl font-bold text-white/85 hover:text-gold transition-colors py-4"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     {item.label}
@@ -163,43 +186,28 @@ export function Header() {
                 </motion.div>
               ))}
 
-              {/* Mobile: Account Link */}
               <SignedIn>
                 <motion.div
-                  initial={{ opacity: 0, x: 50 }}
+                  initial={{ opacity: 0, x: 24 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.35 }}
+                  transition={{ delay: 0.25 }}
                 >
                   <Link
                     href="/account"
-                    className="text-2xl sm:text-3xl font-bold text-white/80 hover:text-gold transition-colors py-2 flex items-center gap-3"
+                    className="flex items-center gap-3 text-2xl sm:text-3xl font-bold text-white/85 hover:text-gold transition-colors py-4"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     <User className="w-6 h-6" />
                     حسابي
                   </Link>
                 </motion.div>
-              </SignedIn>
 
-              {/* Mobile Auth */}
-
-
-              <SignedIn>
                 <motion.div
-                  className="flex flex-col items-center gap-4 mt-4"
+                  className="flex flex-col items-center gap-4 mt-6"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ delay: 0.4 }}
+                  transition={{ delay: 0.3 }}
                 >
-                  <Link
-                    href="/studio"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <button className="btn-gold flex items-center gap-2 cursor-pointer">
-                      <Palette className="w-5 h-5" />
-                      الاستوديو
-                    </button>
-                  </Link>
                   <UserButton
                     afterSignOutUrl="/"
                     appearance={{
@@ -210,10 +218,25 @@ export function Header() {
                   />
                 </motion.div>
               </SignedIn>
-            </div>
+              <SignedOut>
+                <motion.div
+                  initial={{ opacity: 0, x: 24 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.25 }}
+                >
+                  <Link href="/sign-in" onClick={() => setIsMobileMenuOpen(false)}>
+                    <button className="btn-gold flex items-center gap-2 cursor-pointer py-3 px-6">
+                      <User className="w-5 h-5" />
+                      تسجيل الدخول
+                    </button>
+                  </Link>
+                </motion.div>
+              </SignedOut>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
+
     </>
   );
 }

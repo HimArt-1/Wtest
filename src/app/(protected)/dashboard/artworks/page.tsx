@@ -1,5 +1,6 @@
 import { getAdminArtworks } from "@/app/actions/admin";
 import { ArtworksClient } from "@/components/admin/ArtworksClient";
+import { AdminHeader } from "@/components/admin/AdminHeader";
 
 interface PageProps {
     searchParams: Promise<{ page?: string; status?: string }>;
@@ -14,10 +15,10 @@ export default async function AdminArtworksPage({ searchParams }: PageProps) {
 
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold text-fg">إدارة الأعمال الفنية</h1>
-                <p className="text-fg/40 mt-1">مراجعة ونشر وأرشفة الأعمال الفنية على المنصة.</p>
-            </div>
+            <AdminHeader
+                title="إدارة الأعمال الفنية"
+                subtitle="مراجعة ونشر وأرشفة الأعمال الفنية على المنصة."
+            />
 
             <ArtworksClient
                 artworks={artworks}

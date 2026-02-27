@@ -26,7 +26,7 @@ export default async function GalleryPage({
     ]);
 
     return (
-        <div className="min-h-screen bg-bg pt-24 pb-20" dir="rtl">
+        <div className="min-h-[60vh] bg-bg pt-6 sm:pt-8 pb-12 sm:pb-16" dir="rtl">
             <div className="max-w-7xl mx-auto px-6">
                 {/* ─── Header ─── */}
                 <div className="text-center mb-12">

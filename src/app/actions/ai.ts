@@ -194,6 +194,10 @@ export async function generateDesignForPrint(
     input: GenerateDesignForPrintInput
 ): Promise<{ success: boolean; imageUrl?: string; error?: string }> {
     try {
+        if (!input.prompt?.trim()) {
+            return { success: false, error: "الوصف مطلوب" };
+        }
+
         const stylePrompt = input.styleId ? `Style: ${input.styleId}. ` : "";
         const colorPrompt =
             input.colorIds?.length ? `Colors: ${input.colorIds.join(", ")}. ` : "";
@@ -207,8 +211,12 @@ export async function generateDesignForPrint(
 
         if (needImg2Img && input.imageBase64) {
             if (input.imageBase64.length > 250 * 1024) {
-                const uploaded = await uploadImageToStorage(input.imageBase64);
-                imageInput = uploaded ?? undefined;
+                try {
+                    const uploaded = await uploadImageToStorage(input.imageBase64);
+                    imageInput = uploaded ?? undefined;
+                } catch (uploadErr) {
+                    console.error("Upload image error:", uploadErr);
+                }
             } else {
                 imageInput = input.imageBase64;
             }
@@ -240,7 +248,8 @@ export async function generateDesignForPrint(
         }
 
         // لا مفتاح: محاكاة للتطوير
-        await new Promise((r) => setTimeout(r, 3500));
+        console.log("[Dev Mock] generateDesignForPrint — no AI key set, using placeholder");
+        await new Promise((r) => setTimeout(r, 2000));
         return {
             success: true,
             imageUrl:

@@ -7,21 +7,38 @@
 "use server";
 
 import { createClient } from "@supabase/supabase-js";
-import { currentUser } from "@clerk/nextjs/server";
+import { currentUser, clerkClient } from "@clerk/nextjs/server";
 import { unstable_noStore as noStore, revalidatePath } from "next/cache";
+import { sendApplicationAcceptedEmail, sendApplicationRejectedEmail } from "@/lib/email";
+
+/** توليد كلمة مرور عشوائية آمنة (12 حرف) */
+function generateTempPassword(): string {
+    const chars = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789";
+    let p = "";
+    const arr = new Uint8Array(12);
+    if (typeof crypto !== "undefined" && crypto.getRandomValues) {
+        crypto.getRandomValues(arr);
+        for (let i = 0; i < 12; i++) p += chars[arr[i]! % chars.length];
+    } else {
+        for (let i = 0; i < 12; i++) p += chars[Math.floor(Math.random() * chars.length)];
+    }
+    return p;
+}
 
 // ─── Admin Supabase Client ──────────────────────────────────
 
 function getAdminSupabase() {
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!serviceKey) {
-        console.warn("[Admin] SUPABASE_SERVICE_ROLE_KEY is not set — falling back to anon key. Add it to Vercel env vars.");
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!url || !key) {
+        throw new Error(
+            "[Admin] Missing Supabase env: NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY/NEXT_PUBLIC_SUPABASE_ANON_KEY. Add them in Vercel → Project → Settings → Environment Variables."
+        );
     }
-    return createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        serviceKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        { auth: { persistSession: false } }
-    );
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        console.warn("[Admin] SUPABASE_SERVICE_ROLE_KEY is not set — falling back to anon key. Add it to Vercel env vars for full admin access.");
+    }
+    return createClient(url, key, { auth: { persistSession: false } });
 }
 
 // ─── Auth Guard ─────────────────────────────────────────────
@@ -59,9 +76,9 @@ export async function getAdminOverview() {
             // 0: Total users
             supabase.from("profiles").select("id", { count: "exact", head: true }),
             // 1: Total artists
-            supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "artist"),
-            // 2: Total buyers
-            supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "buyer"),
+            supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "wushsha"),
+            // 2: Total subscribers
+            supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "subscriber"),
             // 3: Total orders
             supabase.from("orders").select("id", { count: "exact", head: true }),
             // 4: Total revenue
@@ -210,14 +227,14 @@ export async function getAdminUsers(
 export async function updateUserRole(userId: string, newRole: string) {
     const { supabase } = await requireAdmin();
 
-    const validRoles = ["admin", "artist", "buyer", "guest"];
-    if (!validRoles.includes(newRole)) {
-        return { success: false, error: "Invalid role" };
+    const role = (newRole || "").trim();
+    if (!role || role.length > 50) {
+        return { success: false, error: "الدور يجب أن يكون بين 1 و 50 حرفاً" };
     }
 
     const { error } = await supabase
         .from("profiles")
-        .update({ role: newRole })
+        .update({ role })
         .eq("id", userId);
 
     if (error) {
@@ -229,44 +246,406 @@ export async function updateUserRole(userId: string, newRole: string) {
     return { success: true };
 }
 
+export async function updateUserWushshaLevel(userId: string, level: number) {
+    const { supabase } = await requireAdmin();
+
+    const lvl = Math.min(5, Math.max(1, Math.floor(level)));
+    if (lvl < 1 || lvl > 5) {
+        return { success: false, error: "المستوى يجب أن يكون بين 1 و 5" };
+    }
+
+    const { error } = await supabase
+        .from("profiles")
+        .update({ wushsha_level: lvl })
+        .eq("id", userId);
+
+    if (error) {
+        console.error("Update wushsha level error:", error);
+        return { success: false, error: error.message };
+    }
+
+    revalidatePath("/dashboard/users");
+    return { success: true };
+}
+
+export async function deleteUsers(userIds: string[]) {
+    const { supabase, profile: adminProfile } = await requireAdmin();
+
+    const filtered = userIds.filter((id) => id !== adminProfile.id);
+    if (filtered.length === 0) {
+        return { success: false, error: "لا يمكنك حذف حسابك الشخصي" };
+    }
+
+    const { error } = await supabase
+        .from("profiles")
+        .delete()
+        .in("id", filtered);
+
+    if (error) {
+        console.error("Bulk delete users error:", error);
+        return { success: false, error: error.message };
+    }
+
+    revalidatePath("/dashboard/users");
+    return { success: true, deleted: filtered.length };
+}
+
+export async function deleteUser(userId: string) {
+    const { supabase, profile: adminProfile } = await requireAdmin();
+
+    if (adminProfile.id === userId) {
+        return { success: false, error: "لا يمكنك حذف حسابك الشخصي" };
+    }
+
+    const { error } = await supabase
+        .from("profiles")
+        .delete()
+        .eq("id", userId);
+
+    if (error) {
+        console.error("Delete user error:", error);
+        return { success: false, error: error.message };
+    }
+
+    revalidatePath("/dashboard/users");
+    return { success: true };
+}
+
+export async function createUser(data: {
+    clerk_id: string;
+    display_name: string;
+    username: string;
+    role: string;
+    bio?: string;
+    wushsha_level?: number;
+}) {
+    const { supabase } = await requireAdmin();
+
+    const role = (data.role || "").trim();
+    if (!role || role.length > 50) {
+        return { success: false, error: "الدور يجب أن يكون بين 1 و 50 حرفاً" };
+    }
+
+    const username = data.username.trim().toLowerCase().replace(/\s+/g, "_");
+    const displayName = data.display_name.trim();
+    if (!displayName || !username) {
+        return { success: false, error: "الاسم واسم المستخدم مطلوبان" };
+    }
+
+    const insertData: Record<string, unknown> = {
+        clerk_id: data.clerk_id.trim(),
+        display_name: displayName,
+        username,
+        role,
+        bio: data.bio?.trim() || null,
+    };
+
+    if (role === "wushsha" && data.wushsha_level) {
+        const lvl = Math.min(5, Math.max(1, Math.floor(data.wushsha_level)));
+        insertData.wushsha_level = lvl;
+    }
+
+    const { data: created, error } = await supabase
+        .from("profiles")
+        .insert(insertData)
+        .select("id")
+        .single();
+
+    if (error) {
+        if (error.code === "23505") {
+            return { success: false, error: "اسم المستخدم أو clerk_id مستخدم مسبقاً" };
+        }
+        console.error("Create user error:", error);
+        return { success: false, error: error.message };
+    }
+
+    revalidatePath("/dashboard/users");
+    return { success: true, userId: created?.id };
+}
+
+export async function updateUser(
+    userId: string,
+    data: {
+        display_name?: string;
+        username?: string;
+        bio?: string;
+        role?: string;
+        wushsha_level?: number | null;
+        is_verified?: boolean;
+        website?: string | null;
+    }
+) {
+    const { supabase } = await requireAdmin();
+
+    let roleValue: string | undefined;
+    if (data.role !== undefined) {
+        roleValue = (data.role || "").trim();
+        if (!roleValue || roleValue.length > 50) {
+            return { success: false, error: "الدور يجب أن يكون بين 1 و 50 حرفاً" };
+        }
+    }
+
+    const updateData: Record<string, unknown> = {};
+    if (data.display_name !== undefined) updateData.display_name = data.display_name.trim();
+    if (data.username !== undefined) updateData.username = data.username.trim().toLowerCase().replace(/\s+/g, "_");
+    if (data.bio !== undefined) updateData.bio = data.bio?.trim() || null;
+    if (roleValue !== undefined) updateData.role = roleValue;
+    if (data.wushsha_level !== undefined) updateData.wushsha_level = data.wushsha_level;
+    if (data.is_verified !== undefined) updateData.is_verified = data.is_verified;
+    if (data.website !== undefined) updateData.website = data.website?.trim() || null;
+
+    const { error } = await supabase
+        .from("profiles")
+        .update(updateData)
+        .eq("id", userId);
+
+    if (error) {
+        if (error.code === "23505") {
+            return { success: false, error: "اسم المستخدم مستخدم مسبقاً" };
+        }
+        console.error("Update user error:", error);
+        return { success: false, error: error.message };
+    }
+
+    revalidatePath("/dashboard/users");
+    return { success: true };
+}
+
+export async function getAdminUserById(userId: string) {
+    noStore();
+    const { supabase } = await requireAdmin();
+
+    const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .single();
+
+    if (error || !data) {
+        return null;
+    }
+    return data as Record<string, unknown>;
+}
+
+export async function getAdminUsersStats() {
+    noStore();
+    const { supabase } = await requireAdmin();
+
+    const [totalRes, wushshaRes, subscriberRes, adminRes] = await Promise.all([
+        supabase.from("profiles").select("id", { count: "exact", head: true }),
+        supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "wushsha"),
+        supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "subscriber"),
+        supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "admin"),
+    ]);
+
+    return {
+        total: totalRes.count ?? 0,
+        wushsha: wushshaRes.count ?? 0,
+        subscriber: subscriberRes.count ?? 0,
+        admin: adminRes.count ?? 0,
+    };
+}
+
+export async function acceptApplicationAndCreateUser(
+    applicationId: string,
+    options: {
+        role?: "wushsha" | "subscriber";
+        wushsha_level?: number;
+        clerk_id?: string;
+        /** إنشاء المستخدم في Clerk ليتمكن من تسجيل الدخول */
+        createInClerk?: boolean;
+    }
+) {
+    const { supabase, profile: adminProfile } = await requireAdmin();
+
+    const { data: app } = await supabase
+        .from("applications")
+        .select("*")
+        .eq("id", applicationId)
+        .single();
+
+    const appData = app as any;
+    if (!appData) return { success: false, error: "الطلب غير موجود" };
+    if (!["pending", "reviewing", "accepted"].includes(appData.status)) {
+        return { success: false, error: "لا يمكن معالجة هذا الطلب" };
+    }
+
+    const role = options.role ?? "wushsha";
+    const username = `${appData.full_name.replace(/\s+/g, "_").slice(0, 20)}_${Date.now().toString(36)}`.toLowerCase();
+    let clerkId = options.clerk_id?.trim();
+    let tempPassword: string | undefined;
+    const appClerkId = `app_${applicationId}`;
+
+    // ─── حالة: يوجد ملف بـ app_xxx (بدون Clerk) — إنشاء Clerk وتحديث الملف فقط ───
+    const { data: existingAppProfile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("clerk_id", appClerkId)
+        .maybeSingle();
+
+    if (existingAppProfile && options.createInClerk && appData.email) {
+        const email = String(appData.email).trim();
+        if (!email) return { success: false, error: "البريد الإلكتروني مطلوب" };
+        tempPassword = generateTempPassword();
+        const nameParts = (appData.full_name || "").trim().split(/\s+/);
+        const firstName = nameParts[0] || "مستخدم";
+        const lastName = nameParts.slice(1).join(" ") || "";
+        try {
+            const client = await clerkClient();
+            const clerkUser = await client.users.createUser({
+                emailAddress: [email],
+                password: tempPassword,
+                firstName,
+                lastName: lastName || undefined,
+                username: username.slice(0, 128),
+            });
+            const { error: updateErr } = await supabase
+                .from("profiles")
+                .update({ clerk_id: clerkUser.id })
+                .eq("id", existingAppProfile.id);
+            if (updateErr) {
+                console.error("[acceptApplication] Update profile clerk_id:", updateErr);
+                return { success: false, error: updateErr.message };
+            }
+            await supabase.from("applications").update({ profile_id: existingAppProfile.id }).eq("id", applicationId);
+            revalidatePath("/dashboard/applications");
+            revalidatePath("/dashboard/users");
+            sendApplicationAcceptedEmail(appData.email, appData.full_name || "فنان", tempPassword).catch(console.error);
+            return { success: true, userId: existingAppProfile.id, tempPassword };
+        } catch (err: any) {
+            console.error("[acceptApplication] Clerk createUser error:", err);
+            if (err?.errors?.[0]?.code === "form_identifier_exists") {
+                return { success: false, error: "البريد مسجّل مسبقاً في Clerk." };
+            }
+            return { success: false, error: err?.message || "فشل إنشاء المستخدم في Clerk" };
+        }
+    }
+
+    // ─── إنشاء المستخدم في Clerk (عند إنشاء ملف جديد) ───
+    if (options.createInClerk && appData.email) {
+        const email = String(appData.email).trim();
+        if (!email) return { success: false, error: "البريد الإلكتروني مطلوب لإنشاء حساب Clerk" };
+        tempPassword = generateTempPassword();
+        const nameParts = (appData.full_name || "").trim().split(/\s+/);
+        const firstName = nameParts[0] || "مستخدم";
+        const lastName = nameParts.slice(1).join(" ") || "";
+        try {
+            const client = await clerkClient();
+            const clerkUser = await client.users.createUser({
+                emailAddress: [email],
+                password: tempPassword,
+                firstName,
+                lastName: lastName || undefined,
+                username: username.slice(0, 128),
+            });
+            clerkId = clerkUser.id;
+        } catch (err: any) {
+            console.error("[acceptApplication] Clerk createUser error:", err);
+            if (err?.errors?.[0]?.code === "form_identifier_exists") {
+                return { success: false, error: "البريد الإلكتروني مسجّل مسبقاً في Clerk." };
+            }
+            return { success: false, error: err?.message || "فشل إنشاء المستخدم في Clerk" };
+        }
+    } else {
+        clerkId = clerkId || appClerkId;
+    }
+
+    const { data: existing } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("clerk_id", clerkId)
+        .maybeSingle();
+
+    if (existing) {
+        return { success: false, error: "يوجد مستخدم بنفس clerk_id مسبقاً" };
+    }
+
+    const insertData: Record<string, unknown> = {
+        clerk_id: clerkId,
+        display_name: appData.full_name,
+        username,
+        role,
+        bio: appData.motivation?.slice(0, 500) || null,
+    };
+
+    if (role === "wushsha") {
+        insertData.wushsha_level = Math.min(5, Math.max(1, options.wushsha_level ?? 1));
+    }
+
+    const { data: newProfile, error: insertError } = await supabase
+        .from("profiles")
+        .insert(insertData)
+        .select("id")
+        .single();
+
+    if (insertError) {
+        console.error("Create user from application:", insertError);
+        return { success: false, error: insertError.message };
+    }
+
+    await supabase
+        .from("applications")
+        .update({
+            status: "accepted",
+            reviewer_id: adminProfile.id,
+            profile_id: newProfile?.id,
+        })
+        .eq("id", applicationId);
+
+    revalidatePath("/dashboard/users");
+    revalidatePath("/dashboard/applications");
+    if (appData.email) {
+        sendApplicationAcceptedEmail(appData.email, appData.full_name || "فنان", tempPassword).catch(console.error);
+    }
+    return { success: true, userId: newProfile?.id, tempPassword };
+}
+
 // ═══════════════════════════════════════════════════════════
 //  3. ORDERS — إدارة الطلبات
 // ═══════════════════════════════════════════════════════════
 
 export async function getAdminOrders(page = 1, status = "all") {
     noStore();
-    const { supabase } = await requireAdmin();
+    try {
+        const { supabase } = await requireAdmin();
 
-    const perPage = 15;
-    const from = (page - 1) * perPage;
-    const to = from + perPage - 1;
+        const perPage = 15;
+        const from = (page - 1) * perPage;
+        const to = from + perPage - 1;
 
-    let query = supabase
-        .from("orders")
-        .select(`
+        // استعلام مبسّط — تجنّب فشل الـ join المعقّد
+        const selectQuery = `
             *,
             buyer:profiles(id, display_name, username, avatar_url),
-            order_items(id, product_id, quantity, size, unit_price, total_price, product:products(title, image_url))
-        `, { count: "exact" });
+            order_items(id, product_id, quantity, size, unit_price, total_price)
+        `;
 
-    if (status !== "all") {
-        query = query.eq("status", status);
-    }
+        let query = supabase
+            .from("orders")
+            .select(selectQuery, { count: "exact" });
 
-    const { data, count, error } = await query
-        .order("created_at", { ascending: false })
-        .range(from, to);
+        if (status !== "all") {
+            query = query.eq("status", status);
+        }
 
-    if (error) {
-        console.error("Admin orders error:", error);
+        const { data, count, error } = await query
+            .order("created_at", { ascending: false })
+            .range(from, to);
+
+        if (error) {
+            console.error("Admin orders error:", error);
+            return { data: [], count: 0, totalPages: 0 };
+        }
+
+        return {
+            data: (data as any[]) || [],
+            count: count || 0,
+            totalPages: count ? Math.ceil(count / perPage) : 0,
+        };
+    } catch (err) {
+        console.error("getAdminOrders failed:", err);
         return { data: [], count: 0, totalPages: 0 };
     }
-
-    return {
-        data: (data as any[]) || [],
-        count: count || 0,
-        totalPages: count ? Math.ceil(count / perPage) : 0,
-    };
 }
 
 export async function updateOrderStatus(orderId: string, newStatus: string) {
@@ -322,10 +701,28 @@ export async function getAdminApplications(status = "all") {
         return { data: [], count: 0 };
     }
 
-    return {
-        data: (data as any[]) || [],
-        count: count || 0,
-    };
+    const apps = (data as any[]) || [];
+    // للطلبات المقبولة: التحقق من وجود ملف وحساب Clerk
+    const enriched = await Promise.all(
+        apps.map(async (app) => {
+            if (app.status !== "accepted") return { ...app, profile: null, hasProfile: false, hasClerkAccount: false };
+            // محاولة عبر profile_id أولاً، ثم عبر clerk_id = app_xxx (للترحيل)
+            let profile: { id: string; clerk_id: string } | null = null;
+            if (app.profile_id) {
+                const { data: p } = await supabase.from("profiles").select("id, clerk_id").eq("id", app.profile_id).maybeSingle();
+                profile = p as any;
+            }
+            if (!profile) {
+                const { data: p } = await supabase.from("profiles").select("id, clerk_id").eq("clerk_id", `app_${app.id}`).maybeSingle();
+                profile = p as any;
+            }
+            const hasProfile = !!profile;
+            const hasClerkAccount = hasProfile && !String(profile!.clerk_id).startsWith("app_");
+            return { ...app, profile, hasProfile, hasClerkAccount };
+        })
+    );
+
+    return { data: enriched, count: count || 0 };
 }
 
 export async function reviewApplication(
@@ -360,11 +757,35 @@ export async function reviewApplication(
         return { success: false, error: error.message };
     }
 
-    // If accepted, find the user by email and upgrade their role to 'artist'
+    if (decision === "rejected" && appData.email) {
+        sendApplicationRejectedEmail(appData.email, appData.full_name || "مقدم الطلب").catch(console.error);
+    }
+
+    // عند القبول: ربط profile_id إذا وُجد مستخدم بنفس البريد في Clerk
     if (decision === "accepted" && appData.email) {
-        // Try to find a profile with Clerk that matches this email
-        // For now, we'll log this — in production, you'd use Clerk Admin SDK
-        console.log(`Application accepted for ${appData.email}. Manual role upgrade may be needed.`);
+        try {
+            const client = await clerkClient();
+            const clerkUsers = await client.users.getUserList({
+                emailAddress: [appData.email],
+                limit: 1,
+            });
+            const matched = clerkUsers.data?.[0];
+            if (matched) {
+                const { data: matchedProfile } = await supabase
+                    .from("profiles")
+                    .select("id")
+                    .eq("clerk_id", matched.id)
+                    .maybeSingle();
+                if (matchedProfile) {
+                    await supabase
+                        .from("applications")
+                        .update({ profile_id: matchedProfile.id })
+                        .eq("id", id);
+                }
+            }
+        } catch (linkErr) {
+            console.warn("[reviewApplication] Auto-link profile_id failed (non-critical):", linkErr);
+        }
     }
 
     revalidatePath("/dashboard/applications");

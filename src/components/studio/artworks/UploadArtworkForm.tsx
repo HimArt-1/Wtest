@@ -5,8 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Upload, X, Image as ImageIcon, Loader2, CheckCircle2 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { getSupabaseBrowserClient } from "@/lib/supabase";
-import { createArtwork } from "@/app/actions/artworks";
+import { createArtwork, uploadArtworkImage } from "@/app/actions/artworks";
 
 interface Category {
     id: string;
@@ -21,7 +20,6 @@ export function UploadArtworkForm({ categories }: { categories: Category[] }) {
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [isDragging, setIsDragging] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
-    const [uploadProgress, setUploadProgress] = useState(0);
     const [error, setError] = useState("");
 
     const [formData, setFormData] = useState({
@@ -74,31 +72,19 @@ export function UploadArtworkForm({ categories }: { categories: Category[] }) {
         setError("");
 
         try {
-            const supabase = getSupabaseBrowserClient();
+            // 1. Upload file via Server Action (يتجاوز RLS)
+            const fd = new FormData();
+            fd.append("file", file);
+            const uploadResult = await uploadArtworkImage(fd);
 
-            // 1. Upload file
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-            const filePath = `uploads/${fileName}`;
+            if (!uploadResult.success) {
+                throw new Error(uploadResult.error);
+            }
 
-            const { error: uploadError, data } = await supabase.storage
-                .from('artworks')
-                .upload(filePath, file, {
-                    cacheControl: '3600',
-                    upsert: false
-                });
-
-            if (uploadError) throw uploadError;
-
-            // 2. Get Public URL
-            const { data: { publicUrl } } = supabase.storage
-                .from('artworks')
-                .getPublicUrl(filePath);
-
-            // 3. Create DB Record
+            // 2. Create DB Record
             const result = await createArtwork({
                 ...formData,
-                image_url: publicUrl,
+                image_url: uploadResult.url,
                 tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean),
             });
 

@@ -1,16 +1,14 @@
-import type { Metadata } from "next";
-import { IBM_Plex_Sans_Arabic } from "next/font/google";
+import type { Metadata, Viewport } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { arSA } from "@clerk/localizations";
 import { FloatingJoinButton } from "@/components/ui/FloatingJoinButton";
 import "./globals.css";
 
-const ibmPlexArabic = IBM_Plex_Sans_Arabic({
-  subsets: ["arabic", "latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-arabic",
-  display: "swap",
-});
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
 
 export const metadata: Metadata = {
   title: "منصة وشّى | WUSHA",
@@ -59,9 +57,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider localization={arSA} appearance={clerkAppearance}>
-      <html lang="ar" dir="rtl" className={ibmPlexArabic.variable}>
-        <body className={`${ibmPlexArabic.className} bg-[#080808] text-[#f0ebe3]`}>
+    <ClerkProvider localization={arSA} appearance={clerkAppearance} dynamic>
+      <html lang="ar" dir="rtl">
+        <body className="font-arabic bg-[#080808] text-[#f0ebe3]">
           {/* Noise Texture Overlay */}
           <div className="noise-overlay" aria-hidden="true" />
 

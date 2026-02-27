@@ -41,7 +41,13 @@ const nextStatuses: Record<string, string[]> = {
     refunded: [],
 };
 
-export function OrdersClient({ orders, count, totalPages, currentPage, currentStatus }: OrdersClientProps) {
+export function OrdersClient({
+    orders = [],
+    count = 0,
+    totalPages = 0,
+    currentPage = 1,
+    currentStatus = "all",
+}: OrdersClientProps) {
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
     const [expandedOrder, setExpandedOrder] = useState<string | null>(null);

@@ -33,7 +33,7 @@ export default async function ArtworkDetailPage({ params }: { params: Promise<{ 
     const similarArtworks = similar.data?.filter((a: any) => a.id !== artwork.id).slice(0, 4) || [];
 
     return (
-        <div className="min-h-screen bg-bg pt-24 pb-20" dir="rtl">
+        <div className="min-h-[60vh] bg-bg pt-6 sm:pt-8 pb-12 sm:pb-16" dir="rtl">
             <div className="max-w-7xl mx-auto px-6">
                 {/* ─── Breadcrumb ─── */}
                 <nav className="flex items-center gap-2 text-xs text-fg/30 mb-8">

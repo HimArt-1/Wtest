@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -8,6 +10,7 @@
 ═══════════════════════════════════════════════════════════ */
 
 :root {
+  --font-arabic: "IBM Plex Sans Arabic", Tahoma, Arial, sans-serif;
   /* الألوان الأساسية — Dark Heritage */
   --wusha-bg: #080808;
   --wusha-surface: #111111;
@@ -52,6 +55,7 @@
 }
 
 html {
+  position: relative;
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -59,6 +63,7 @@ html {
 }
 
 body {
+  position: relative;
   background-color: var(--wusha-bg);
   color: var(--wusha-text);
   min-height: 100vh;
@@ -72,6 +77,7 @@ body {
 ═══════════════════════════════════════════════════════════ */
 
 .font-arabic {
+  font-family: var(--font-arabic);
   font-feature-settings: "ss01", "ss02";
   letter-spacing: 0.02em;
 }
@@ -94,7 +100,7 @@ h6 {
 .noise-overlay {
   position: fixed;
   inset: 0;
-  z-index: 9999;
+  z-index: 0;
   pointer-events: none;
   opacity: 0.025;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");

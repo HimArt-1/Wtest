@@ -1,5 +1,6 @@
-import { getAdminUsers } from "@/app/actions/admin";
+import { getAdminUsers, getAdminUsersStats } from "@/app/actions/admin";
 import { UsersClient } from "@/components/admin/UsersClient";
+import { AdminHeader } from "@/components/admin/AdminHeader";
 
 interface PageProps {
     searchParams: Promise<{ page?: string; role?: string; search?: string }>;
@@ -11,14 +12,17 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
     const role = params.role || "all";
     const search = params.search || "";
 
-    const { data: users, count, totalPages } = await getAdminUsers(page, role, search);
+    const [{ data: users, count, totalPages }, stats] = await Promise.all([
+        getAdminUsers(page, role, search),
+        getAdminUsersStats(),
+    ]);
 
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold text-fg">إدارة المستخدمين</h1>
-                <p className="text-fg/40 mt-1">عرض وإدارة جميع المستخدمين على المنصة.</p>
-            </div>
+            <AdminHeader
+                title="إدارة المستخدمين"
+                subtitle="عرض وإدارة وإضافة وتعديل وحذف المستخدمين على المنصة."
+            />
 
             <UsersClient
                 users={users}
@@ -27,6 +31,7 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
                 currentPage={page}
                 currentRole={role}
                 currentSearch={search}
+                stats={stats}
             />
         </div>
     );
