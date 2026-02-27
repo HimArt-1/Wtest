@@ -31,23 +31,45 @@ interface NavItem {
     badge?: number;
 }
 
+interface NavGroup {
+    title?: string;
+    items: NavItem[];
+}
+
 export function AdminSidebar({ pendingApps = 0 }: { pendingApps?: number }) {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [isMobileOpen, setIsMobileOpen] = useState(false);
     const pathname = usePathname();
 
-    const navItems: NavItem[] = [
-        { icon: LayoutDashboard, label: "نظرة عامة", href: "/dashboard" },
-        { icon: UserCheck, label: "مستخدمي Clerk", href: "/dashboard/users-clerk" },
-        { icon: Users, label: "المستخدمون", href: "/dashboard/users" },
-        { icon: ShoppingCart, label: "الطلبات", href: "/dashboard/orders" },
-        { icon: FileText, label: "طلبات الانضمام", href: "/dashboard/applications", badge: pendingApps },
-        { icon: ImageIcon, label: "الأعمال الفنية", href: "/dashboard/artworks" },
-        { icon: Tag, label: "الفئات", href: "/dashboard/categories" },
-        { icon: Package, label: "المنتجات", href: "/dashboard/products" },
-        { icon: Palette, label: "تصاميم وشّى الحصرية", href: "/dashboard/exclusive-designs" },
-        { icon: Mail, label: "النشرة البريدية", href: "/dashboard/newsletter" },
-        { icon: Settings, label: "الإعدادات", href: "/dashboard/settings" },
+    const navGroups: NavGroup[] = [
+        {
+            items: [{ icon: LayoutDashboard, label: "نظرة عامة", href: "/dashboard" }],
+        },
+        {
+            title: "المستخدمون والطلبات",
+            items: [
+                { icon: UserCheck, label: "مستخدمي Clerk", href: "/dashboard/users-clerk" },
+                { icon: Users, label: "المستخدمون", href: "/dashboard/users" },
+                { icon: ShoppingCart, label: "الطلبات", href: "/dashboard/orders" },
+                { icon: FileText, label: "طلبات الانضمام", href: "/dashboard/applications", badge: pendingApps },
+            ],
+        },
+        {
+            title: "المحتوى والتصاميم",
+            items: [
+                { icon: ImageIcon, label: "الأعمال الفنية", href: "/dashboard/artworks" },
+                { icon: Tag, label: "الفئات", href: "/dashboard/categories" },
+                { icon: Package, label: "المنتجات", href: "/dashboard/products" },
+                { icon: Palette, label: "تصاميم وشّى الحصرية", href: "/dashboard/exclusive-designs" },
+            ],
+        },
+        {
+            title: "التواصل والإعدادات",
+            items: [
+                { icon: Mail, label: "النشرة البريدية", href: "/dashboard/newsletter" },
+                { icon: Settings, label: "الإعدادات", href: "/dashboard/settings" },
+            ],
+        },
     ];
 
     const sidebarContent = (
@@ -93,62 +115,71 @@ export function AdminSidebar({ pendingApps = 0 }: { pendingApps?: number }) {
             </div>
 
             {/* ─── Navigation ─── */}
-            <nav className="flex-1 py-4 px-3 flex flex-col gap-1 overflow-y-auto">
-                {navItems.map((item) => {
-                    const isActive = pathname === item.href ||
-                        (item.href !== "/dashboard" && pathname.startsWith(item.href));
-
-                    return (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            onClick={() => setIsMobileOpen(false)}
-                            className={`
-                                relative flex items-center gap-3 px-3 py-2.5 rounded-xl
-                                transition-all duration-300 group
-                                ${isActive
-                                    ? "bg-gold/10 text-gold"
-                                    : "text-fg/40 hover:text-fg/70 hover:bg-white/[0.03]"
-                                }
-                            `}
-                        >
-                            <item.icon className={`w-5 h-5 shrink-0 transition-colors ${isActive ? "text-gold" : "text-fg/40 group-hover:text-fg/60"
-                                }`} />
-
-                            <AnimatePresence>
-                                {!isCollapsed && (
-                                    <motion.span
-                                        initial={{ opacity: 0, x: -8 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        exit={{ opacity: 0, x: -8 }}
-                                        className="text-sm font-medium whitespace-nowrap flex-1"
-                                    >
-                                        {item.label}
-                                    </motion.span>
-                                )}
-                            </AnimatePresence>
-
-                            {/* Badge */}
-                            {item.badge && item.badge > 0 && (
-                                <span className={`
-                                    ${isCollapsed ? "absolute -top-1 -right-1 w-4 h-4 text-[9px]" : "w-5 h-5 text-[10px]"}
-                                    bg-gold text-bg rounded-full flex items-center justify-center font-bold
-                                `}>
-                                    {item.badge}
+            <nav className="flex-1 py-4 px-3 flex flex-col gap-6 overflow-y-auto">
+                {navGroups.map((group, gi) => (
+                    <div key={gi} className="space-y-1">
+                        {group.title && !isCollapsed && (
+                            <div className="px-3 mb-2">
+                                <span className="text-[10px] font-bold text-fg/30 uppercase tracking-wider">
+                                    {group.title}
                                 </span>
-                            )}
+                            </div>
+                        )}
+                        {group.items.map((item) => {
+                            const isActive = pathname === item.href ||
+                                (item.href !== "/dashboard" && pathname.startsWith(item.href));
 
-                            {/* Active indicator */}
-                            {isActive && (
-                                <motion.div
-                                    layoutId="admin-active-pill"
-                                    className="absolute right-0 top-1/2 -translate-y-1/2 w-0.5 h-6 bg-gold rounded-l-full"
-                                    transition={{ duration: 0.3 }}
-                                />
-                            )}
-                        </Link>
-                    );
-                })}
+                            return (
+                                <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    onClick={() => setIsMobileOpen(false)}
+                                    className={`
+                                        relative flex items-center gap-3 px-3 py-2.5 rounded-xl
+                                        transition-all duration-300 group
+                                        ${isActive
+                                            ? "bg-gold/10 text-gold"
+                                            : "text-fg/40 hover:text-fg/70 hover:bg-white/[0.03]"
+                                        }
+                                    `}
+                                >
+                                    <item.icon className={`w-5 h-5 shrink-0 transition-colors ${isActive ? "text-gold" : "text-fg/40 group-hover:text-fg/60"
+                                        }`} />
+
+                                    <AnimatePresence>
+                                        {!isCollapsed && (
+                                            <motion.span
+                                                initial={{ opacity: 0, x: -8 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                exit={{ opacity: 0, x: -8 }}
+                                                className="text-sm font-medium whitespace-nowrap flex-1"
+                                            >
+                                                {item.label}
+                                            </motion.span>
+                                        )}
+                                    </AnimatePresence>
+
+                                    {item.badge && item.badge > 0 && (
+                                        <span className={`
+                                            ${isCollapsed ? "absolute -top-1 -right-1 w-4 h-4 text-[9px]" : "w-5 h-5 text-[10px]"}
+                                            bg-gold text-bg rounded-full flex items-center justify-center font-bold
+                                        `}>
+                                            {item.badge}
+                                        </span>
+                                    )}
+
+                                    {isActive && (
+                                        <motion.div
+                                            layoutId="admin-active-pill"
+                                            className="absolute right-0 top-1/2 -translate-y-1/2 w-0.5 h-6 bg-gold rounded-l-full"
+                                            transition={{ duration: 0.3 }}
+                                        />
+                                    )}
+                                </Link>
+                            );
+                        })}
+                    </div>
+                ))}
             </nav>
 
             {/* ─── Footer ─── */}

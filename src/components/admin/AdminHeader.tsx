@@ -14,7 +14,8 @@ const ROUTES: Record<string, { label: string; parent?: string }> = {
     "/dashboard/artworks": { label: "الأعمال الفنية", parent: "/dashboard" },
     "/dashboard/categories": { label: "الفئات", parent: "/dashboard" },
     "/dashboard/products": { label: "المنتجات", parent: "/dashboard" },
-    "/dashboard/newsletter": { label: "المشتركون", parent: "/dashboard" },
+    "/dashboard/exclusive-designs": { label: "تصاميم وشّى الحصرية", parent: "/dashboard" },
+    "/dashboard/newsletter": { label: "النشرة البريدية", parent: "/dashboard" },
     "/dashboard/settings": { label: "الإعدادات", parent: "/dashboard" },
 };
 

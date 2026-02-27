@@ -3,6 +3,7 @@ import { StatCard } from "@/components/admin/StatCard";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { AdminQuickActions } from "@/components/admin/AdminQuickActions";
+import { AdminCard } from "@/components/admin/AdminCard";
 import Link from "next/link";
 
 export default async function AdminDashboardPage() {
@@ -10,7 +11,7 @@ export default async function AdminDashboardPage() {
     const { stats, recentOrders, pendingApplications } = overview;
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-10">
             {/* ─── Header ─── */}
             <AdminHeader
                 title="نظرة عامة"
@@ -19,7 +20,7 @@ export default async function AdminDashboardPage() {
             />
 
             {/* ─── Stats Grid (Primary) ─── */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 <StatCard
                     title="إجمالي الإيرادات"
                     value={`${stats.totalRevenue.toLocaleString()} ر.س`}
@@ -69,13 +70,15 @@ export default async function AdminDashboardPage() {
             {/* ─── Bottom Grid: Recent Orders + Pending Apps ─── */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Recent Orders Table */}
-                <div className="lg:col-span-2 rounded-2xl border border-white/[0.06] bg-surface/50 backdrop-blur-sm overflow-hidden">
-                    <div className="px-6 py-4 border-b border-white/[0.06] flex items-center justify-between">
-                        <h3 className="font-bold text-fg text-sm">آخر الطلبات</h3>
-                        <Link href="/dashboard/orders" className="text-xs text-gold hover:text-gold-light transition-colors">
+                <AdminCard
+                    title="آخر الطلبات"
+                    action={
+                        <Link href="/dashboard/orders" className="text-xs text-gold hover:text-gold-light transition-colors font-medium">
                             عرض الكل ←
                         </Link>
-                    </div>
+                    }
+                    className="lg:col-span-2"
+                >
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead>
@@ -106,16 +109,18 @@ export default async function AdminDashboardPage() {
                             </tbody>
                         </table>
                     </div>
-                </div>
+                </AdminCard>
 
                 {/* Pending Applications */}
-                <div className="rounded-2xl border border-white/[0.06] bg-surface/50 backdrop-blur-sm overflow-hidden">
-                    <div className="px-6 py-4 border-b border-white/[0.06] flex items-center justify-between">
-                        <h3 className="font-bold text-fg text-sm">طلبات الانضمام</h3>
-                        <Link href="/dashboard/applications" className="text-xs text-gold hover:text-gold-light transition-colors">
+                <AdminCard
+                    title="طلبات الانضمام"
+                    subtitle={stats.pendingApplications > 0 ? `${stats.pendingApplications} بانتظار المراجعة` : undefined}
+                    action={
+                        <Link href="/dashboard/applications" className="text-xs text-gold hover:text-gold-light transition-colors font-medium">
                             عرض الكل ←
                         </Link>
-                    </div>
+                    }
+                >
                     <div className="divide-y divide-white/[0.03]">
                         {pendingApplications.length > 0 ? pendingApplications.map((app: any) => (
                             <div key={app.id} className="px-6 py-4 hover:bg-white/[0.02] transition-colors">
@@ -133,7 +138,7 @@ export default async function AdminDashboardPage() {
                             </div>
                         )}
                     </div>
-                </div>
+                </AdminCard>
             </div>
         </div>
     );

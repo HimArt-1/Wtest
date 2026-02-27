@@ -5,11 +5,12 @@ import { motion } from "framer-motion";
 import { Users, FileText, ShoppingCart, Plus, Palette, ExternalLink } from "lucide-react";
 
 const actions = [
-    { icon: Users, label: "إضافة مستخدم", href: "/dashboard/users", query: "?add=1" },
     { icon: FileText, label: "طلبات الانضمام", href: "/dashboard/applications", badge: "pending" },
-    { icon: ShoppingCart, label: "الطلبات الجديدة", href: "/dashboard/orders", query: "?status=pending" },
+    { icon: ShoppingCart, label: "الطلبات", href: "/dashboard/orders", query: "?status=pending" },
+    { icon: Users, label: "المستخدمون", href: "/dashboard/users" },
+    { icon: Palette, label: "التصاميم الحصرية", href: "/dashboard/exclusive-designs" },
     { icon: Palette, label: "الأعمال الفنية", href: "/dashboard/artworks" },
-    { icon: ExternalLink, label: "المتجر العام", href: "/store", external: true },
+    { icon: ExternalLink, label: "المتجر", href: "/store", external: true },
 ];
 
 export function AdminQuickActions({ pendingCount = 0 }: { pendingCount?: number }) {
