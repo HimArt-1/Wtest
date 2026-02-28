@@ -107,3 +107,72 @@ export async function sendOrderConfirmationEmail(
         `,
     });
 }
+
+/** إرسال بريد للأدمن عند طلب جديد أو استلام دفع. يستخدم ADMIN_EMAIL من .env */
+export async function sendAdminOrderNotificationEmail(
+    orderNumber: string,
+    total: number,
+    type: "new_order" | "payment_received",
+    adminEmailOverride?: string
+) {
+    const adminEmail = adminEmailOverride || process.env.ADMIN_EMAIL;
+    if (!adminEmail?.trim()) {
+        return { success: false };
+    }
+    const subject = type === "new_order"
+        ? `طلب جديد #${orderNumber} — ${total.toLocaleString()} ر.س`
+        : `تم استلام الدفع #${orderNumber} — ${total.toLocaleString()} ر.س`;
+    const title = type === "new_order" ? "طلب جديد" : "تم استلام الدفع";
+    const desc = type === "new_order"
+        ? "تم إنشاء طلب جديد في المتجر."
+        : "تم تأكيد الدفع لطلب عبر Stripe.";
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://wusha.sa";
+    return send({
+        to: adminEmail,
+        subject: `[${SITE_NAME}] ${subject}`,
+        html: `
+            <div dir="rtl" style="font-family: 'Segoe UI', Tahoma, sans-serif; max-width: 560px; margin: 0 auto; padding: 24px;">
+                <h1 style="color: #ceae7f; font-size: 22px;">${title}</h1>
+                <p style="color: #333; line-height: 1.7;">${desc}</p>
+                <p style="color: #333; line-height: 1.7;">رقم الطلب: <strong>${orderNumber}</strong></p>
+                <p style="color: #333; line-height: 1.7;">الإجمالي: <strong>${total.toLocaleString()} ر.س</strong></p>
+                <p style="margin-top: 24px;">
+                    <a href="${baseUrl}/dashboard/orders" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #ceae7f, #b8964f); color: #0a0a0a; font-weight: bold; text-decoration: none; border-radius: 12px;">
+                        عرض الطلبات
+                    </a>
+                </p>
+                <p style="color: #666; margin-top: 32px; font-size: 13px;">— ${SITE_NAME}</p>
+            </div>
+        `,
+    });
+}
+
+/** إرسال بريد للأدمن عند طلب انضمام جديد */
+export async function sendAdminApplicationNotificationEmail(
+    fullName: string,
+    email: string,
+    artStyle: string
+) {
+    const adminEmail = process.env.ADMIN_EMAIL;
+    if (!adminEmail?.trim()) return { success: false };
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://wusha.sa";
+    return send({
+        to: adminEmail,
+        subject: `[${SITE_NAME}] طلب انضمام جديد — ${fullName}`,
+        html: `
+            <div dir="rtl" style="font-family: 'Segoe UI', Tahoma, sans-serif; max-width: 560px; margin: 0 auto; padding: 24px;">
+                <h1 style="color: #ceae7f; font-size: 22px;">طلب انضمام جديد</h1>
+                <p style="color: #333; line-height: 1.7;">تم تقديم طلب انضمام كفنان وشّاي.</p>
+                <p style="color: #333; line-height: 1.7;"><strong>الاسم:</strong> ${fullName}</p>
+                <p style="color: #333; line-height: 1.7;"><strong>البريد:</strong> ${email}</p>
+                <p style="color: #333; line-height: 1.7;"><strong>الأسلوب الفني:</strong> ${artStyle}</p>
+                <p style="margin-top: 24px;">
+                    <a href="${baseUrl}/dashboard/applications" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #ceae7f, #b8964f); color: #0a0a0a; font-weight: bold; text-decoration: none; border-radius: 12px;">
+                        مراجعة الطلبات
+                    </a>
+                </p>
+                <p style="color: #666; margin-top: 32px; font-size: 13px;">— ${SITE_NAME}</p>
+            </div>
+        `,
+    });
+}

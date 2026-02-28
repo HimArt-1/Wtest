@@ -4,6 +4,8 @@ import { getSupabaseServerClient } from "@/lib/supabase";
 import { revalidatePath } from "next/cache";
 import { applicationSchema, newsletterSchema } from "@/lib/validations";
 import { createAdminNotification } from "@/app/actions/notifications";
+import { sendAdminApplicationNotificationEmail } from "@/lib/email";
+import { sendPushToAll } from "@/lib/push";
 // import type { Database } from "@/types/database"; // Not strictly needed if we cast
 
 export type ActionResponse = {
@@ -68,6 +70,14 @@ export async function submitApplication(formData: FormData): Promise<ActionRespo
         link: "/dashboard/applications",
         metadata: { email: validated.data.email },
     }).catch(() => {});
+
+    sendAdminApplicationNotificationEmail(
+        validated.data.full_name,
+        validated.data.email,
+        validated.data.art_style
+    ).catch(console.error);
+
+    sendPushToAll("طلب انضمام جديد", `${validated.data.full_name} — ${validated.data.art_style}`, "/dashboard/applications").catch(() => {});
 
     revalidatePath("/"); // Revalidate cache for relevant paths
     return { success: true, message: "تم استلام طلبك بنجاح! سنقوم بمراجعته والتواصل معك قريباً." };

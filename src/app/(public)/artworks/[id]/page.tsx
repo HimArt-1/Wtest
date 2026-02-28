@@ -1,9 +1,11 @@
 import { getArtworkById, getArtworks } from "@/app/actions/artworks";
+import { getArtworkReviews } from "@/app/actions/reviews";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { Metadata } from "next";
 import { ArtworkActions } from "./ArtworkActions";
+import { ArtworkReviews } from "@/components/reviews/ArtworkReviews";
 
 // ─── Dynamic Metadata ───────────────────────────────────────
 
@@ -27,6 +29,8 @@ export default async function ArtworkDetailPage({ params }: { params: Promise<{ 
     const { id } = await params;
     const artwork = await getArtworkById(id) as any;
     if (!artwork) notFound();
+
+    const reviews = await getArtworkReviews(id);
 
     // Fetch similar artworks (same category, excluding current)
     const similar = await getArtworks(1, "all", "");
@@ -149,6 +153,9 @@ export default async function ArtworkDetailPage({ params }: { params: Promise<{ 
                         )}
                     </div>
                 </div>
+
+                {/* ─── Reviews ─── */}
+                <ArtworkReviews artworkId={id} initialReviews={reviews} />
 
                 {/* ─── Similar Artworks ─── */}
                 {similarArtworks.length > 0 && (

@@ -198,6 +198,7 @@ export function SettingsClient({ settings }: SettingsProps) {
 
             {/* ─── 2. Site Info ─── */}
             <SettingsCard title="معلومات الموقع" icon={Globe}>
+                <p className="text-fg/40 text-xs mb-4">لإشعارات البريد (طلبات جديدة، طلبات انضمام): أضف <code className="bg-white/5 px-1 rounded">ADMIN_EMAIL</code> في ملف .env</p>
                 <div className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <Field
@@ -207,7 +208,7 @@ export function SettingsClient({ settings }: SettingsProps) {
                             placeholder="وشّى"
                         />
                         <Field
-                            label="البريد الإلكتروني"
+                            label="البريد الإلكتروني (للاستقبال + إشعارات الأدمن)"
                             value={siteInfo.email}
                             onChange={(v) => setSiteInfo({ ...siteInfo, email: v })}
                             placeholder="info@wusha.art"

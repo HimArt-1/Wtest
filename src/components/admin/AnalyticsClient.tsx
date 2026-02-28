@@ -14,7 +14,7 @@ import {
     Legend,
 } from "recharts";
 import { getAdminAnalytics, type AnalyticsData, type AnalyticsPeriod } from "@/app/actions/admin";
-import { TrendingUp, Package, Users, DollarSign } from "lucide-react";
+import { TrendingUp, Package, Users, DollarSign, Download, ArrowUpRight, ArrowDownRight } from "lucide-react";
 
 const PERIODS: { id: AnalyticsPeriod; label: string }[] = [
     { id: "7d", label: "7 أيام" },
@@ -60,6 +60,30 @@ export function AnalyticsClient({
         users: d.count,
     }));
 
+    const exportCSV = () => {
+        const usersMap = new Map(data.usersByDay.map((u) => [u.date, u.count]));
+        const rows: string[][] = [
+            ["التاريخ", "الإيرادات (ر.س)", "الطلبات", "المستخدمون الجدد"],
+            ...data.revenueByDay.map((d) => [
+                d.date,
+                String(Math.round(d.revenue)),
+                String(d.orders),
+                String(usersMap.get(d.date) ?? 0),
+            ]),
+            [],
+            ["المنتج", "الكمية", "الإيرادات (ر.س)"],
+            ...data.topProducts.map((p) => [p.title, String(p.quantity), String(p.revenue)]),
+        ];
+        const csv = rows.map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
+        const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `wusha-analytics-${period}-${new Date().toISOString().slice(0, 10)}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
     return (
         <div className="space-y-8">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -67,7 +91,14 @@ export function AnalyticsClient({
                     <h1 className="text-2xl font-bold text-fg">لوحة التحليلات</h1>
                     <p className="text-fg/50 text-sm mt-1">إيرادات ومبيعات ومستخدمين</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
+                    <button
+                        onClick={exportCSV}
+                        className="px-4 py-2 rounded-xl text-sm font-medium border border-white/10 hover:border-gold/40 text-fg/70 hover:text-gold transition-colors inline-flex items-center gap-2"
+                    >
+                        <Download className="w-4 h-4" />
+                        تصدير CSV
+                    </button>
                     {PERIODS.map((p) => (
                         <button
                             key={p.id}
@@ -85,30 +116,63 @@ export function AnalyticsClient({
                 </div>
             </div>
 
-            {/* Summary cards */}
+            {/* Summary cards + مقارنة الفترة السابقة */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
-                    <div className="flex items-center gap-2 text-fg/50 text-sm mb-1">
-                        <DollarSign className="w-4 h-4" />
-                        إجمالي الإيرادات
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-fg/50 text-sm mb-1">
+                            <DollarSign className="w-4 h-4" />
+                            إجمالي الإيرادات
+                        </div>
+                        {data.previousPeriod && (
+                            <span className={`text-xs flex items-center gap-0.5 ${data.previousPeriod.revenueGrowth >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                                {data.previousPeriod.revenueGrowth >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                                {data.previousPeriod.revenueGrowth >= 0 ? "+" : ""}{data.previousPeriod.revenueGrowth.toFixed(1)}%
+                            </span>
+                        )}
                     </div>
                     <p className="text-xl font-bold text-fg">
                         {data.summary.totalRevenue.toLocaleString()} ر.س
                     </p>
+                    {data.previousPeriod && (
+                        <p className="text-xs text-fg/30 mt-1">الفترة السابقة: {data.previousPeriod.totalRevenue.toLocaleString()} ر.س</p>
+                    )}
                 </div>
                 <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
-                    <div className="flex items-center gap-2 text-fg/50 text-sm mb-1">
-                        <Package className="w-4 h-4" />
-                        عدد الطلبات
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-fg/50 text-sm mb-1">
+                            <Package className="w-4 h-4" />
+                            عدد الطلبات
+                        </div>
+                        {data.previousPeriod && (
+                            <span className={`text-xs flex items-center gap-0.5 ${data.previousPeriod.ordersGrowth >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                                {data.previousPeriod.ordersGrowth >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                                {data.previousPeriod.ordersGrowth >= 0 ? "+" : ""}{data.previousPeriod.ordersGrowth.toFixed(1)}%
+                            </span>
+                        )}
                     </div>
                     <p className="text-xl font-bold text-fg">{data.summary.totalOrders}</p>
+                    {data.previousPeriod && (
+                        <p className="text-xs text-fg/30 mt-1">الفترة السابقة: {data.previousPeriod.totalOrders}</p>
+                    )}
                 </div>
                 <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
-                    <div className="flex items-center gap-2 text-fg/50 text-sm mb-1">
-                        <Users className="w-4 h-4" />
-                        مستخدمون جدد
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-fg/50 text-sm mb-1">
+                            <Users className="w-4 h-4" />
+                            مستخدمون جدد
+                        </div>
+                        {data.previousPeriod && (
+                            <span className={`text-xs flex items-center gap-0.5 ${data.previousPeriod.usersGrowth >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                                {data.previousPeriod.usersGrowth >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                                {data.previousPeriod.usersGrowth >= 0 ? "+" : ""}{data.previousPeriod.usersGrowth.toFixed(1)}%
+                            </span>
+                        )}
                     </div>
                     <p className="text-xl font-bold text-fg">{data.summary.totalUsers}</p>
+                    {data.previousPeriod && (
+                        <p className="text-xs text-fg/30 mt-1">الفترة السابقة: {data.previousPeriod.totalUsers}</p>
+                    )}
                 </div>
                 <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
                     <div className="flex items-center gap-2 text-fg/50 text-sm mb-1">

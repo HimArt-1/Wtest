@@ -7,6 +7,8 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { createAdminNotification } from "@/app/actions/notifications";
+import { sendAdminApplicationNotificationEmail } from "@/lib/email";
+import { sendPushToAll } from "@/lib/push";
 
 function getClient() {
     return createClient(
@@ -60,6 +62,10 @@ export async function submitJoinForm(data: JoinFormData) {
             message: `${data.name} — ${data.email}`,
             link: "/dashboard/applications",
         }).catch(() => {});
+
+        sendAdminApplicationNotificationEmail(data.name, data.email, data.clothing?.join(", ") || "—").catch(console.error);
+
+        sendPushToAll("طلب انضمام جديد", `${data.name} — ${data.email}`, "/dashboard/applications").catch(() => {});
 
         return { success: true, message: "تم التسجيل بنجاح!" };
     } catch (error) {

@@ -9,6 +9,7 @@ import {
 import { ensureProfile } from "@/lib/ensure-profile";
 import { getPublicVisibility } from "@/app/actions/settings";
 import { OnboardingBanner } from "@/components/account/OnboardingBanner";
+import { PushSubscribeButton } from "@/components/notifications/PushSubscribeButton";
 import { getSupabaseServerClient } from "@/lib/supabase";
 import type { Metadata } from "next";
 
@@ -140,6 +141,9 @@ export default async function AccountPage() {
                         <p className="text-fg/30 text-sm mt-1">
                             {roleLabel} · @{profile?.username || "user"}
                         </p>
+                        <div className="mt-2">
+                            <PushSubscribeButton />
+                        </div>
                     </div>
                 </div>
 

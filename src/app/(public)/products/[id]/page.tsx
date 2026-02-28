@@ -1,9 +1,11 @@
 import { getProductById, getProducts } from "@/app/actions/products";
+import { getProductReviews } from "@/app/actions/reviews";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { Metadata } from "next";
 import { ProductActions } from "./ProductActions";
+import { ProductReviews } from "@/components/reviews/ProductReviews";
 
 // ─── Dynamic Metadata ───────────────────────────────────────
 
@@ -27,6 +29,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     const { id } = await params;
     const product = await getProductById(id) as any;
     if (!product) notFound();
+
+    const reviews = await getProductReviews(id);
 
     // Related products
     const related = await getProducts(1, product.type || "all");
@@ -115,6 +119,14 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                         <ProductActions product={product} />
                     </div>
                 </div>
+
+                {/* ─── Reviews ─── */}
+                <ProductReviews
+                    productId={id}
+                    initialReviews={reviews}
+                    initialRating={Number(product.rating) || 0}
+                    initialReviewsCount={Number(product.reviews_count) || 0}
+                />
 
                 {/* ─── Related Products ─── */}
                 {relatedProducts.length > 0 && (

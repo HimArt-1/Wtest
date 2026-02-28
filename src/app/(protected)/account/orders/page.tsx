@@ -79,7 +79,7 @@ export default async function OrdersPage() {
                             return (
                                 <div
                                     key={order.id}
-                                    className="p-5 border border-white/[0.06] rounded-2xl bg-surface/30 hover:border-white/[0.1] transition-all"
+                                    className="p-5 border border-white/[0.06] rounded-2xl bg-surface/30 hover:border-gold/20 hover:bg-surface/40 transition-all duration-300"
                                 >
                                     {/* Order Header */}
                                     <div className="flex items-center justify-between mb-4">
@@ -147,11 +147,13 @@ export default async function OrdersPage() {
                         })}
                     </div>
                 ) : (
-                    <div className="text-center py-24">
-                        <Package className="w-16 h-16 text-fg/10 mx-auto mb-4" />
-                        <h3 className="text-lg font-bold text-fg/30 mb-2">لا توجد طلبات</h3>
-                        <p className="text-fg/15 text-sm mb-6">لم تقم بأي طلب بعد</p>
-                        <Link href="/store" className="btn-gold py-3 px-8 text-sm">
+                    <div className="text-center py-24 rounded-2xl border border-white/[0.04] bg-surface/20">
+                        <div className="w-20 h-20 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mx-auto mb-5">
+                            <Package className="w-10 h-10 text-fg/20" />
+                        </div>
+                        <h3 className="text-lg font-bold text-fg/40 mb-2">لا توجد طلبات</h3>
+                        <p className="text-fg/30 text-sm mb-6 max-w-sm mx-auto">لم تقم بأي طلب بعد. تصفح المتجر واختر ما يعجبك</p>
+                        <Link href="/store" className="inline-flex items-center gap-2 btn-gold py-3 px-8 text-sm">
                             تصفح المتجر
                         </Link>
                     </div>

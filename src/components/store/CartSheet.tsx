@@ -49,22 +49,31 @@ export function CartSheet() {
                         {/* Items */}
                         <div className="flex-1 overflow-y-auto p-5 space-y-4">
                             {items.length === 0 ? (
-                                <div className="h-full flex flex-col items-center justify-center text-center space-y-4 text-fg/20">
-                                    <ShoppingBag className="w-16 h-16" />
-                                    <p>السلة فارغة</p>
-                                    <button
+                                <div className="h-full min-h-[200px] flex flex-col items-center justify-center text-center space-y-5 py-12">
+                                    <div className="w-20 h-20 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center">
+                                        <ShoppingBag className="w-10 h-10 text-fg/20" />
+                                    </div>
+                                    <div>
+                                        <p className="text-fg/40 font-medium">السلة فارغة</p>
+                                        <p className="text-fg/20 text-sm mt-1">أضف منتجات من المتجر لتبدأ</p>
+                                    </div>
+                                    <Link
+                                        href="/store"
                                         onClick={() => toggleCart(false)}
-                                        className="text-gold text-sm hover:underline"
+                                        className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-gold/30 text-gold text-sm font-medium hover:bg-gold/10 transition-colors"
                                     >
-                                        تصفح المنتجات
-                                    </button>
+                                        تصفح المتجر
+                                    </Link>
                                 </div>
                             ) : (
-                                items.map((item) => (
+                                items.map((item, i) => (
                                     <motion.div
                                         layout
                                         key={`${item.id}-${item.size}`}
-                                        className="flex gap-4 p-3 bg-white/[0.02] border border-white/[0.04] rounded-xl group"
+                                        initial={{ opacity: 0, x: 20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: i * 0.05 }}
+                                        className="flex gap-4 p-3 bg-white/[0.02] border border-white/[0.04] rounded-xl group hover:border-white/[0.08] transition-colors"
                                     >
                                         {/* Image */}
                                         <div className="relative w-20 h-20 bg-white/5 rounded-lg overflow-hidden shrink-0">
@@ -128,7 +137,7 @@ export function CartSheet() {
 
                         {/* Footer */}
                         {items.length > 0 && (
-                            <div className="p-5 border-t border-white/[0.06] bg-surface space-y-4">
+                            <div className="p-5 border-t border-white/[0.06] bg-surface/80 backdrop-blur-sm space-y-4">
                                 <div className="flex items-center justify-between text-sm">
                                     <span className="text-fg/60">المجموع</span>
                                     <span className="text-xl font-bold text-gold">{getCartTotal().toLocaleString()} ر.س</span>
@@ -136,7 +145,7 @@ export function CartSheet() {
                                 <Link
                                     href="/checkout"
                                     onClick={() => toggleCart(false)}
-                                    className="w-full flex items-center justify-center gap-2 bg-gold text-bg font-bold py-3.5 rounded-xl hover:bg-gold-light transition-colors"
+                                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-gold to-gold/90 text-bg font-bold py-3.5 rounded-xl hover:shadow-lg hover:shadow-gold/20 transition-all duration-300"
                                 >
                                     إتمام الشراء
                                     <ArrowRight className="w-4 h-4" />

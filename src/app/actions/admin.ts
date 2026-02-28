@@ -191,6 +191,14 @@ export interface AnalyticsData {
     topProducts: { productId: string; title: string; quantity: number; revenue: number }[];
     usersByDay: { date: string; count: number }[];
     summary: { totalRevenue: number; totalOrders: number; totalUsers: number; avgOrderValue: number };
+    previousPeriod?: {
+        totalRevenue: number;
+        totalOrders: number;
+        totalUsers: number;
+        revenueGrowth: number;
+        ordersGrowth: number;
+        usersGrowth: number;
+    };
 }
 
 export async function getAdminAnalytics(period: AnalyticsPeriod = "30d"): Promise<AnalyticsData> {
@@ -283,6 +291,35 @@ export async function getAdminAnalytics(period: AnalyticsPeriod = "30d"): Promis
             .sort((a, b) => a[0].localeCompare(b[0]))
             .map(([date, count]) => ({ date, count }));
 
+        // Previous period for comparison
+        const prevStartDate = new Date(startDate);
+        prevStartDate.setDate(prevStartDate.getDate() - days);
+        const prevStartIso = prevStartDate.toISOString();
+
+        let previousPeriod: AnalyticsData["previousPeriod"];
+        try {
+            const [
+                { data: prevOrders },
+                { data: prevProfiles },
+            ] = await Promise.all([
+                supabase.from("orders").select("id, total").gte("created_at", prevStartIso).lt("created_at", startIso).in("payment_status", ["paid"]),
+                supabase.from("profiles").select("id").gte("created_at", prevStartIso).lt("created_at", startIso),
+            ]);
+            const prevOrdersList = (prevOrders as { total: number }[]) || [];
+            const prevRev = prevOrdersList.reduce((s, o) => s + (Number(o.total) || 0), 0);
+            const prevUsers = (prevProfiles as unknown[])?.length ?? 0;
+            previousPeriod = {
+                totalRevenue: prevRev,
+                totalOrders: prevOrdersList.length,
+                totalUsers: prevUsers,
+                revenueGrowth: prevRev > 0 ? ((totalRevenue - prevRev) / prevRev) * 100 : (totalRevenue > 0 ? 100 : 0),
+                ordersGrowth: prevOrdersList.length > 0 ? ((orders.length - prevOrdersList.length) / prevOrdersList.length) * 100 : (orders.length > 0 ? 100 : 0),
+                usersGrowth: prevUsers > 0 ? ((profiles.length - prevUsers) / prevUsers) * 100 : (profiles.length > 0 ? 100 : 0),
+            };
+        } catch {
+            previousPeriod = undefined;
+        }
+
         return {
             revenueByDay,
             topProducts,
@@ -293,6 +330,7 @@ export async function getAdminAnalytics(period: AnalyticsPeriod = "30d"): Promis
                 totalUsers: profiles.length,
                 avgOrderValue: orders.length > 0 ? totalRevenue / orders.length : 0,
             },
+            previousPeriod,
         };
     } catch (err) {
         console.error("getAdminAnalytics error:", err);

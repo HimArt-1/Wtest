@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { arSA } from "@clerk/localizations";
 import { FloatingJoinButton } from "@/components/ui/FloatingJoinButton";
+import { ServiceWorkerRegister } from "@/components/notifications/ServiceWorkerRegister";
 import "./globals.css";
 
 export const viewport: Viewport = {
@@ -10,11 +11,19 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://wusha.sa";
+
 export const metadata: Metadata = {
-  title: "منصة وشّى | WUSHA",
-  description: "منصة فنية رقمية تجمع المبدعين العرب. معرض، بورتفوليو، متجر، ونظام قبول ذكي.",
-  keywords: ["فن", "معرض", "رقمي", "عربي", "بورتفوليو", "متجر فني"],
-  authors: [{ name: "WUSHA" }],
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "منصة وشّى | WUSHA — فنٌ يرتدى",
+    template: "%s | وشّى",
+  },
+  description: "منصة فنية رقمية تجمع المبدعين العرب. معرض، بورتفوليو، متجر، وتصميم قطعك بالذكاء الاصطناعي.",
+  keywords: ["فن", "معرض", "رقمي", "عربي", "بورتفوليو", "متجر فني", "وشّى", "wusha", "فن عربي"],
+  authors: [{ name: "WUSHA", url: SITE_URL }],
+  creator: "WUSHA",
+  manifest: "/manifest.json",
   icons: {
     icon: [
       { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
@@ -22,11 +31,30 @@ export const metadata: Metadata = {
     ],
     apple: "/apple-touch-icon.png",
   },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "وشّى",
+  },
   openGraph: {
-    title: "منصة وشّى | WUSHA",
-    description: "منصة فنية رقمية تجمع المبدعين العرب",
+    title: "منصة وشّى | WUSHA — فنٌ يرتدى",
+    description: "منصة فنية رقمية تجمع المبدعين العرب. معرض، متجر، وتصميم قطعك بالذكاء الاصطناعي.",
     type: "website",
     locale: "ar_SA",
+    url: SITE_URL,
+    siteName: "وشّى",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "منصة وشّى | WUSHA",
+    description: "منصة فنية رقمية تجمع المبدعين العرب",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  alternates: {
+    canonical: SITE_URL,
   },
 };
 
@@ -66,6 +94,8 @@ export default function RootLayout({
           {/* Main Content */}
           {children}
 
+          {/* Service Worker للـ PWA و Web Push */}
+          <ServiceWorkerRegister />
           {/* Floating Join Button */}
           <FloatingJoinButton />
         </body>
