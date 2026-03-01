@@ -55,8 +55,9 @@ export default async function DashboardLayout({
 
         return (
             <div className="flex min-h-screen bg-bg relative" dir="rtl">
-                {/* Subtle gradient overlay for depth */}
-                <div className="fixed inset-0 pointer-events-none bg-gradient-to-b from-gold/[0.02] via-transparent to-transparent opacity-50" />
+                {/* Cyber grid + gradient overlay */}
+                <div className="fixed inset-0 pointer-events-none cyber-grid opacity-40" />
+                <div className="fixed inset-0 pointer-events-none bg-gradient-to-b from-gold/[0.02] via-transparent to-transparent opacity-60" />
                 <AdminSidebar pendingApps={pendingApps} />
                 <div className="flex-1 flex flex-col min-w-0 relative">
                     <AdminTopBar />

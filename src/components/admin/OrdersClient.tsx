@@ -91,7 +91,7 @@ export function OrdersClient({
             </div>
 
             {/* ─── Orders Table ─── */}
-            <div className="rounded-2xl border border-white/[0.06] bg-surface/50 backdrop-blur-sm overflow-hidden relative">
+            <div className="rounded-2xl glass-premium border border-white/[0.08] overflow-hidden relative">
                 {isPending && (
                     <div className="absolute inset-0 bg-bg/50 flex items-center justify-center z-10">
                         <Loader2 className="w-6 h-6 text-gold animate-spin" />

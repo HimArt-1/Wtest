@@ -165,7 +165,7 @@ export function ArtworksClient({
                         initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.04 }}
-                        className="rounded-2xl border border-white/[0.06] bg-surface/50 backdrop-blur-sm overflow-hidden hover:border-white/[0.1] transition-all group"
+                        className="rounded-2xl glass-premium border border-white/[0.08] overflow-hidden hover:border-gold/20 transition-all duration-500 group"
                     >
                         {/* Image */}
                         <div className="relative aspect-[4/3] overflow-hidden bg-white/[0.02]">

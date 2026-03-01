@@ -118,7 +118,7 @@ export function AnalyticsClient({
 
             {/* Summary cards + مقارنة الفترة السابقة */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
+                <div className="p-4 rounded-2xl glass-premium border border-white/[0.08] hover:border-gold/20 transition-all duration-500">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 text-fg/50 text-sm mb-1">
                             <DollarSign className="w-4 h-4" />
@@ -138,7 +138,7 @@ export function AnalyticsClient({
                         <p className="text-xs text-fg/30 mt-1">الفترة السابقة: {data.previousPeriod.totalRevenue.toLocaleString()} ر.س</p>
                     )}
                 </div>
-                <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
+                <div className="p-4 rounded-2xl glass-premium border border-white/[0.08] hover:border-gold/20 transition-all duration-500">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 text-fg/50 text-sm mb-1">
                             <Package className="w-4 h-4" />
@@ -156,7 +156,7 @@ export function AnalyticsClient({
                         <p className="text-xs text-fg/30 mt-1">الفترة السابقة: {data.previousPeriod.totalOrders}</p>
                     )}
                 </div>
-                <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
+                <div className="p-4 rounded-2xl glass-premium border border-white/[0.08] hover:border-gold/20 transition-all duration-500">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 text-fg/50 text-sm mb-1">
                             <Users className="w-4 h-4" />
@@ -174,7 +174,7 @@ export function AnalyticsClient({
                         <p className="text-xs text-fg/30 mt-1">الفترة السابقة: {data.previousPeriod.totalUsers}</p>
                     )}
                 </div>
-                <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
+                <div className="p-4 rounded-2xl glass-premium border border-white/[0.08] hover:border-gold/20 transition-all duration-500">
                     <div className="flex items-center gap-2 text-fg/50 text-sm mb-1">
                         <TrendingUp className="w-4 h-4" />
                         متوسط قيمة الطلب
@@ -186,7 +186,7 @@ export function AnalyticsClient({
             </div>
 
             {/* Revenue & Orders chart */}
-            <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-6">
+            <div className="rounded-2xl glass-premium border border-white/[0.08] p-6">
                 <h2 className="text-lg font-bold text-fg mb-4">الإيرادات والطلبات</h2>
                 <div className="h-72">
                     <ResponsiveContainer width="100%" height="100%">
@@ -228,7 +228,7 @@ export function AnalyticsClient({
             </div>
 
             {/* Users chart */}
-            <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-6">
+            <div className="rounded-2xl glass-premium border border-white/[0.08] p-6">
                 <h2 className="text-lg font-bold text-fg mb-4">المستخدمون الجدد</h2>
                 <div className="h-56">
                     <ResponsiveContainer width="100%" height="100%">
@@ -250,7 +250,7 @@ export function AnalyticsClient({
             </div>
 
             {/* Top products */}
-            <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-6">
+            <div className="rounded-2xl glass-premium border border-white/[0.08] p-6">
                 <h2 className="text-lg font-bold text-fg mb-4">أكثر المنتجات مبيعاً</h2>
                 {data.topProducts.length > 0 ? (
                     <div className="overflow-x-auto">

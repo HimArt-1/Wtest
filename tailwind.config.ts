@@ -51,6 +51,7 @@ const config: Config = {
         "fade-in": "fadeIn 0.6s ease-out forwards",
         "shimmer": "shimmer 3s ease-in-out infinite",
         "glow-pulse": "glowPulse 2s ease-in-out infinite",
+        "neon-pulse": "neonPulse 2.5s ease-in-out infinite",
       },
       keyframes: {
         float: {
@@ -80,6 +81,10 @@ const config: Config = {
         glowPulse: {
           "0%, 100%": { boxShadow: "0 0 20px rgba(206, 174, 127, 0.1)" },
           "50%": { boxShadow: "0 0 40px rgba(206, 174, 127, 0.25)" },
+        },
+        neonPulse: {
+          "0%, 100%": { opacity: "1", boxShadow: "0 0 20px rgba(206, 174, 127, 0.3)" },
+          "50%": { opacity: "0.95", boxShadow: "0 0 40px rgba(206, 174, 127, 0.5)" },
         },
       },
       backgroundImage: {

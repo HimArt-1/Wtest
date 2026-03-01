@@ -17,7 +17,7 @@ export function AdminCard({ title, subtitle, action, children, className = "", n
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className={`rounded-2xl border border-white/[0.06] bg-surface/50 backdrop-blur-sm overflow-hidden ${className}`}
+            className={`rounded-2xl border border-white/[0.08] bg-surface/60 backdrop-blur-xl overflow-hidden shadow-lg shadow-black/20 hover:border-gold/10 transition-all duration-500 ${className}`}
         >
             {(title || action) && (
                 <div className="px-6 py-4 border-b border-white/[0.06] flex items-center justify-between gap-4">

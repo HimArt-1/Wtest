@@ -42,16 +42,16 @@ const variantStyles = {
         glow: "",
     },
     gold: {
-        icon: "bg-gold/10 text-gold",
-        glow: "hover:shadow-[0_0_40px_rgba(206,174,127,0.12)]",
+        icon: "bg-gradient-to-br from-gold/20 to-gold/5 text-gold",
+        glow: "hover:shadow-[0_0_40px_rgba(206,174,127,0.15)] hover:border-gold/20",
     },
     accent: {
-        icon: "bg-accent/10 text-accent",
-        glow: "hover:shadow-[0_0_40px_rgba(157,139,177,0.12)]",
+        icon: "bg-gradient-to-br from-accent/20 to-accent/5 text-accent",
+        glow: "hover:shadow-[0_0_40px_rgba(157,139,177,0.15)] hover:border-accent/20",
     },
     forest: {
-        icon: "bg-forest/10 text-forest",
-        glow: "hover:shadow-[0_0_40px_rgba(42,122,90,0.12)]",
+        icon: "bg-gradient-to-br from-forest/20 to-forest/5 text-forest",
+        glow: "hover:shadow-[0_0_40px_rgba(42,122,90,0.15)] hover:border-forest/20",
     },
 };
 
@@ -105,11 +105,12 @@ export function StatCard({
     );
 
     const cardClass = `
-        relative overflow-hidden rounded-2xl border border-white/[0.06]
-        bg-surface/70 backdrop-blur-sm p-6
+        relative overflow-hidden rounded-2xl border border-white/[0.08]
+        bg-surface/80 backdrop-blur-xl p-6
         transition-all duration-500 group
-        hover:border-white/[0.12] ${styles.glow}
+        hover:border-white/[0.15] hover:scale-[1.02] ${styles.glow}
         ${href ? "cursor-pointer" : ""}
+        shadow-lg shadow-black/20
     `;
 
     if (href) {
