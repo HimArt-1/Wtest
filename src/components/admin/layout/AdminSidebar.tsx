@@ -8,6 +8,8 @@ import {
     LayoutDashboard,
     BarChart3,
     Users,
+    Warehouse,
+    TrendingUp,
     UserCheck,
     ShoppingCart,
     FileText,
@@ -56,6 +58,13 @@ export function AdminSidebar({ pendingApps = 0 }: { pendingApps?: number }) {
                 { icon: Users, label: "المستخدمون", href: "/dashboard/users" },
                 { icon: ShoppingCart, label: "الطلبات", href: "/dashboard/orders" },
                 { icon: FileText, label: "طلبات الانضمام", href: "/dashboard/applications", badge: pendingApps },
+            ],
+        },
+        {
+            title: "المبيعات والمخزون",
+            items: [
+                { icon: TrendingUp, label: "إدارة المبيعات", href: "/dashboard/sales" },
+                { icon: Warehouse, label: "إدارة المخزون", href: "/dashboard/inventory" },
             ],
         },
         {

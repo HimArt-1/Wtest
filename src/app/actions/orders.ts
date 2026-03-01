@@ -9,6 +9,7 @@ import { createClient } from "@supabase/supabase-js";
 import { currentUser } from "@clerk/nextjs/server";
 import { sendOrderConfirmationEmail, sendAdminOrderNotificationEmail } from "@/lib/email";
 import { sendPushToAll } from "@/lib/push";
+import { checkStockAvailability, decrementStockForOrder } from "@/lib/inventory";
 import { createAdminNotification } from "@/app/actions/notifications";
 
 function getAdminClient() {
@@ -86,7 +87,13 @@ export async function createOrder(
         buyerId = newProfile.id;
     }
 
-    // 3. Calculate totals
+    // 3. Check stock availability
+    const stockCheck = await checkStockAvailability(items);
+    if (!stockCheck.ok) {
+        return { success: false, error: stockCheck.error || "المخزون غير كافٍ" };
+    }
+
+    // 4. Calculate totals
     const subtotal = items.reduce((sum, item) => sum + item.unit_price * item.quantity, 0);
     const tax = subtotal * TAX_RATE;
     const total = subtotal + SHIPPING_COST + tax;
@@ -147,6 +154,11 @@ export async function createOrder(
         };
     }
 
+    // خصم المخزون عند التأكيد (COD مؤكد مباشرة، Stripe يخصم عند confirmOrderPayment)
+    if (isCod) {
+        await decrementStockForOrder(order.id);
+    }
+
     if (isCod) {
         const email = user.emailAddresses?.[0]?.emailAddress;
         const name = shippingAddress.name || user.firstName || "عميل";
@@ -202,6 +214,8 @@ export async function confirmOrderPayment(
         console.error("[confirmOrderPayment]", error);
         return { success: false };
     }
+
+    await decrementStockForOrder(orderId);
 
     const ord = order as { order_number: string; total: number; shipping_address?: { name?: string } } | null;
     if (ord) {

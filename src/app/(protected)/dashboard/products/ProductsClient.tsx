@@ -168,6 +168,7 @@ export function ProductsClient({
                                 <th className="text-right px-4 py-3 text-fg/30 font-medium text-xs">الوشّاي</th>
                                 <th className="text-right px-4 py-3 text-fg/30 font-medium text-xs">النوع</th>
                                 <th className="text-right px-4 py-3 text-fg/30 font-medium text-xs">السعر</th>
+                                <th className="text-right px-4 py-3 text-fg/30 font-medium text-xs">المخزون</th>
                                 <th className="text-center px-4 py-3 text-fg/30 font-medium text-xs">متوفر</th>
                                 <th className="text-center px-4 py-3 text-fg/30 font-medium text-xs">مميز</th>
                                 <th className="text-right px-5 py-3 text-fg/30 font-medium text-xs">إجراءات</th>
@@ -191,6 +192,11 @@ export function ProductsClient({
                                         <span className="text-[10px] bg-white/5 px-2 py-1 rounded-lg text-fg/40">{typeLabels[product.type] || product.type}</span>
                                     </td>
                                     <td className="px-4 py-3 font-bold text-gold text-xs">{Number(product.price).toLocaleString()} ر.س</td>
+                                    <td className="px-4 py-3">
+                                        <span className={`font-mono text-xs ${product.stock_quantity != null && product.stock_quantity <= 5 ? "text-amber-400" : "text-fg/60"}`}>
+                                            {product.stock_quantity == null ? "∞" : product.stock_quantity}
+                                        </span>
+                                    </td>
                                     <td className="px-4 py-3 text-center">
                                         <button
                                             onClick={() => handleToggle(product.id, "in_stock", product.in_stock)}
@@ -243,7 +249,7 @@ export function ProductsClient({
                                 </tr>
                             )) : (
                                 <tr>
-                                    <td colSpan={7} className="text-center py-16 text-fg/20">
+                                    <td colSpan={8} className="text-center py-16 text-fg/20">
                                         <Package className="w-12 h-12 mx-auto mb-3 opacity-30" />
                                         <p className="text-sm">لا توجد منتجات</p>
                                         <button

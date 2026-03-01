@@ -344,6 +344,107 @@ export async function getAdminAnalytics(period: AnalyticsPeriod = "30d"): Promis
 }
 
 // ═══════════════════════════════════════════════════════════
+//  1c. INVENTORY — إدارة المخزون
+// ═══════════════════════════════════════════════════════════
+
+const LOW_STOCK_THRESHOLD = 5;
+
+export async function getAdminInventory(filter: "all" | "low" | "out" = "all") {
+    noStore();
+    try {
+        const { supabase } = await requireAdmin();
+        const { data, error } = await supabase
+            .from("products")
+            .select("id, title, image_url, type, in_stock, stock_quantity, price, artist:profiles(display_name)")
+            .order("title");
+        if (error) throw error;
+        const allProducts = (data || []) as any[];
+        const lowStock = allProducts.filter((p) => p.stock_quantity != null && p.stock_quantity <= LOW_STOCK_THRESHOLD && p.stock_quantity > 0);
+        const outOfStock = allProducts.filter((p) => !p.in_stock || (p.stock_quantity != null && p.stock_quantity === 0));
+        const products = filter === "out" ? outOfStock : (filter === "low" ? lowStock : allProducts);
+        return {
+            products,
+            lowStockCount: lowStock.length,
+            outOfStockCount: outOfStock.length,
+        };
+    } catch (err) {
+        console.error("getAdminInventory error:", err);
+        return { products: [], lowStockCount: 0, outOfStockCount: 0 };
+    }
+}
+
+export async function updateProductStock(productId: string, stockQuantity: number | null, inStock?: boolean) {
+    const { supabase } = await requireAdmin();
+    const updates: Record<string, unknown> = {
+        stock_quantity: stockQuantity,
+        updated_at: new Date().toISOString(),
+    };
+    if (inStock !== undefined) updates.in_stock = inStock;
+    else if (stockQuantity !== null) updates.in_stock = stockQuantity > 0;
+    const { error } = await supabase.from("products").update(updates).eq("id", productId);
+    if (error) return { success: false, error: error.message };
+    revalidatePath("/dashboard/inventory");
+    revalidatePath("/dashboard/products");
+    revalidatePath("/store");
+    return { success: true };
+}
+
+// ═══════════════════════════════════════════════════════════
+//  1d. SALES — إدارة المبيعات
+// ═══════════════════════════════════════════════════════════
+
+export async function getAdminSales(period: "7d" | "30d" | "90d" = "30d") {
+    noStore();
+    try {
+        const { supabase } = await requireAdmin();
+        const days = period === "7d" ? 7 : period === "30d" ? 30 : 90;
+        const startIso = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+
+        const { data: orders } = await supabase
+            .from("orders")
+            .select("id, total, created_at, status, payment_status")
+            .gte("created_at", startIso)
+            .in("payment_status", ["paid"])
+            .in("status", ["confirmed", "processing", "shipped", "delivered"]);
+
+        const orderIds = (orders || []).map((o: any) => o.id);
+        let items: any[] = [];
+        if (orderIds.length > 0) {
+            const { data: orderItems } = await supabase
+                .from("order_items")
+                .select("product_id, quantity, total_price, custom_title, product:products(title)")
+                .in("order_id", orderIds);
+            items = orderItems || [];
+        }
+
+        const byProduct = new Map<string, { title: string; quantity: number; revenue: number }>();
+        for (const it of items) {
+            const key = it.product_id || `custom_${it.custom_title || "مخصص"}`;
+            const title = it.product?.title ?? it.custom_title ?? "تصميم مخصص";
+            const curr = byProduct.get(key) ?? { title, quantity: 0, revenue: 0 };
+            curr.quantity += it.quantity || 0;
+            curr.revenue += Number(it.total_price) || 0;
+            byProduct.set(key, curr);
+        }
+
+        const totalRevenue = (orders || []).reduce((s: number, o: any) => s + (Number(o.total) || 0), 0);
+        const salesByProduct = Array.from(byProduct.entries())
+            .map(([productId, v]) => ({ productId, ...v }))
+            .sort((a, b) => b.revenue - a.revenue);
+
+        return {
+            totalRevenue,
+            totalOrders: (orders || []).length,
+            salesByProduct,
+            orders: orders || [],
+        };
+    } catch (err) {
+        console.error("getAdminSales error:", err);
+        return { totalRevenue: 0, totalOrders: 0, salesByProduct: [], orders: [] };
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
 //  2. USERS — إدارة المستخدمين
 // ═══════════════════════════════════════════════════════════
 
@@ -823,9 +924,14 @@ export async function updateOrderStatus(orderId: string, newStatus: string) {
         return { success: false, error: "Invalid status" };
     }
 
+    const { data: currentOrder } = await supabase
+        .from("orders")
+        .select("status")
+        .eq("id", orderId)
+        .single();
+
     const updateData: any = { status: newStatus };
 
-    // Auto-update payment_status based on order status
     if (newStatus === "confirmed") updateData.payment_status = "paid";
     if (newStatus === "cancelled") updateData.payment_status = "refunded";
     if (newStatus === "refunded") updateData.payment_status = "refunded";
@@ -840,7 +946,14 @@ export async function updateOrderStatus(orderId: string, newStatus: string) {
         return { success: false, error: error.message };
     }
 
+    const hadStockDeducted = ["confirmed", "processing", "shipped"].includes(currentOrder?.status || "");
+    if ((newStatus === "cancelled" || newStatus === "refunded") && hadStockDeducted) {
+        const { restoreStockForOrder } = await import("@/lib/inventory");
+        await restoreStockForOrder(orderId);
+    }
+
     revalidatePath("/dashboard/orders");
+    revalidatePath("/dashboard/inventory");
     return { success: true };
 }
 
