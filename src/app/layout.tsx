@@ -11,7 +11,7 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://wusha.sa";
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://washa.stor";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

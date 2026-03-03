@@ -1,6 +1,6 @@
 import { MetadataRoute } from "next";
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://wusha.sa";
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://washa.stor";
 
 export default function robots(): MetadataRoute.Robots {
     const baseUrl = BASE_URL.replace(/\/$/, "");
