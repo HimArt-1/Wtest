@@ -187,7 +187,7 @@ export function ProductsClient({
                                             <span className="font-medium text-fg/80 truncate max-w-[200px]">{product.title}</span>
                                         </div>
                                     </td>
-                                    <td className="px-4 py-3 text-fg/40 text-xs">{product.artist?.display_name || "—"}</td>
+                                    <td className="px-4 py-3 text-fg/40 text-xs">{product.store_name || product.artist?.display_name || "—"}</td>
                                     <td className="px-4 py-3">
                                         <span className="text-[10px] bg-white/5 px-2 py-1 rounded-lg text-fg/40">{typeLabels[product.type] || product.type}</span>
                                     </td>
@@ -348,6 +348,7 @@ function ProductFormModal({
         image_url: "",
         in_stock: true,
         stock_quantity: "",
+        store_name: "",
     });
 
     useEffect(() => {
@@ -367,6 +368,7 @@ function ProductFormModal({
                 image_url: product.image_url || "",
                 in_stock: product.in_stock ?? true,
                 stock_quantity: product.stock_quantity != null ? String(product.stock_quantity) : "",
+                store_name: product.store_name || "",
             });
         } else if (mode === "add") {
             setForm({
@@ -378,9 +380,10 @@ function ProductFormModal({
                 image_url: "",
                 in_stock: true,
                 stock_quantity: "",
+                store_name: "WASHA.STOR",
             });
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open, mode, product?.id, artists]);
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -446,6 +449,7 @@ function ProductFormModal({
                 image_url: imageUrl,
                 in_stock: form.in_stock,
                 stock_quantity: form.stock_quantity ? parseInt(form.stock_quantity, 10) : undefined,
+                store_name: form.store_name.trim() || undefined,
             });
             setLoading(false);
             if (result.success) {
@@ -463,6 +467,7 @@ function ProductFormModal({
                 artist_id: form.artist_id,
                 in_stock: form.in_stock,
                 stock_quantity: form.stock_quantity ? parseInt(form.stock_quantity, 10) : null,
+                store_name: form.store_name.trim() || null,
             });
             setLoading(false);
             if (result.success) {
@@ -636,6 +641,17 @@ function ProductFormModal({
                             placeholder="وصف المنتج..."
                             rows={2}
                             className="w-full px-4 py-2.5 bg-white/[0.03] border border-white/[0.08] rounded-xl text-sm text-fg placeholder:text-fg/20 focus:outline-none focus:border-gold/30 resize-none"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-fg/50 mb-1.5">اسم المتجر (اختياري)</label>
+                        <input
+                            type="text"
+                            value={form.store_name}
+                            onChange={(e) => setForm((f) => ({ ...f, store_name: e.target.value }))}
+                            placeholder="مثال: WASHA.STOR — يظهر بدل اسم الوشّاي"
+                            className="w-full px-4 py-2.5 bg-white/[0.03] border border-white/[0.08] rounded-xl text-sm text-fg placeholder:text-fg/20 focus:outline-none focus:border-gold/30"
+                            dir="ltr"
                         />
                     </div>
                     <div className="flex gap-4">

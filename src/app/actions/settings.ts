@@ -8,9 +8,12 @@ import { revalidatePath } from "next/cache";
 
 function getAdminSupabase() {
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey) {
+        throw new Error("SUPABASE_SERVICE_ROLE_KEY is not configured — admin operations require the service role key.");
+    }
     return createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        serviceKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        serviceKey,
         { auth: { persistSession: false } }
     );
 }
@@ -250,6 +253,7 @@ export async function updateProduct(id: string, updates: Partial<{
     is_featured: boolean;
     stock_quantity: number | null;
     badge: string | null;
+    store_name: string | null;
 }>) {
     await requireAdmin();
     const supabase = getAdminSupabase();
@@ -297,6 +301,7 @@ export async function createProductAdmin(data: {
     sizes?: string[];
     in_stock?: boolean;
     stock_quantity?: number;
+    store_name?: string;
 }) {
     await requireAdmin();
     const supabase = getAdminSupabase();
@@ -318,6 +323,7 @@ export async function createProductAdmin(data: {
             sizes: data.sizes || null,
             in_stock: data.in_stock ?? true,
             stock_quantity: data.stock_quantity ?? null,
+            store_name: data.store_name?.trim() || null,
             currency: "SAR",
         })
         .select("id")

@@ -23,6 +23,7 @@ interface ProductCardProps {
         price: number;
         image_url: string;
         type: string;
+        store_name?: string;
         artist?: { display_name: string };
     };
 }
@@ -112,7 +113,7 @@ export function ProductCard({ product }: ProductCardProps) {
                         {product.title}
                     </h3>
                     <div className="flex items-center justify-between mt-1.5">
-                        <span className="text-[10px] text-fg/30">{product.artist?.display_name}</span>
+                        <span className="text-[10px] text-fg/30">{product.store_name || product.artist?.display_name}</span>
                         <span className="text-xs font-bold text-gold">{Number(product.price).toLocaleString()} ر.س</span>
                     </div>
                 </div>
@@ -142,18 +143,16 @@ export function ProductCard({ product }: ProductCardProps) {
                     <SignedIn>
                         <button
                             onClick={handleWishlist}
-                            className={`p-2 rounded-xl backdrop-blur-md transition-colors ${
-                                inWishlist ? "bg-gold/20 text-gold" : "bg-black/40 text-white/80 hover:bg-gold/20 hover:text-gold"
-                            }`}
+                            className={`p-2 rounded-xl backdrop-blur-md transition-colors ${inWishlist ? "bg-gold/20 text-gold" : "bg-black/40 text-white/80 hover:bg-gold/20 hover:text-gold"
+                                }`}
                             title={inWishlist ? "إزالة من المحفوظات" : "إضافة للمحفوظات"}
                         >
                             <Bookmark className={`w-4 h-4 ${inWishlist ? "fill-current" : ""}`} />
                         </button>
                         <button
                             onClick={handleLike}
-                            className={`p-2 rounded-xl backdrop-blur-md transition-colors flex items-center gap-1 ${
-                                liked ? "bg-red-500/20 text-red-400" : "bg-black/40 text-white/80 hover:bg-red-500/20 hover:text-red-400"
-                            }`}
+                            className={`p-2 rounded-xl backdrop-blur-md transition-colors flex items-center gap-1 ${liked ? "bg-red-500/20 text-red-400" : "bg-black/40 text-white/80 hover:bg-red-500/20 hover:text-red-400"
+                                }`}
                             title={liked ? "إلغاء الإعجاب" : "إعجاب"}
                         >
                             <Heart className={`w-4 h-4 ${liked ? "fill-current" : ""}`} />
@@ -174,7 +173,7 @@ export function ProductCard({ product }: ProductCardProps) {
                     {product.title}
                 </h3>
                 <div className="flex items-center justify-between mt-1.5">
-                    <span className="text-[10px] text-fg/30">{product.artist?.display_name}</span>
+                    <span className="text-[10px] text-fg/30">{product.store_name || product.artist?.display_name}</span>
                     <span className="text-xs font-bold text-gold">{Number(product.price).toLocaleString()} ر.س</span>
                 </div>
             </div>
