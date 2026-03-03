@@ -65,6 +65,7 @@ export function ProductsClient({
     const [error, setError] = useState<string | null>(null);
     const [showAddModal, setShowAddModal] = useState(false);
     const [editingProduct, setEditingProduct] = useState<any | null>(null);
+    const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
     const showToast = (msg: string) => {
         setToast(msg);
@@ -83,11 +84,15 @@ export function ProductsClient({
         }
     };
 
-    const handleDelete = async (product: any) => {
-        if (!confirm(`هل أنت متأكد من حذف المنتج "${product.title}"؟`)) return;
-        setLoadingId(product.id);
+    const handleDelete = (product: any) => {
+        setConfirmDeleteId(product.id);
+    };
+
+    const confirmDelete = async (productId: string) => {
+        setConfirmDeleteId(null);
+        setLoadingId(productId);
         setError(null);
-        const result = await deleteProduct(product.id);
+        const result = await deleteProduct(productId);
         setLoadingId(null);
         if (result.success) {
             showToast("تم حذف المنتج ✓");
@@ -232,18 +237,35 @@ export function ProductsClient({
                                             >
                                                 <Pencil className="w-4 h-4" />
                                             </button>
-                                            <button
-                                                onClick={() => handleDelete(product)}
-                                                disabled={loadingId === product.id}
-                                                className="p-2 rounded-lg text-fg/40 hover:text-red-400 hover:bg-red-500/10 transition-all disabled:opacity-50"
-                                                title="حذف"
-                                            >
-                                                {loadingId === product.id ? (
-                                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                                ) : (
-                                                    <Trash2 className="w-4 h-4" />
-                                                )}
-                                            </button>
+                                            {confirmDeleteId === product.id ? (
+                                                <div className="flex items-center gap-1">
+                                                    <button
+                                                        onClick={() => confirmDelete(product.id)}
+                                                        className="px-2 py-1 rounded-lg text-xs font-bold bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-all"
+                                                    >
+                                                        تأكيد
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setConfirmDeleteId(null)}
+                                                        className="px-2 py-1 rounded-lg text-xs text-fg/40 hover:bg-white/5 transition-all"
+                                                    >
+                                                        إلغاء
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <button
+                                                    onClick={() => handleDelete(product)}
+                                                    disabled={loadingId === product.id}
+                                                    className="p-2 rounded-lg text-fg/40 hover:text-red-400 hover:bg-red-500/10 transition-all disabled:opacity-50"
+                                                    title="حذف"
+                                                >
+                                                    {loadingId === product.id ? (
+                                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                                    ) : (
+                                                        <Trash2 className="w-4 h-4" />
+                                                    )}
+                                                </button>
+                                            )}
                                         </div>
                                     </td>
                                 </tr>
