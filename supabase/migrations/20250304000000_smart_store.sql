@@ -5,7 +5,7 @@
 
 -- ─── القطع (الملابس) ─────────────────────────────────────
 CREATE TABLE IF NOT EXISTS custom_design_garments (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   slug TEXT UNIQUE NOT NULL,
   image_url TEXT,
@@ -19,7 +19,7 @@ CREATE INDEX IF NOT EXISTS idx_cd_garments_active ON custom_design_garments(is_a
 
 -- ─── ألوان القطع ─────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS custom_design_colors (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   garment_id UUID NOT NULL REFERENCES custom_design_garments(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   hex_code TEXT NOT NULL DEFAULT '#000000',
@@ -34,7 +34,7 @@ CREATE INDEX IF NOT EXISTS idx_cd_colors_garment ON custom_design_colors(garment
 
 -- ─── المقاسات ────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS custom_design_sizes (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   garment_id UUID NOT NULL REFERENCES custom_design_garments(id) ON DELETE CASCADE,
   color_id UUID REFERENCES custom_design_colors(id) ON DELETE SET NULL,
   name TEXT NOT NULL,
@@ -49,7 +49,7 @@ CREATE INDEX IF NOT EXISTS idx_cd_sizes_garment ON custom_design_sizes(garment_i
 
 -- ─── أنماط التصميم ───────────────────────────────────────
 CREATE TABLE IF NOT EXISTS custom_design_styles (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   description TEXT,
   image_url TEXT,
@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS custom_design_styles (
 
 -- ─── أساليب الرسم ────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS custom_design_art_styles (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   description TEXT,
   image_url TEXT,
@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS custom_design_art_styles (
 
 -- ─── باقات الألوان ───────────────────────────────────────
 CREATE TABLE IF NOT EXISTS custom_design_color_packages (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   colors JSONB NOT NULL DEFAULT '[]',
   image_url TEXT,

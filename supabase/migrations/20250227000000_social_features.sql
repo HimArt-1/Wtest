@@ -5,7 +5,7 @@
 
 -- ─── متابعة الفنانين ─────────────────────────────────────
 CREATE TABLE IF NOT EXISTS artist_follows (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   follower_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   artist_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -28,7 +28,7 @@ CREATE POLICY "Anyone can read follows" ON artist_follows
 
 -- ─── محفوظات المنتجات (Wishlist) ─────────────────────────
 CREATE TABLE IF NOT EXISTS product_wishlist (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -51,7 +51,7 @@ CREATE POLICY "Anyone can read wishlist" ON product_wishlist
 
 -- ─── إعجاب بالمنتج ───────────────────────────────────────
 CREATE TABLE IF NOT EXISTS product_likes (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ DEFAULT NOW(),

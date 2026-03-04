@@ -3,7 +3,7 @@
 -- ═══════════════════════════════════════════════════════════
 
 CREATE TABLE IF NOT EXISTS admin_notifications (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   type TEXT NOT NULL,  -- order_new, application_new, etc.
   title TEXT NOT NULL,
   message TEXT,

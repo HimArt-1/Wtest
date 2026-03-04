@@ -4,7 +4,7 @@
 -- ═══════════════════════════════════════════════════════════
 
 CREATE TABLE IF NOT EXISTS custom_design_studio_items (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   description TEXT,
   price DECIMAL(10, 2) DEFAULT 0,

@@ -4,7 +4,7 @@
 
 -- جدول التصاميم الحصرية (مطبوعات وشّى الخاصة)
 CREATE TABLE IF NOT EXISTS exclusive_designs (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
   description TEXT,
   image_url TEXT NOT NULL,

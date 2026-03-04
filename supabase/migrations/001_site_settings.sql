@@ -4,7 +4,7 @@
 -- ═══════════════════════════════════════════════════════════
 
 CREATE TABLE IF NOT EXISTS site_settings (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   key TEXT UNIQUE NOT NULL,
   value JSONB NOT NULL DEFAULT '{}',
   updated_at TIMESTAMPTZ DEFAULT NOW()
