@@ -101,33 +101,33 @@ export default function RootLayout({
           <FloatingJoinButton />
 
           {/* Re:amaze — دعم فني (GoDaddy) */}
-          <Script id="reamaze-config" strategy="lazyOnload">{`
-            var _support = _support || { 'ui': {}, 'user': {} };
-            _support['account'] = 'e0b4e5a7-7c09-4071-882e-2477bd1f3d20';
-            _support['ui']['contactMode'] = 'default';
-            _support['ui']['enableKb'] = 'false';
-            _support['ui']['mailbox'] = '77652573';
-            _support['ui']['styles'] = { widgetColor: '#ceae7f' };
-            _support['ui']['shoutboxFacesMode'] = 'brand-avatar';
-            _support['ui']['widget'] = {
+          <Script id="reamaze-config" strategy="beforeInteractive">{`
+            window._support = window._support || { 'ui': {}, 'user': {} };
+            window._support['account'] = 'e0b4e5a7-7c09-4071-882e-2477bd1f3d20';
+            window._support['ui']['contactMode'] = 'default';
+            window._support['ui']['enableKb'] = 'false';
+            window._support['ui']['mailbox'] = '77652573';
+            window._support['ui']['styles'] = { widgetColor: '#ceae7f' };
+            window._support['ui']['shoutboxFacesMode'] = 'brand-avatar';
+            window._support['ui']['widget'] = {
               icon: 'webChat',
               allowBotProcessing: 'false',
               slug: 'washa',
               label: {
                 text: 'أهلاً وسهلاً..\\nحياك الله في وشّى ..\\nأكتب مشكلتك ..',
-                mode: "notification",
+                mode: 'notification',
                 delay: 10,
-                secondary: '',
+                secondary: ''
               },
               position: 'bottom-right'
             };
-            _support['ui']['overrides'] = _support['ui']['overrides'] || {};
-            _support['ui']['overrides']['confirmationMessage'] = 'شكراً .. بيرد عليك موظفنا بس يخلص الشغله اللي عنده .. معليش اذا تأخرنا عليك 🤍🐢';
-            _support['ui']['user'] = {"authpath":"/m/api/reamaze/v2/customers/auth?brand=38752227"};
+            window._support['ui']['overrides'] = window._support['ui']['overrides'] || {};
+            window._support['ui']['overrides']['confirmationMessage'] = 'شكراً .. بيرد عليك موظفنا بس يخلص الشغله اللي عنده .. معليش اذا تأخرنا عليك 🤍🐢';
+            window._support['ui']['user'] = {"authpath":"/m/api/reamaze/v2/customers/auth?brand=38752227"};
           `}</Script>
           <Script
             src="https://cdn.reamaze.com/assets/reamaze-godaddy-loader.js"
-            strategy="lazyOnload"
+            strategy="afterInteractive"
           />
         </body>
       </html>
