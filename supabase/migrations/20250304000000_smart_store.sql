@@ -95,11 +95,17 @@ ALTER TABLE custom_design_art_styles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE custom_design_color_packages ENABLE ROW LEVEL SECURITY;
 
 -- Public read for all active items
+DROP POLICY IF EXISTS "Smart store garments public read" ON custom_design_garments;
 CREATE POLICY "Smart store garments public read" ON custom_design_garments FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Smart store colors public read" ON custom_design_colors;
 CREATE POLICY "Smart store colors public read" ON custom_design_colors FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Smart store sizes public read" ON custom_design_sizes;
 CREATE POLICY "Smart store sizes public read" ON custom_design_sizes FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Smart store styles public read" ON custom_design_styles;
 CREATE POLICY "Smart store styles public read" ON custom_design_styles FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Smart store art_styles public read" ON custom_design_art_styles;
 CREATE POLICY "Smart store art_styles public read" ON custom_design_art_styles FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Smart store color_packages public read" ON custom_design_color_packages;
 CREATE POLICY "Smart store color_packages public read" ON custom_design_color_packages FOR SELECT USING (true);
 
 -- ═══════════════════════════════════════════════════════════
@@ -120,7 +126,11 @@ CREATE TRIGGER set_cd_color_packages_updated_at BEFORE UPDATE ON custom_design_c
 INSERT INTO storage.buckets (id, name, public) VALUES ('smart-store', 'smart-store', true) ON CONFLICT DO NOTHING;
 
 -- Public read policy for smart-store bucket
+DROP POLICY IF EXISTS "Smart store images public read" ON storage.objects;
 CREATE POLICY "Smart store images public read" ON storage.objects FOR SELECT USING (bucket_id = 'smart-store');
+DROP POLICY IF EXISTS "Smart store images admin insert" ON storage.objects;
 CREATE POLICY "Smart store images admin insert" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'smart-store');
+DROP POLICY IF EXISTS "Smart store images admin update" ON storage.objects;
 CREATE POLICY "Smart store images admin update" ON storage.objects FOR UPDATE USING (bucket_id = 'smart-store');
+DROP POLICY IF EXISTS "Smart store images admin delete" ON storage.objects;
 CREATE POLICY "Smart store images admin delete" ON storage.objects FOR DELETE USING (bucket_id = 'smart-store');
