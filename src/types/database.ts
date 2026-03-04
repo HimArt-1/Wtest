@@ -215,6 +215,13 @@ export interface CustomDesignGarment {
     image_url: string | null;
     sort_order: number;
     is_active: boolean;
+    // Print Pricing
+    price_chest_large: number;
+    price_chest_small: number;
+    price_back_large: number;
+    price_back_small: number;
+    price_shoulder_large: number;
+    price_shoulder_small: number;
     created_at: string;
     updated_at: string;
 }
@@ -419,6 +426,11 @@ export interface CustomDesignOrder {
     skip_results: boolean;
     admin_notes: string | null;
     assigned_to: string | null;
+
+    // Print Placement & Pricing
+    print_position: string | null;
+    print_size: string | null;
+    final_price: number | null;
 
     // Timestamps
     created_at: string;

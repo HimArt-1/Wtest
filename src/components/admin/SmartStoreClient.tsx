@@ -312,6 +312,32 @@ function GarmentsTab({ items, onRefresh }: { items: CustomDesignGarment[]; onRef
                     <option value="false">غير نشط</option>
                 </select>
             </FormField>
+
+            {/* أسعار الطباعة */}
+            <div className="pt-2 border-t border-white/[0.06]">
+                <p className="text-sm font-bold text-gold mb-3">💰 أسعار الطباعة (ر.س)</p>
+                <div className="grid grid-cols-2 gap-3">
+                    <FormField label="الصدر — كبير">
+                        <input name="price_chest_large" type="number" step="0.01" min="0" defaultValue={editing?.price_chest_large ?? 0} className={inputCls} />
+                    </FormField>
+                    <FormField label="الصدر — صغير">
+                        <input name="price_chest_small" type="number" step="0.01" min="0" defaultValue={editing?.price_chest_small ?? 0} className={inputCls} />
+                    </FormField>
+                    <FormField label="الظهر — كبير">
+                        <input name="price_back_large" type="number" step="0.01" min="0" defaultValue={editing?.price_back_large ?? 0} className={inputCls} />
+                    </FormField>
+                    <FormField label="الظهر — صغير">
+                        <input name="price_back_small" type="number" step="0.01" min="0" defaultValue={editing?.price_back_small ?? 0} className={inputCls} />
+                    </FormField>
+                    <FormField label="الكتف — كبير">
+                        <input name="price_shoulder_large" type="number" step="0.01" min="0" defaultValue={editing?.price_shoulder_large ?? 0} className={inputCls} />
+                    </FormField>
+                    <FormField label="الكتف — صغير">
+                        <input name="price_shoulder_small" type="number" step="0.01" min="0" defaultValue={editing?.price_shoulder_small ?? 0} className={inputCls} />
+                    </FormField>
+                </div>
+            </div>
+
             <div className="flex gap-3 pt-2">
                 <button type="submit" disabled={loading} className={btnPrimary}>{loading ? "جاري الحفظ..." : "حفظ"}</button>
                 <button type="button" onClick={closeModal} className={btnSecondary}>إلغاء</button>

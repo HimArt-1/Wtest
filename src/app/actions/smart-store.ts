@@ -143,6 +143,13 @@ export async function upsertGarment(formData: FormData) {
         image_url: (formData.get("image_url") as string) || null,
         sort_order: Number(formData.get("sort_order") ?? 0),
         is_active: formData.get("is_active") === "true",
+        // Print Pricing
+        price_chest_large: Number(formData.get("price_chest_large") ?? 0),
+        price_chest_small: Number(formData.get("price_chest_small") ?? 0),
+        price_back_large: Number(formData.get("price_back_large") ?? 0),
+        price_back_small: Number(formData.get("price_back_small") ?? 0),
+        price_shoulder_large: Number(formData.get("price_shoulder_large") ?? 0),
+        price_shoulder_small: Number(formData.get("price_shoulder_small") ?? 0),
     };
 
     if (id) {
@@ -547,3 +554,42 @@ export async function cancelDesignOrderByCustomer(id: string) {
     if (error) return { error: error.message };
     return { success: true };
 }
+
+// ─── Get Garment Pricing ─────────────────────────────────
+
+export async function getGarmentPricing(garmentName: string) {
+    const sb = getSmartStoreSb();
+    const { data } = await sb
+        .from("custom_design_garments")
+        .select("price_chest_large, price_chest_small, price_back_large, price_back_small, price_shoulder_large, price_shoulder_small")
+        .eq("name", garmentName)
+        .single();
+    if (!data) return {
+        price_chest_large: 0, price_chest_small: 0,
+        price_back_large: 0, price_back_small: 0,
+        price_shoulder_large: 0, price_shoulder_small: 0,
+    };
+    return data as {
+        price_chest_large: number; price_chest_small: number;
+        price_back_large: number; price_back_small: number;
+        price_shoulder_large: number; price_shoulder_small: number;
+    };
+}
+
+// ─── Confirm: Save Placement + Price ─────────────────────
+
+export async function confirmDesignOrder(id: string, position: string, size: string, price: number) {
+    const sb = getSmartStoreSb();
+    const { error } = await sb
+        .from("custom_design_orders")
+        .update({
+            print_position: position,
+            print_size: size,
+            final_price: price,
+            status: "completed" as any,
+        })
+        .eq("id", id);
+    if (error) return { error: error.message };
+    return { success: true };
+}
+
