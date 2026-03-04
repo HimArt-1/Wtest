@@ -24,6 +24,10 @@ import {
     Upload,
     X,
     MessageCircle,
+    MapPin,
+    Maximize2,
+    Minimize2,
+    Loader2,
 } from "lucide-react";
 import { getGarmentColors, getColorSizes } from "@/app/actions/smart-store";
 import type {
@@ -50,6 +54,8 @@ interface WizardState {
     textPrompt: string;
     imageFile: File | null;
     imagePreview: string | null;
+    printPosition: string | null;
+    printSize: string | null;
     isSending: boolean;
     sent: boolean;
 }
@@ -67,11 +73,13 @@ const INITIAL_STATE: WizardState = {
     textPrompt: "",
     imageFile: null,
     imagePreview: null,
+    printPosition: null,
+    printSize: null,
     isSending: false,
     sent: false,
 };
 
-const TOTAL_STEPS = 8;
+const TOTAL_STEPS = 9;
 
 const STEP_INFO = [
     { num: 1, label: "القطعة", icon: Shirt },
@@ -81,7 +89,8 @@ const STEP_INFO = [
     { num: 5, label: "النمط", icon: Paintbrush },
     { num: 6, label: "الأسلوب", icon: SwatchBook },
     { num: 7, label: "الألوان", icon: Palette },
-    { num: 8, label: "الإرسال", icon: Send },
+    { num: 8, label: "الطباعة", icon: MapPin },
+    { num: 9, label: "الإرسال", icon: Send },
 ];
 
 interface Props {
@@ -187,6 +196,8 @@ export function DesignYourPieceWizard({ garments, styles, artStyles, colorPackag
                 art_style_image_url: state.artStyle?.image_url ?? undefined,
                 color_package_name: state.colorPackage?.name ?? undefined,
                 custom_colors: state.customColors.length > 0 ? state.customColors : undefined,
+                print_position: state.printPosition ?? undefined,
+                print_size: state.printSize ?? undefined,
             });
             if (result.error) {
                 console.error("Order creation error:", result.error);
@@ -368,6 +379,17 @@ export function DesignYourPieceWizard({ garments, styles, artStyles, colorPackag
                             />
                         )}
                         {state.step === 8 && (
+                            <StepPrintPlacement
+                                garment={state.garment}
+                                selectedPosition={state.printPosition}
+                                selectedSize={state.printSize}
+                                onSelectPosition={(p) => setState((s) => ({ ...s, printPosition: p }))}
+                                onSelectSize={(sz) => setState((s) => ({ ...s, printSize: sz }))}
+                                onBack={goBack}
+                                onNext={goNext}
+                            />
+                        )}
+                        {state.step === 9 && (
                             <StepSubmit state={state} onBack={goBack} onSend={handleSend} />
                         )}
                     </motion.div>
@@ -902,6 +924,182 @@ function StepColorPalette({ packages, selectedPackage, onSelectPackage, customCo
 
 // ═══════════════════════════════════════════════════════════
 //  Step 8: Submit
+// ═══════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════
+//  Step 8: Print Placement & Pricing
+// ═══════════════════════════════════════════════════════════
+
+const PRINT_POSITIONS: { id: string; label: string; emoji: string; desc: string }[] = [
+    { id: "chest", label: "الصدر", emoji: "👕", desc: "تصميم على الجهة الأمامية" },
+    { id: "back", label: "الظهر", emoji: "🔄", desc: "تصميم على الجهة الخلفية" },
+    { id: "shoulder_right", label: "الكتف الأيمن", emoji: "➡️", desc: "شعار على الكتف الأيمن" },
+    { id: "shoulder_left", label: "الكتف الأيسر", emoji: "⬅️", desc: "شعار على الكتف الأيسر" },
+];
+
+const PRINT_SIZES: { id: string; label: string; desc: string; icon: any }[] = [
+    { id: "large", label: "مقاس كبير", desc: "تغطية واسعة وبارزة", icon: Maximize2 },
+    { id: "small", label: "مقاس صغير", desc: "تصميم أنيق ومحدود", icon: Minimize2 },
+];
+
+function getPrintPrice(pricing: any, pos: string, sz: string): number {
+    if (!pricing) return 0;
+    if (pos === "shoulder_right" || pos === "shoulder_left") {
+        return sz === "large" ? (pricing.price_shoulder_large ?? 0) : (pricing.price_shoulder_small ?? 0);
+    }
+    if (pos === "back") {
+        return sz === "large" ? (pricing.price_back_large ?? 0) : (pricing.price_back_small ?? 0);
+    }
+    return sz === "large" ? (pricing.price_chest_large ?? 0) : (pricing.price_chest_small ?? 0);
+}
+
+import { getGarmentPricing } from "@/app/actions/smart-store";
+
+function StepPrintPlacement({ garment, selectedPosition, selectedSize, onSelectPosition, onSelectSize, onBack, onNext }: {
+    garment: CustomDesignGarment | null;
+    selectedPosition: string | null;
+    selectedSize: string | null;
+    onSelectPosition: (p: string) => void;
+    onSelectSize: (sz: string) => void;
+    onBack: () => void;
+    onNext: () => void;
+}) {
+    const [pricing, setPricing] = useState<any>(null);
+    const [loadingPricing, setLoadingPricing] = useState(true);
+
+    useEffect(() => {
+        if (!garment) { setLoadingPricing(false); return; }
+        getGarmentPricing(garment.name).then((p) => {
+            setPricing(p);
+            setLoadingPricing(false);
+        });
+    }, [garment]);
+
+    const currentPrice = selectedPosition && selectedSize && pricing
+        ? getPrintPrice(pricing, selectedPosition, selectedSize)
+        : null;
+
+    return (
+        <>
+            <StepHeader title="موقع وحجم الطباعة" desc="حدد مكان الطباعة وحجمها على القطعة + شاهد السعر" />
+
+            {/* Position Selector */}
+            <div className="mb-6">
+                <p className="text-sm font-bold text-fg mb-3 flex items-center gap-2"><MapPin className="w-4 h-4 text-gold" /> اختر موقع الطباعة</p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {PRINT_POSITIONS.map((pos) => {
+                        const isActive = selectedPosition === pos.id;
+                        return (
+                            <motion.button
+                                key={pos.id}
+                                whileHover={{ scale: 1.03 }}
+                                whileTap={{ scale: 0.97 }}
+                                onClick={() => onSelectPosition(pos.id)}
+                                className={`relative p-4 rounded-2xl border-2 transition-all text-center ${isActive
+                                    ? "border-gold bg-gold/10 shadow-lg shadow-gold/10"
+                                    : "border-white/[0.08] hover:border-white/20 bg-white/[0.02]"
+                                    }`}
+                            >
+                                <div className="text-3xl mb-2">{pos.emoji}</div>
+                                <p className={`text-sm font-bold ${isActive ? "text-gold" : "text-fg"}`}>{pos.label}</p>
+                                <p className="text-[10px] text-fg/35 mt-0.5">{pos.desc}</p>
+                                {isActive && (
+                                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
+                                        className="absolute top-2 left-2 w-5 h-5 rounded-full bg-gold flex items-center justify-center">
+                                        <Check className="w-3 h-3 text-bg" />
+                                    </motion.div>
+                                )}
+                            </motion.button>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* Size Selector */}
+            <AnimatePresence>
+                {selectedPosition && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="mb-6 overflow-hidden"
+                    >
+                        <p className="text-sm font-bold text-fg mb-3 flex items-center gap-2"><Maximize2 className="w-4 h-4 text-gold" /> اختر حجم الطباعة</p>
+                        <div className="grid grid-cols-2 gap-4">
+                            {PRINT_SIZES.map((sz) => {
+                                const isActive = selectedSize === sz.id;
+                                const price = pricing ? getPrintPrice(pricing, selectedPosition, sz.id) : null;
+                                const SzIcon = sz.icon;
+                                return (
+                                    <motion.button
+                                        key={sz.id}
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
+                                        onClick={() => onSelectSize(sz.id)}
+                                        className={`relative p-5 rounded-2xl border-2 transition-all ${isActive
+                                            ? "border-gold bg-gold/10 shadow-lg shadow-gold/10"
+                                            : "border-white/[0.08] hover:border-white/20 bg-white/[0.02]"
+                                            }`}
+                                    >
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <SzIcon className={`w-8 h-8 ${isActive ? "text-gold" : "text-fg/30"}`} />
+                                            <div className="text-right">
+                                                <p className={`font-bold ${isActive ? "text-gold" : "text-fg"}`}>{sz.label}</p>
+                                                <p className="text-[10px] text-fg/35">{sz.desc}</p>
+                                            </div>
+                                        </div>
+                                        {!loadingPricing && price !== null && (
+                                            <div className={`text-xl font-bold mt-2 ${isActive ? "text-gold" : "text-fg/50"}`}>
+                                                {price > 0 ? `${price} ر.س` : "مجاني"}
+                                            </div>
+                                        )}
+                                        {loadingPricing && (
+                                            <div className="mt-2"><Loader2 className="w-5 h-5 animate-spin text-fg/20" /></div>
+                                        )}
+                                        {isActive && (
+                                            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
+                                                className="absolute top-3 left-3 w-5 h-5 rounded-full bg-gold flex items-center justify-center">
+                                                <Check className="w-3 h-3 text-bg" />
+                                            </motion.div>
+                                        )}
+                                    </motion.button>
+                                );
+                            })}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Price Summary */}
+            <AnimatePresence>
+                {currentPrice !== null && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="p-4 rounded-2xl border border-gold/20 mb-4"
+                        style={{ background: "linear-gradient(135deg, rgba(206,174,127,0.08) 0%, rgba(206,174,127,0.02) 100%)" }}
+                    >
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-fg/50">سعر الطباعة</p>
+                                <p className="text-xs text-fg/30 mt-0.5">
+                                    {PRINT_POSITIONS.find(p => p.id === selectedPosition)?.label} — {PRINT_SIZES.find(s => s.id === selectedSize)?.label}
+                                </p>
+                            </div>
+                            <p className="text-2xl font-bold text-gold">{currentPrice > 0 ? `${currentPrice} ر.س` : "مجاني"}</p>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <NavButtons onBack={onBack} onNext={onNext} nextDisabled={!selectedPosition || !selectedSize} />
+        </>
+    );
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Step 9: Submit
 // ═══════════════════════════════════════════════════════════
 
 function StepSubmit({ state, onBack, onSend }: { state: WizardState; onBack: () => void; onSend: () => void }) {

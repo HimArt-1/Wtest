@@ -393,6 +393,8 @@ export async function submitDesignOrder(orderData: {
     customer_name?: string;
     customer_email?: string;
     customer_phone?: string;
+    print_position?: string;
+    print_size?: string;
 }) {
     const sb = getSmartStoreSb();
 
@@ -443,6 +445,8 @@ export async function submitDesignOrder(orderData: {
         customer_name: orderData.customer_name || null,
         customer_email: orderData.customer_email || null,
         customer_phone: orderData.customer_phone || null,
+        print_position: orderData.print_position || null,
+        print_size: orderData.print_size || null,
     };
 
     const { data, error } = await sb
