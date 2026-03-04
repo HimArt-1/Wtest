@@ -25,14 +25,14 @@ ALTER TABLE public.user_notifications ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users can view their own notifications" ON public.user_notifications;
 CREATE POLICY "Users can view their own notifications" ON public.user_notifications
     FOR SELECT
-    USING (auth.uid() = (SELECT clerk_id FROM public.profiles WHERE id = user_id LIMIT 1));
+    USING ((current_setting('request.jwt.claims', true)::json->>'sub') = (SELECT clerk_id FROM public.profiles WHERE id = user_id LIMIT 1));
 
 -- 2. Users can mark their own notifications as read
 DROP POLICY IF EXISTS "Users can update their own notifications" ON public.user_notifications;
 CREATE POLICY "Users can update their own notifications" ON public.user_notifications
     FOR UPDATE
-    USING (auth.uid() = (SELECT clerk_id FROM public.profiles WHERE id = user_id LIMIT 1))
-    WITH CHECK (auth.uid() = (SELECT clerk_id FROM public.profiles WHERE id = user_id LIMIT 1));
+    USING ((current_setting('request.jwt.claims', true)::json->>'sub') = (SELECT clerk_id FROM public.profiles WHERE id = user_id LIMIT 1))
+    WITH CHECK ((current_setting('request.jwt.claims', true)::json->>'sub') = (SELECT clerk_id FROM public.profiles WHERE id = user_id LIMIT 1));
 
 -- 3. Only Service Role can insert/delete (handled automatically by bypassing RLS or explicit policies if needed)
 -- For Supabase, the generated service_role key bypasses RLS, so no explicit policy is strictly required
@@ -43,6 +43,6 @@ CREATE POLICY "Admins can insert notifications" ON public.user_notifications
     WITH CHECK (
         EXISTS (
             SELECT 1 FROM public.profiles
-            WHERE clerk_id = auth.uid() AND role = 'admin'
+            WHERE clerk_id = (current_setting('request.jwt.claims', true)::json->>'sub') AND role = 'admin'
         )
     );

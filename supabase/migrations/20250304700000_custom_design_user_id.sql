@@ -19,8 +19,7 @@ BEGIN
         WHERE tablename = 'custom_design_orders' AND policyname = 'Users can view their own design orders'
     ) THEN
         DROP POLICY IF EXISTS "Users can view their own design orders" ON public.custom_design_orders;
-DROP POLICY IF EXISTS "Users can view their own design orders" ON public.custom_design_orders;
-CREATE POLICY "Users can view their own design orders" ON public.custom_design_orders
-            FOR SELECT USING (auth.uid() = user_id);
+        CREATE POLICY "Users can view their own design orders" ON public.custom_design_orders
+            FOR SELECT USING ((current_setting('request.jwt.claims', true)::json->>'sub') = (SELECT clerk_id FROM public.profiles WHERE id = user_id LIMIT 1));
     END IF;
 END $$;
