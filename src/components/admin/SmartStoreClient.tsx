@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { createClient } from "@supabase/supabase-js";
 import {
     Plus,
     Pencil,
@@ -16,10 +17,8 @@ import {
     Upload,
     X,
     Check,
-    ChevronDown,
-    Eye,
-    EyeOff,
-    GripVertical,
+    Image as ImageIcon,
+    Loader2,
 } from "lucide-react";
 import {
     upsertGarment,
@@ -43,6 +42,31 @@ import type {
     CustomDesignArtStyle,
     CustomDesignColorPackage,
 } from "@/types/database";
+
+// ─── Supabase Storage Upload ────────────────────────────
+
+function getStorageClient() {
+    return createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+}
+
+async function uploadToStorage(file: File, folder: string): Promise<string | null> {
+    const sb = getStorageClient();
+    const ext = file.name.split(".").pop() ?? "png";
+    const fileName = `${folder}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const { error } = await sb.storage.from("smart-store").upload(fileName, file, {
+        cacheControl: "3600",
+        upsert: false,
+    });
+    if (error) {
+        console.error("Upload error:", error);
+        return null;
+    }
+    const { data } = sb.storage.from("smart-store").getPublicUrl(fileName);
+    return data.publicUrl;
+}
 
 // ─── Types ──────────────────────────────────────────────
 
@@ -74,7 +98,6 @@ export function SmartStoreClient({ garments, colors, sizes, styles, artStyles, c
 
     return (
         <div className="space-y-6">
-            {/* Tab Navigation */}
             <div className="flex flex-wrap gap-2">
                 {TABS.map((tab) => {
                     const Icon = tab.icon;
@@ -83,13 +106,7 @@ export function SmartStoreClient({ garments, colors, sizes, styles, artStyles, c
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
-                            className={`
-                flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-300
-                ${isActive
-                                    ? "bg-gold/15 text-gold border border-gold/30"
-                                    : "bg-white/[0.03] text-fg/50 border border-white/[0.06] hover:text-fg/80 hover:bg-white/[0.05]"
-                                }
-              `}
+                            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${isActive ? "bg-gold/15 text-gold border border-gold/30" : "bg-white/[0.03] text-fg/50 border border-white/[0.06] hover:text-fg/80 hover:bg-white/[0.05]"}`}
                         >
                             <Icon className="w-4 h-4" />
                             {tab.label}
@@ -97,16 +114,8 @@ export function SmartStoreClient({ garments, colors, sizes, styles, artStyles, c
                     );
                 })}
             </div>
-
-            {/* Tab Content */}
             <AnimatePresence mode="wait">
-                <motion.div
-                    key={activeTab}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
-                >
+                <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
                     {activeTab === "garments" && <GarmentsTab items={garments} onRefresh={() => router.refresh()} />}
                     {activeTab === "colors" && <ColorsTab items={colors} garments={garments} onRefresh={() => router.refresh()} />}
                     {activeTab === "sizes" && <SizesTab items={sizes} garments={garments} colors={colors} onRefresh={() => router.refresh()} />}
@@ -128,12 +137,8 @@ function SectionCard({ children, title, onAdd }: { children: React.ReactNode; ti
         <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-6">
             <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-bold text-fg">{title}</h2>
-                <button
-                    onClick={onAdd}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gold/10 text-gold border border-gold/20 hover:bg-gold/20 transition-colors text-sm font-medium"
-                >
-                    <Plus className="w-4 h-4" />
-                    إضافة
+                <button onClick={onAdd} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gold/10 text-gold border border-gold/20 hover:bg-gold/20 transition-colors text-sm font-medium">
+                    <Plus className="w-4 h-4" /> إضافة
                 </button>
             </div>
             {children}
@@ -177,9 +182,80 @@ function Modal({ open, onClose, title, children }: { open: boolean; onClose: () 
 }
 
 function EmptyState({ text }: { text: string }) {
+    return <div className="text-center py-16 text-fg/30"><p className="text-sm">{text}</p></div>;
+}
+
+// ─── Image Uploader ─────────────────────────────────────
+
+function ImageUploader({ value, onChange, folder, label }: {
+    value: string;
+    onChange: (url: string) => void;
+    folder: string;
+    label?: string;
+}) {
+    const [uploading, setUploading] = useState(false);
+    const [preview, setPreview] = useState(value);
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        // Show instant preview
+        const localUrl = URL.createObjectURL(file);
+        setPreview(localUrl);
+        setUploading(true);
+        const publicUrl = await uploadToStorage(file, folder);
+        setUploading(false);
+        if (publicUrl) {
+            setPreview(publicUrl);
+            onChange(publicUrl);
+        } else {
+            setPreview(value);
+            alert("فشل رفع الصورة. تأكد من إعداد storage bucket في Supabase.");
+        }
+        // Reset input
+        if (inputRef.current) inputRef.current.value = "";
+    };
+
+    // Sync external changes
+    if (!uploading && value !== preview && value !== "" && preview !== value) {
+        // handled by useEffect below
+    }
+
     return (
-        <div className="text-center py-16 text-fg/30">
-            <p className="text-sm">{text}</p>
+        <div className="space-y-2">
+            {/* Preview */}
+            {(preview || value) && (
+                <div className="relative inline-block">
+                    <img
+                        src={preview || value}
+                        alt={label ?? "صورة"}
+                        className="h-28 max-w-full rounded-xl object-cover border border-white/10 bg-white/5"
+                    />
+                    {uploading && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-xl">
+                            <Loader2 className="w-6 h-6 text-gold animate-spin" />
+                        </div>
+                    )}
+                    {!uploading && (preview || value) && (
+                        <button
+                            type="button"
+                            onClick={() => { setPreview(""); onChange(""); }}
+                            className="absolute -top-2 -left-2 w-6 h-6 rounded-full bg-red-500 flex items-center justify-center shadow-lg"
+                        >
+                            <X className="w-3.5 h-3.5 text-white" />
+                        </button>
+                    )}
+                </div>
+            )}
+            {/* Upload button */}
+            <label className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/[0.04] border border-dashed border-white/[0.15] hover:border-gold/30 cursor-pointer transition-colors text-sm text-fg/50 hover:text-fg/70 w-fit">
+                <Upload className="w-4 h-4" />
+                {uploading ? "جاري الرفع..." : (preview || value) ? "تغيير الصورة" : "رفع صورة من الجهاز"}
+                <input ref={inputRef} type="file" accept="image/*" onChange={handleFile} className="hidden" disabled={uploading} />
+            </label>
+            {/* Hidden input for form */}
+            <input type="hidden" name={label === "صورة أمام" ? "image_front_url" : label === "صورة خلف" ? "image_back_url" : "image_url"} value={preview || value || ""} />
         </div>
     );
 }
@@ -192,18 +268,23 @@ function GarmentsTab({ items, onRefresh }: { items: CustomDesignGarment[]; onRef
     const [editing, setEditing] = useState<CustomDesignGarment | null>(null);
     const [isAdding, setIsAdding] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [imageUrl, setImageUrl] = useState("");
+
+    const openAdd = () => { setIsAdding(true); setImageUrl(""); };
+    const openEdit = (g: CustomDesignGarment) => { setEditing(g); setImageUrl(g.image_url ?? ""); };
+    const closeModal = () => { setEditing(null); setIsAdding(false); setImageUrl(""); };
 
     const handleSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setLoading(true);
         const fd = new FormData(e.currentTarget);
         if (editing) fd.set("id", editing.id);
+        fd.set("image_url", imageUrl);
         await upsertGarment(fd);
         setLoading(false);
-        setEditing(null);
-        setIsAdding(false);
+        closeModal();
         onRefresh();
-    }, [editing, onRefresh]);
+    }, [editing, onRefresh, imageUrl]);
 
     const handleDelete = useCallback(async (id: string) => {
         if (!confirm("حذف هذه القطعة؟ سيتم حذف جميع الألوان والمقاسات المرتبطة.")) return;
@@ -219,8 +300,8 @@ function GarmentsTab({ items, onRefresh }: { items: CustomDesignGarment[]; onRef
             <FormField label="الرابط (slug)">
                 <input name="slug" defaultValue={editing?.slug ?? ""} required className={inputCls} placeholder="مثال: tshirt" />
             </FormField>
-            <FormField label="رابط الصورة">
-                <input name="image_url" defaultValue={editing?.image_url ?? ""} className={inputCls} placeholder="https://..." />
+            <FormField label="صورة القطعة">
+                <ImageUploader value={imageUrl} onChange={setImageUrl} folder="garments" />
             </FormField>
             <FormField label="الترتيب">
                 <input name="sort_order" type="number" defaultValue={editing?.sort_order ?? 0} className={inputCls} />
@@ -232,22 +313,22 @@ function GarmentsTab({ items, onRefresh }: { items: CustomDesignGarment[]; onRef
                 </select>
             </FormField>
             <div className="flex gap-3 pt-2">
-                <button type="submit" disabled={loading} className={btnPrimary}>
-                    {loading ? "جاري الحفظ..." : "حفظ"}
-                </button>
-                <button type="button" onClick={() => { setEditing(null); setIsAdding(false); }} className={btnSecondary}>إلغاء</button>
+                <button type="submit" disabled={loading} className={btnPrimary}>{loading ? "جاري الحفظ..." : "حفظ"}</button>
+                <button type="button" onClick={closeModal} className={btnSecondary}>إلغاء</button>
             </div>
         </form>
     );
 
     return (
-        <SectionCard title="القطع (الملابس)" onAdd={() => setIsAdding(true)}>
+        <SectionCard title="القطع (الملابس)" onAdd={openAdd}>
             {items.length === 0 ? <EmptyState text="لا توجد قطع بعد. أضف أول قطعة!" /> : (
                 <div className="grid gap-3">
                     {items.map((g) => (
                         <div key={g.id} className="flex items-center gap-4 p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] group">
-                            {g.image_url && (
+                            {g.image_url ? (
                                 <img src={g.image_url} alt={g.name} className="w-14 h-14 rounded-lg object-cover bg-white/5" />
+                            ) : (
+                                <div className="w-14 h-14 rounded-lg bg-white/5 flex items-center justify-center"><ImageIcon className="w-6 h-6 text-fg/20" /></div>
                             )}
                             <div className="flex-1 min-w-0">
                                 <p className="font-medium text-fg truncate">{g.name}</p>
@@ -257,16 +338,14 @@ function GarmentsTab({ items, onRefresh }: { items: CustomDesignGarment[]; onRef
                                 {g.is_active ? "نشط" : "معطل"}
                             </span>
                             <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button onClick={() => setEditing(g)} className="p-2 hover:bg-white/5 rounded-lg"><Pencil className="w-4 h-4 text-fg/40" /></button>
+                                <button onClick={() => openEdit(g)} className="p-2 hover:bg-white/5 rounded-lg"><Pencil className="w-4 h-4 text-fg/40" /></button>
                                 <button onClick={() => handleDelete(g.id)} className="p-2 hover:bg-red-500/10 rounded-lg"><Trash2 className="w-4 h-4 text-red-400/60" /></button>
                             </div>
                         </div>
                     ))}
                 </div>
             )}
-            <Modal open={isAdding || !!editing} onClose={() => { setEditing(null); setIsAdding(false); }} title={editing ? "تعديل القطعة" : "إضافة قطعة جديدة"}>
-                {form}
-            </Modal>
+            <Modal open={isAdding || !!editing} onClose={closeModal} title={editing ? "تعديل القطعة" : "إضافة قطعة جديدة"}>{form}</Modal>
         </SectionCard>
     );
 }
@@ -280,20 +359,24 @@ function ColorsTab({ items, garments, onRefresh }: { items: CustomDesignColor[];
     const [isAdding, setIsAdding] = useState(false);
     const [loading, setLoading] = useState(false);
     const [filterGarment, setFilterGarment] = useState<string>("all");
+    const [imageUrl, setImageUrl] = useState("");
 
     const filtered = filterGarment === "all" ? items : items.filter(c => c.garment_id === filterGarment);
+    const openAdd = () => { setIsAdding(true); setImageUrl(""); };
+    const openEdit = (c: CustomDesignColor) => { setEditing(c); setImageUrl(c.image_url ?? ""); };
+    const closeModal = () => { setEditing(null); setIsAdding(false); setImageUrl(""); };
 
     const handleSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setLoading(true);
         const fd = new FormData(e.currentTarget);
         if (editing) fd.set("id", editing.id);
+        fd.set("image_url", imageUrl);
         await upsertColor(fd);
         setLoading(false);
-        setEditing(null);
-        setIsAdding(false);
+        closeModal();
         onRefresh();
-    }, [editing, onRefresh]);
+    }, [editing, onRefresh, imageUrl]);
 
     const handleDelete = useCallback(async (id: string) => {
         if (!confirm("حذف هذا اللون؟")) return;
@@ -312,12 +395,10 @@ function ColorsTab({ items, garments, onRefresh }: { items: CustomDesignColor[];
                 <input name="name" defaultValue={editing?.name ?? ""} required className={inputCls} placeholder="مثال: أسود" />
             </FormField>
             <FormField label="كود اللون">
-                <div className="flex gap-2">
-                    <input name="hex_code" defaultValue={editing?.hex_code ?? "#000000"} required className={inputCls} placeholder="#000000" />
-                </div>
+                <input name="hex_code" type="color" defaultValue={editing?.hex_code ?? "#000000"} required className="w-16 h-10 rounded-lg cursor-pointer bg-transparent border border-white/10" />
             </FormField>
-            <FormField label="رابط الصورة (mockup)">
-                <input name="image_url" defaultValue={editing?.image_url ?? ""} className={inputCls} placeholder="https://..." />
+            <FormField label="صورة Mockup">
+                <ImageUploader value={imageUrl} onChange={setImageUrl} folder="colors" />
             </FormField>
             <FormField label="الترتيب">
                 <input name="sort_order" type="number" defaultValue={editing?.sort_order ?? 0} className={inputCls} />
@@ -330,14 +411,13 @@ function ColorsTab({ items, garments, onRefresh }: { items: CustomDesignColor[];
             </FormField>
             <div className="flex gap-3 pt-2">
                 <button type="submit" disabled={loading} className={btnPrimary}>{loading ? "جاري الحفظ..." : "حفظ"}</button>
-                <button type="button" onClick={() => { setEditing(null); setIsAdding(false); }} className={btnSecondary}>إلغاء</button>
+                <button type="button" onClick={closeModal} className={btnSecondary}>إلغاء</button>
             </div>
         </form>
     );
 
     return (
-        <SectionCard title="ألوان القطع" onAdd={() => setIsAdding(true)}>
-            {/* Filter */}
+        <SectionCard title="ألوان القطع" onAdd={openAdd}>
             <div className="mb-4">
                 <select value={filterGarment} onChange={(e) => setFilterGarment(e.target.value)} className={inputCls + " max-w-xs"}>
                     <option value="all">جميع القطع</option>
@@ -350,7 +430,7 @@ function ColorsTab({ items, garments, onRefresh }: { items: CustomDesignColor[];
                         const garmentName = garments.find(g => g.id === c.garment_id)?.name ?? "—";
                         return (
                             <div key={c.id} className="flex items-center gap-4 p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] group">
-                                <div className="w-10 h-10 rounded-lg border border-white/10" style={{ backgroundColor: c.hex_code }} />
+                                <div className="w-10 h-10 rounded-lg border border-white/10 shadow-inner" style={{ backgroundColor: c.hex_code }} />
                                 {c.image_url && <img src={c.image_url} alt={c.name} className="w-14 h-14 rounded-lg object-cover bg-white/5" />}
                                 <div className="flex-1 min-w-0">
                                     <p className="font-medium text-fg truncate">{c.name}</p>
@@ -360,7 +440,7 @@ function ColorsTab({ items, garments, onRefresh }: { items: CustomDesignColor[];
                                     {c.is_active ? "نشط" : "معطل"}
                                 </span>
                                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button onClick={() => setEditing(c)} className="p-2 hover:bg-white/5 rounded-lg"><Pencil className="w-4 h-4 text-fg/40" /></button>
+                                    <button onClick={() => openEdit(c)} className="p-2 hover:bg-white/5 rounded-lg"><Pencil className="w-4 h-4 text-fg/40" /></button>
                                     <button onClick={() => handleDelete(c.id)} className="p-2 hover:bg-red-500/10 rounded-lg"><Trash2 className="w-4 h-4 text-red-400/60" /></button>
                                 </div>
                             </div>
@@ -368,9 +448,7 @@ function ColorsTab({ items, garments, onRefresh }: { items: CustomDesignColor[];
                     })}
                 </div>
             )}
-            <Modal open={isAdding || !!editing} onClose={() => { setEditing(null); setIsAdding(false); }} title={editing ? "تعديل اللون" : "إضافة لون جديد"}>
-                {form}
-            </Modal>
+            <Modal open={isAdding || !!editing} onClose={closeModal} title={editing ? "تعديل اللون" : "إضافة لون جديد"}>{form}</Modal>
         </SectionCard>
     );
 }
@@ -380,33 +458,30 @@ function ColorsTab({ items, garments, onRefresh }: { items: CustomDesignColor[];
 // ═══════════════════════════════════════════════════════════
 
 function GenericItemsTab<T extends { id: string; name: string; description?: string | null; image_url?: string | null; sort_order?: number; is_active: boolean }>({
-    items,
-    title,
-    onUpsert,
-    onDelete,
-    onRefresh,
+    items, title, onUpsert, onDelete, onRefresh, folder,
 }: {
-    items: T[];
-    title: string;
-    onUpsert: (fd: FormData) => Promise<any>;
-    onDelete: (id: string) => Promise<any>;
-    onRefresh: () => void;
+    items: T[]; title: string; onUpsert: (fd: FormData) => Promise<any>; onDelete: (id: string) => Promise<any>; onRefresh: () => void; folder: string;
 }) {
     const [editing, setEditing] = useState<T | null>(null);
     const [isAdding, setIsAdding] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [imageUrl, setImageUrl] = useState("");
+
+    const openAdd = () => { setIsAdding(true); setImageUrl(""); };
+    const openEdit = (item: T) => { setEditing(item); setImageUrl(item.image_url ?? ""); };
+    const closeModal = () => { setEditing(null); setIsAdding(false); setImageUrl(""); };
 
     const handleSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setLoading(true);
         const fd = new FormData(e.currentTarget);
         if (editing) fd.set("id", editing.id);
+        fd.set("image_url", imageUrl);
         await onUpsert(fd);
         setLoading(false);
-        setEditing(null);
-        setIsAdding(false);
+        closeModal();
         onRefresh();
-    }, [editing, onRefresh, onUpsert]);
+    }, [editing, onRefresh, onUpsert, imageUrl]);
 
     const handleDelete = useCallback(async (id: string) => {
         if (!confirm("حذف هذا العنصر؟")) return;
@@ -422,8 +497,8 @@ function GenericItemsTab<T extends { id: string; name: string; description?: str
             <FormField label="الوصف">
                 <textarea name="description" defaultValue={editing?.description ?? ""} className={inputCls} rows={3} />
             </FormField>
-            <FormField label="رابط الصورة">
-                <input name="image_url" defaultValue={editing?.image_url ?? ""} className={inputCls} placeholder="https://..." />
+            <FormField label="الصورة">
+                <ImageUploader value={imageUrl} onChange={setImageUrl} folder={folder} />
             </FormField>
             <FormField label="الترتيب">
                 <input name="sort_order" type="number" defaultValue={(editing as any)?.sort_order ?? 0} className={inputCls} />
@@ -436,19 +511,21 @@ function GenericItemsTab<T extends { id: string; name: string; description?: str
             </FormField>
             <div className="flex gap-3 pt-2">
                 <button type="submit" disabled={loading} className={btnPrimary}>{loading ? "جاري الحفظ..." : "حفظ"}</button>
-                <button type="button" onClick={() => { setEditing(null); setIsAdding(false); }} className={btnSecondary}>إلغاء</button>
+                <button type="button" onClick={closeModal} className={btnSecondary}>إلغاء</button>
             </div>
         </form>
     );
 
     return (
-        <SectionCard title={title} onAdd={() => setIsAdding(true)}>
+        <SectionCard title={title} onAdd={openAdd}>
             {items.length === 0 ? <EmptyState text="لا توجد عناصر بعد." /> : (
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     {items.map((item) => (
                         <div key={item.id} className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] group relative overflow-hidden">
-                            {item.image_url && (
+                            {item.image_url ? (
                                 <img src={item.image_url} alt={item.name} className="w-full h-32 object-cover rounded-lg mb-3 bg-white/5" />
+                            ) : (
+                                <div className="w-full h-32 rounded-lg bg-white/[0.04] flex items-center justify-center mb-3"><ImageIcon className="w-8 h-8 text-fg/15" /></div>
                             )}
                             <p className="font-medium text-fg truncate">{item.name}</p>
                             {item.description && <p className="text-xs text-fg/40 mt-1 line-clamp-2">{item.description}</p>}
@@ -457,7 +534,7 @@ function GenericItemsTab<T extends { id: string; name: string; description?: str
                                     {item.is_active ? "نشط" : "معطل"}
                                 </span>
                                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button onClick={() => setEditing(item)} className="p-1.5 hover:bg-white/5 rounded-lg"><Pencil className="w-3.5 h-3.5 text-fg/40" /></button>
+                                    <button onClick={() => openEdit(item)} className="p-1.5 hover:bg-white/5 rounded-lg"><Pencil className="w-3.5 h-3.5 text-fg/40" /></button>
                                     <button onClick={() => handleDelete(item.id)} className="p-1.5 hover:bg-red-500/10 rounded-lg"><Trash2 className="w-3.5 h-3.5 text-red-400/60" /></button>
                                 </div>
                             </div>
@@ -465,19 +542,17 @@ function GenericItemsTab<T extends { id: string; name: string; description?: str
                     ))}
                 </div>
             )}
-            <Modal open={isAdding || !!editing} onClose={() => { setEditing(null); setIsAdding(false); }} title={editing ? "تعديل العنصر" : "إضافة عنصر جديد"}>
-                {form}
-            </Modal>
+            <Modal open={isAdding || !!editing} onClose={closeModal} title={editing ? "تعديل العنصر" : "إضافة عنصر جديد"}>{form}</Modal>
         </SectionCard>
     );
 }
 
 function StylesTab({ items, onRefresh }: { items: CustomDesignStyle[]; onRefresh: () => void }) {
-    return <GenericItemsTab items={items} title="أنماط التصميم" onUpsert={upsertStyle} onDelete={deleteStyle} onRefresh={onRefresh} />;
+    return <GenericItemsTab items={items} title="أنماط التصميم" onUpsert={upsertStyle} onDelete={deleteStyle} onRefresh={onRefresh} folder="styles" />;
 }
 
 function ArtStylesTab({ items, onRefresh }: { items: CustomDesignArtStyle[]; onRefresh: () => void }) {
-    return <GenericItemsTab items={items} title="أساليب الرسم" onUpsert={upsertArtStyle} onDelete={deleteArtStyle} onRefresh={onRefresh} />;
+    return <GenericItemsTab items={items} title="أساليب الرسم" onUpsert={upsertArtStyle} onDelete={deleteArtStyle} onRefresh={onRefresh} folder="art-styles" />;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -489,20 +564,26 @@ function SizesTab({ items, garments, colors, onRefresh }: { items: CustomDesignS
     const [isAdding, setIsAdding] = useState(false);
     const [loading, setLoading] = useState(false);
     const [filterGarment, setFilterGarment] = useState<string>("all");
+    const [frontUrl, setFrontUrl] = useState("");
+    const [backUrl, setBackUrl] = useState("");
 
     const filtered = filterGarment === "all" ? items : items.filter(s => s.garment_id === filterGarment);
+    const openAdd = () => { setIsAdding(true); setFrontUrl(""); setBackUrl(""); };
+    const openEdit = (s: CustomDesignSize) => { setEditing(s); setFrontUrl(s.image_front_url ?? ""); setBackUrl(s.image_back_url ?? ""); };
+    const closeModal = () => { setEditing(null); setIsAdding(false); setFrontUrl(""); setBackUrl(""); };
 
     const handleSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setLoading(true);
         const fd = new FormData(e.currentTarget);
         if (editing) fd.set("id", editing.id);
+        fd.set("image_front_url", frontUrl);
+        fd.set("image_back_url", backUrl);
         await upsertSize(fd);
         setLoading(false);
-        setEditing(null);
-        setIsAdding(false);
+        closeModal();
         onRefresh();
-    }, [editing, onRefresh]);
+    }, [editing, onRefresh, frontUrl, backUrl]);
 
     const handleDelete = useCallback(async (id: string) => {
         if (!confirm("حذف هذا المقاس؟")) return;
@@ -527,10 +608,10 @@ function SizesTab({ items, garments, colors, onRefresh }: { items: CustomDesignS
                 <input name="name" defaultValue={editing?.name ?? ""} required className={inputCls} placeholder="مثال: XL" />
             </FormField>
             <FormField label="صورة أمام">
-                <input name="image_front_url" defaultValue={editing?.image_front_url ?? ""} className={inputCls} placeholder="https://..." />
+                <ImageUploader value={frontUrl} onChange={setFrontUrl} folder="sizes" label="صورة أمام" />
             </FormField>
             <FormField label="صورة خلف">
-                <input name="image_back_url" defaultValue={editing?.image_back_url ?? ""} className={inputCls} placeholder="https://..." />
+                <ImageUploader value={backUrl} onChange={setBackUrl} folder="sizes" label="صورة خلف" />
             </FormField>
             <FormField label="الحالة">
                 <select name="is_active" defaultValue={editing?.is_active !== false ? "true" : "false"} className={inputCls}>
@@ -540,13 +621,13 @@ function SizesTab({ items, garments, colors, onRefresh }: { items: CustomDesignS
             </FormField>
             <div className="flex gap-3 pt-2">
                 <button type="submit" disabled={loading} className={btnPrimary}>{loading ? "جاري الحفظ..." : "حفظ"}</button>
-                <button type="button" onClick={() => { setEditing(null); setIsAdding(false); }} className={btnSecondary}>إلغاء</button>
+                <button type="button" onClick={closeModal} className={btnSecondary}>إلغاء</button>
             </div>
         </form>
     );
 
     return (
-        <SectionCard title="المقاسات" onAdd={() => setIsAdding(true)}>
+        <SectionCard title="المقاسات" onAdd={openAdd}>
             <div className="mb-4">
                 <select value={filterGarment} onChange={(e) => setFilterGarment(e.target.value)} className={inputCls + " max-w-xs"}>
                     <option value="all">جميع القطع</option>
@@ -569,7 +650,7 @@ function SizesTab({ items, garments, colors, onRefresh }: { items: CustomDesignS
                                     {s.is_active ? "نشط" : "معطل"}
                                 </span>
                                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button onClick={() => setEditing(s)} className="p-2 hover:bg-white/5 rounded-lg"><Pencil className="w-4 h-4 text-fg/40" /></button>
+                                    <button onClick={() => openEdit(s)} className="p-2 hover:bg-white/5 rounded-lg"><Pencil className="w-4 h-4 text-fg/40" /></button>
                                     <button onClick={() => handleDelete(s.id)} className="p-2 hover:bg-red-500/10 rounded-lg"><Trash2 className="w-4 h-4 text-red-400/60" /></button>
                                 </div>
                             </div>
@@ -577,9 +658,7 @@ function SizesTab({ items, garments, colors, onRefresh }: { items: CustomDesignS
                     })}
                 </div>
             )}
-            <Modal open={isAdding || !!editing} onClose={() => { setEditing(null); setIsAdding(false); }} title={editing ? "تعديل المقاس" : "إضافة مقاس جديد"}>
-                {form}
-            </Modal>
+            <Modal open={isAdding || !!editing} onClose={closeModal} title={editing ? "تعديل المقاس" : "إضافة مقاس جديد"}>{form}</Modal>
         </SectionCard>
     );
 }
@@ -593,6 +672,7 @@ function ColorPackagesTab({ items, onRefresh }: { items: CustomDesignColorPackag
     const [isAdding, setIsAdding] = useState(false);
     const [loading, setLoading] = useState(false);
     const [packageColors, setPackageColors] = useState<{ hex: string; name: string }[]>([]);
+    const [imageUrl, setImageUrl] = useState("");
 
     const handleSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -600,13 +680,15 @@ function ColorPackagesTab({ items, onRefresh }: { items: CustomDesignColorPackag
         const fd = new FormData(e.currentTarget);
         if (editing) fd.set("id", editing.id);
         fd.set("colors", JSON.stringify(packageColors));
+        fd.set("image_url", imageUrl);
         await upsertColorPackage(fd);
         setLoading(false);
         setEditing(null);
         setIsAdding(false);
         setPackageColors([]);
+        setImageUrl("");
         onRefresh();
-    }, [editing, onRefresh, packageColors]);
+    }, [editing, onRefresh, packageColors, imageUrl]);
 
     const handleDelete = useCallback(async (id: string) => {
         if (!confirm("حذف هذه الباقة؟")) return;
@@ -617,57 +699,35 @@ function ColorPackagesTab({ items, onRefresh }: { items: CustomDesignColorPackag
     const openEdit = (item: CustomDesignColorPackage) => {
         setEditing(item);
         setPackageColors(Array.isArray(item.colors) ? item.colors : []);
+        setImageUrl(item.image_url ?? "");
     };
 
     const openAdd = () => {
         setIsAdding(true);
         setPackageColors([{ hex: "#ceae7f", name: "ذهبي" }, { hex: "#000000", name: "أسود" }]);
+        setImageUrl("");
     };
+
+    const closeModal = () => { setEditing(null); setIsAdding(false); setPackageColors([]); setImageUrl(""); };
 
     const form = (
         <form onSubmit={handleSubmit} className="space-y-4">
             <FormField label="اسم الباقة">
                 <input name="name" defaultValue={editing?.name ?? ""} required className={inputCls} placeholder="مثال: باقة ذهبية" />
             </FormField>
-            <FormField label="رابط الصورة">
-                <input name="image_url" defaultValue={editing?.image_url ?? ""} className={inputCls} placeholder="https://..." />
+            <FormField label="صورة الباقة">
+                <ImageUploader value={imageUrl} onChange={setImageUrl} folder="color-packages" />
             </FormField>
             <FormField label="الألوان">
                 <div className="space-y-2">
                     {packageColors.map((c, i) => (
                         <div key={i} className="flex gap-2 items-center">
-                            <input
-                                type="color"
-                                value={c.hex}
-                                onChange={(e) => {
-                                    const newColors = [...packageColors];
-                                    newColors[i] = { ...newColors[i], hex: e.target.value };
-                                    setPackageColors(newColors);
-                                }}
-                                className="w-10 h-10 rounded-lg cursor-pointer bg-transparent border-0"
-                            />
-                            <input
-                                value={c.name}
-                                onChange={(e) => {
-                                    const newColors = [...packageColors];
-                                    newColors[i] = { ...newColors[i], name: e.target.value };
-                                    setPackageColors(newColors);
-                                }}
-                                className={inputCls + " flex-1"}
-                                placeholder="اسم اللون"
-                            />
-                            <button type="button" onClick={() => setPackageColors(packageColors.filter((_, j) => j !== i))} className="p-2 hover:bg-red-500/10 rounded-lg">
-                                <X className="w-4 h-4 text-red-400/60" />
-                            </button>
+                            <input type="color" value={c.hex} onChange={(e) => { const n = [...packageColors]; n[i] = { ...n[i], hex: e.target.value }; setPackageColors(n); }} className="w-10 h-10 rounded-lg cursor-pointer bg-transparent border-0" />
+                            <input value={c.name} onChange={(e) => { const n = [...packageColors]; n[i] = { ...n[i], name: e.target.value }; setPackageColors(n); }} className={inputCls + " flex-1"} placeholder="اسم اللون" />
+                            <button type="button" onClick={() => setPackageColors(packageColors.filter((_, j) => j !== i))} className="p-2 hover:bg-red-500/10 rounded-lg"><X className="w-4 h-4 text-red-400/60" /></button>
                         </div>
                     ))}
-                    <button
-                        type="button"
-                        onClick={() => setPackageColors([...packageColors, { hex: "#888888", name: "" }])}
-                        className="text-xs text-gold hover:text-gold-light transition-colors"
-                    >
-                        + أضف لون
-                    </button>
+                    <button type="button" onClick={() => setPackageColors([...packageColors, { hex: "#888888", name: "" }])} className="text-xs text-gold hover:text-gold-light transition-colors">+ أضف لون</button>
                 </div>
             </FormField>
             <FormField label="الترتيب">
@@ -681,7 +741,7 @@ function ColorPackagesTab({ items, onRefresh }: { items: CustomDesignColorPackag
             </FormField>
             <div className="flex gap-3 pt-2">
                 <button type="submit" disabled={loading} className={btnPrimary}>{loading ? "جاري الحفظ..." : "حفظ"}</button>
-                <button type="button" onClick={() => { setEditing(null); setIsAdding(false); setPackageColors([]); }} className={btnSecondary}>إلغاء</button>
+                <button type="button" onClick={closeModal} className={btnSecondary}>إلغاء</button>
             </div>
         </form>
     );
@@ -692,6 +752,7 @@ function ColorPackagesTab({ items, onRefresh }: { items: CustomDesignColorPackag
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     {items.map((pkg) => (
                         <div key={pkg.id} className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] group">
+                            {pkg.image_url && <img src={pkg.image_url} alt={pkg.name} className="w-full h-24 object-cover rounded-lg mb-2 bg-white/5" />}
                             <p className="font-medium text-fg mb-2">{pkg.name}</p>
                             <div className="flex gap-1 mb-3">
                                 {(Array.isArray(pkg.colors) ? pkg.colors : []).map((c: any, i: number) => (
@@ -711,9 +772,7 @@ function ColorPackagesTab({ items, onRefresh }: { items: CustomDesignColorPackag
                     ))}
                 </div>
             )}
-            <Modal open={isAdding || !!editing} onClose={() => { setEditing(null); setIsAdding(false); setPackageColors([]); }} title={editing ? "تعديل الباقة" : "إضافة باقة جديدة"}>
-                {form}
-            </Modal>
+            <Modal open={isAdding || !!editing} onClose={closeModal} title={editing ? "تعديل الباقة" : "إضافة باقة جديدة"}>{form}</Modal>
         </SectionCard>
     );
 }
