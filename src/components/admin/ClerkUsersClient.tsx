@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -53,6 +53,11 @@ export function ClerkUsersClient({
     const router = useRouter();
     const [search, setSearch] = useState(currentSearch);
     const [isPending, startTransition] = useTransition();
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const navigate = (params: { page?: string; search?: string }) => {
         const sp = new URLSearchParams();
@@ -130,7 +135,7 @@ export function ClerkUsersClient({
                         <tbody>
                             <AnimatePresence mode="popLayout">
                                 {users.length === 0 ? (
-                                    <tr>
+                                    <tr key="empty-row">
                                         <td colSpan={6} className="py-16 text-center text-fg/40">
                                             لا يوجد مستخدمون
                                         </td>
@@ -191,13 +196,13 @@ export function ClerkUsersClient({
                                             <td className="py-4 px-4 text-fg/60">
                                                 <span className="flex items-center gap-1.5">
                                                     <Calendar className="w-3.5 h-3.5 text-fg/40" />
-                                                    {formatDate(user.createdAt)}
+                                                    {mounted ? formatDate(user.createdAt) : "—"}
                                                 </span>
                                             </td>
                                             <td className="py-4 px-4 text-fg/60">
                                                 <span className="flex items-center gap-1.5">
                                                     <LogIn className="w-3.5 h-3.5 text-fg/40" />
-                                                    {formatDate(user.lastSignInAt ?? 0)}
+                                                    {mounted ? formatDate(user.lastSignInAt ?? 0) : "—"}
                                                 </span>
                                             </td>
                                             <td className="py-4 px-4">

@@ -123,10 +123,17 @@ export function OrdersClient({
                                         {isAwaiting ? (
                                             <button
                                                 onClick={() => setSelectedDesignOrder(dOrder)}
-                                                className="flex-1 bg-gold text-bg py-2 rounded-xl text-xs font-bold hover:bg-gold-light transition-colors flex items-center justify-center gap-2"
+                                                className={`flex-1 ${dOrder.is_sent_to_customer ? "bg-emerald-500 hover:bg-emerald-600" : "bg-gold hover:bg-gold-light"} text-bg py-2 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2 shadow-lg ${dOrder.is_sent_to_customer ? "shadow-emerald-500/20" : ""}`}
                                             >
-                                                <Search className="w-4 h-4" />
-                                                معاينة واعتماد النتيجة
+                                                {dOrder.is_sent_to_customer ? (
+                                                    <>
+                                                        <CheckCircle2 className="w-4 h-4" /> دفع وإضافة للسلة · {dOrder.final_price} ر.س
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Search className="w-4 h-4" /> معاينة واعتماد النتيجة
+                                                    </>
+                                                )}
                                             </button>
                                         ) : dOrder.status !== "completed" && dOrder.status !== "cancelled" ? (
                                             <>

@@ -420,7 +420,7 @@ export interface Database {
             };
             custom_design_orders: {
                 Row: CustomDesignOrder;
-                Insert: Omit<CustomDesignOrder, "id" | "created_at" | "updated_at" | "order_number" | "status" | "skip_results"> & { status?: CustomDesignOrderStatus; skip_results?: boolean };
+                Insert: Omit<CustomDesignOrder, "id" | "created_at" | "updated_at" | "order_number" | "status" | "skip_results" | "is_sent_to_customer"> & { status?: CustomDesignOrderStatus; skip_results?: boolean; is_sent_to_customer?: boolean };
                 Update: Partial<Omit<CustomDesignOrder, "id" | "created_at" | "order_number">>;
             };
             custom_design_settings: {
@@ -538,6 +538,10 @@ export interface CustomDesignOrder {
     result_mockup_url: string | null;
     result_pdf_url: string | null;
 
+    // Fulfillment & Cart Integration
+    final_price: number | null;
+    is_sent_to_customer: boolean;
+
     // Workflow
     status: CustomDesignOrderStatus;
     skip_results: boolean;
@@ -547,7 +551,6 @@ export interface CustomDesignOrder {
     // Print Placement & Pricing
     print_position: string | null;
     print_size: string | null;
-    final_price: number | null;
 
     // Timestamps
     created_at: string;

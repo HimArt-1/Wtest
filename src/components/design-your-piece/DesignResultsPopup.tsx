@@ -64,13 +64,20 @@ export function DesignResultsPopup({
         });
     }, [order.garment_name]);
 
-    const currentPrice = position && size && pricing ? getPrice(pricing, position, size) : 0;
+    const currentPrice = order.is_sent_to_customer
+        ? (order.final_price || 0)
+        : (position && size && pricing ? getPrice(pricing, position, size) : 0);
+
+    const isReadyToConfirm = order.is_sent_to_customer || (position && size);
 
     const handleConfirm = async () => {
-        if (!position || !size) return;
+        if (!isReadyToConfirm) return;
         setConfirming(true);
 
-        await confirmDesignOrder(order.id, position, size, currentPrice);
+        const posArg = order.is_sent_to_customer ? null : position;
+        const sizeArg = order.is_sent_to_customer ? null : size;
+
+        await confirmDesignOrder(order.id, posArg, sizeArg, currentPrice);
 
         // Add to cart
         addItem({
@@ -84,7 +91,9 @@ export function DesignResultsPopup({
             maxQuantity: 1,
             customDesignUrl: order.result_design_url ?? undefined,
             customGarment: order.garment_name,
-            customPosition: `${POSITIONS.find(p => p.id === position)?.label} — ${SIZE_LABELS[size].label}`,
+            customPosition: order.is_sent_to_customer
+                ? "حسب المواصفات المعتمدة"
+                : `${POSITIONS.find(p => p.id === position)?.label} — ${SIZE_LABELS[size!].label}`,
         });
 
         setConfirming(false);
@@ -185,47 +194,49 @@ export function DesignResultsPopup({
                     )}
 
                     {/* ═══ Print Position Selector ═══ */}
-                    <motion.div
-                        initial={{ y: 20, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={{ delay: 0.3 }}
-                        className="space-y-4 w-full"
-                    >
-                        <h3 className="text-lg font-bold text-fg flex items-center gap-2">
-                            <MapPin className="w-5 h-5 text-gold" /> اختر موقع الطباعة
-                        </h3>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                            {POSITIONS.map((pos) => {
-                                const isActive = position === pos.id;
-                                return (
-                                    <motion.button
-                                        key={pos.id}
-                                        whileHover={{ scale: 1.03 }}
-                                        whileTap={{ scale: 0.97 }}
-                                        onClick={() => setPosition(pos.id)}
-                                        className={`relative p-4 rounded-2xl border-2 transition-all text-center ${isActive
-                                            ? "border-gold bg-gold/10 shadow-lg shadow-gold/10"
-                                            : "border-white/[0.08] hover:border-white/20 bg-white/[0.02]"
-                                            }`}
-                                    >
-                                        <div className="text-3xl mb-2">{pos.emoji}</div>
-                                        <p className={`text-sm font-bold ${isActive ? "text-gold" : "text-fg"}`}>{pos.label}</p>
-                                        <p className="text-[10px] text-fg/35 mt-0.5">{pos.desc}</p>
-                                        {isActive && (
-                                            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
-                                                className="absolute top-2 left-2 w-6 h-6 rounded-full bg-gold flex items-center justify-center">
-                                                <Check className="w-3.5 h-3.5 text-bg" />
-                                            </motion.div>
-                                        )}
-                                    </motion.button>
-                                );
-                            })}
-                        </div>
-                    </motion.div>
+                    {!order.is_sent_to_customer && (
+                        <motion.div
+                            initial={{ y: 20, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            transition={{ delay: 0.3 }}
+                            className="space-y-4 w-full"
+                        >
+                            <h3 className="text-lg font-bold text-fg flex items-center gap-2">
+                                <MapPin className="w-5 h-5 text-gold" /> اختر موقع الطباعة
+                            </h3>
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                {POSITIONS.map((pos) => {
+                                    const isActive = position === pos.id;
+                                    return (
+                                        <motion.button
+                                            key={pos.id}
+                                            whileHover={{ scale: 1.03 }}
+                                            whileTap={{ scale: 0.97 }}
+                                            onClick={() => setPosition(pos.id)}
+                                            className={`relative p-4 rounded-2xl border-2 transition-all text-center ${isActive
+                                                ? "border-gold bg-gold/10 shadow-lg shadow-gold/10"
+                                                : "border-white/[0.08] hover:border-white/20 bg-white/[0.02]"
+                                                }`}
+                                        >
+                                            <div className="text-3xl mb-2">{pos.emoji}</div>
+                                            <p className={`text-sm font-bold ${isActive ? "text-gold" : "text-fg"}`}>{pos.label}</p>
+                                            <p className="text-[10px] text-fg/35 mt-0.5">{pos.desc}</p>
+                                            {isActive && (
+                                                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
+                                                    className="absolute top-2 left-2 w-6 h-6 rounded-full bg-gold flex items-center justify-center">
+                                                    <Check className="w-3.5 h-3.5 text-bg" />
+                                                </motion.div>
+                                            )}
+                                        </motion.button>
+                                    );
+                                })}
+                            </div>
+                        </motion.div>
+                    )}
 
                     {/* ═══ Print Size Selector ═══ */}
                     <AnimatePresence>
-                        {position && (
+                        {position && !order.is_sent_to_customer && (
                             <motion.div
                                 initial={{ height: 0, opacity: 0 }}
                                 animate={{ height: "auto", opacity: 1 }}
@@ -281,7 +292,7 @@ export function DesignResultsPopup({
 
                     {/* ═══ Price Summary + Actions ═══ */}
                     <AnimatePresence>
-                        {position && size && (
+                        {isReadyToConfirm && (
                             <motion.div
                                 initial={{ y: 20, opacity: 0 }}
                                 animate={{ y: 0, opacity: 1 }}
@@ -293,7 +304,7 @@ export function DesignResultsPopup({
                                     <div>
                                         <p className="text-sm text-fg/50">ملخص الطلب</p>
                                         <p className="text-xs text-fg/30 mt-1">
-                                            {order.garment_name} — {POSITIONS.find(p => p.id === position)?.label} — {SIZE_LABELS[size].label}
+                                            {order.garment_name} — {order.is_sent_to_customer ? "حسب المواصفات المعتمدة بالاستوديو" : `${POSITIONS.find(p => p.id === position)?.label} — ${SIZE_LABELS[size!]?.label}`}
                                         </p>
                                     </div>
                                     <div className="text-left">

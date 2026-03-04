@@ -20,7 +20,7 @@ export function AdminSupportTicketChat({ ticket, initialMessages }: { ticket: an
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
     };
 
     useEffect(() => {
@@ -100,8 +100,8 @@ export function AdminSupportTicketChat({ ticket, initialMessages }: { ticket: an
                             disabled={isUpdatingStatus || ticket.status === st.id}
                             onClick={() => handleUpdateStatus(st.id as SupportTicketStatus)}
                             className={`px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold transition-all ${ticket.status === st.id
-                                    ? statusObj.bg + " " + statusObj.color + " border cursor-default"
-                                    : "bg-white/[0.05] text-white/50 hover:bg-white/10 hover:text-white border border-transparent disabled:opacity-50"
+                                ? statusObj.bg + " " + statusObj.color + " border cursor-default"
+                                : "bg-white/[0.05] text-white/50 hover:bg-white/10 hover:text-white border border-transparent disabled:opacity-50"
                                 }`}
                         >
                             {st.label}

@@ -1,33 +1,22 @@
 {
-  "name": "وشّى | WUSHA — فنٌ يرتدى",
-  "short_name": "وشّى",
-  "description": "منصة فنية رقمية تجمع المبدعين العرب. معرض، متجر، وتصميم قطعك بالذكاء الاصطناعي.",
+  "name": "WUSHA",
+  "short_name": "WUSHA",
+  "description": "Premium Local Streetwear by Haitham Wusha",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#080808",
-  "theme_color": "#ceae7f",
-  "orientation": "portrait-primary",
-  "dir": "rtl",
-  "lang": "ar",
+  "background_color": "#111111",
+  "theme_color": "#111111",
+  "orientation": "portrait",
   "icons": [
     {
-      "src": "/favicon-32x32.png",
-      "sizes": "32x32",
-      "type": "image/png",
-      "purpose": "any"
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
     },
     {
-      "src": "/favicon-16x16.png",
-      "sizes": "16x16",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/apple-touch-icon.png",
-      "sizes": "180x180",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
     }
-  ],
-  "categories": ["shopping", "lifestyle", "art"]
+  ]
 }

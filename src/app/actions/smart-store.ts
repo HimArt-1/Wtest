@@ -608,6 +608,38 @@ export async function updateDesignOrderNotes(id: string, notes: string) {
     return { success: true };
 }
 
+// ─── Admin: Send to Customer Cart ───────────────────────
+
+export async function sendDesignOrderToCustomer(id: string, finalPrice: number) {
+    const sb = getSmartStoreSb();
+
+    // Update the database to lock in the final price and mark it as sent
+    const { error, data: order } = await sb.from("custom_design_orders")
+        .update({
+            final_price: finalPrice,
+            is_sent_to_customer: true,
+            status: "awaiting_review" as any // Ensure status is reviewable
+        })
+        .eq("id", id)
+        .select("user_id, order_number")
+        .single();
+
+    if (error) return { error: error.message };
+
+    // Notify the user that their order is priced and ready for checkout
+    if (order && (order as any).user_id) {
+        await createUserNotification({
+            userId: (order as any).user_id,
+            title: "تصميم مخصص جاهز للدفع 🛍️",
+            message: `تم تسعير طلبك #${(order as any).order_number} ليصبح جاهزاً للإضافة للسلة والدفع. يرجى مراجعته واعتماده.`,
+            type: "order_update",
+            link: `/account/orders?design=${id}`, // Direct them to their orders tab
+        });
+    }
+
+    return { success: true };
+}
+
 // ═══════════════════════════════════════════════════════════
 //  Public Order Actions — تتبع الطلب
 // ═══════════════════════════════════════════════════════════
@@ -703,18 +735,29 @@ export async function getGarmentPricing(garmentName: string) {
 
 // ─── Confirm: Save Placement + Price ─────────────────────
 
-export async function confirmDesignOrder(id: string, position: string, size: string, price: number) {
+export async function confirmDesignOrder(id: string, position?: string | null, size?: string | null, price?: number | null) {
     const sb = getSmartStoreSb();
+    const updateData: any = { status: "completed" };
+    if (position) updateData.print_position = position;
+    if (size) updateData.print_size = size;
+    if (price !== undefined && price !== null) updateData.final_price = price;
+
     const { error } = await sb
         .from("custom_design_orders")
-        .update({
-            print_position: position,
-            print_size: size,
-            final_price: price,
-            status: "completed" as any,
-        })
+        .update(updateData)
         .eq("id", id);
     if (error) return { error: error.message };
+
+    const { data: order } = await sb.from("custom_design_orders").select("order_number").eq("id", id).single();
+    if (order) {
+        await createAdminNotification({
+            title: "تأكيد تصميم مخصّص للسلة 🛒",
+            message: `قام العميل للتو بمراجعة وتأكيد التصميم للطلب #${(order as any).order_number} وأضافه للسلة.`,
+            type: "system_alert",
+            link: "/dashboard/smart-store",
+        });
+    }
+
     return { success: true };
 }
 

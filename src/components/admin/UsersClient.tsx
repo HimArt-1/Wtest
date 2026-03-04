@@ -74,6 +74,11 @@ export function UsersClient({
     const [editingUser, setEditingUser] = useState<any | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const navigate = (params: Record<string, string>) => {
         const sp = new URLSearchParams();
@@ -362,7 +367,7 @@ export function UsersClient({
                                         )}
                                     </td>
                                     <td className="px-4 py-3.5 text-fg/30 text-xs" dir="ltr">
-                                        {new Date(user.created_at).toLocaleDateString("ar-SA")}
+                                        {mounted ? new Date(user.created_at).toLocaleDateString("ar-SA") : user.created_at?.split("T")[0] || "—"}
                                     </td>
                                     <td className="px-6 py-3.5">
                                         <div className="flex items-center gap-2">
@@ -683,7 +688,7 @@ function EditUserModal({
                 website: user.website || "",
             });
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user?.id]);
 
     if (!user) return null;

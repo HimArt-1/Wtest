@@ -16,6 +16,7 @@ import {
     skipDesignResults,
     updateDesignOrderNotes,
     updateDesignPromptTemplate,
+    sendDesignOrderToCustomer,
 } from "@/app/actions/smart-store";
 import type { CustomDesignOrder, CustomDesignOrderStatus } from "@/types/database";
 import { DesignOrderAdminChat } from "./DesignOrderAdminChat";
@@ -207,6 +208,7 @@ function OrderDetailModal({ order, onClose }: { order: CustomDesignOrder; onClos
     const [copied, setCopied] = useState(false);
     const [notes, setNotes] = useState(order.admin_notes ?? "");
     const [uploading, setUploading] = useState<string | null>(null);
+    const [finalPrice, setFinalPrice] = useState(order.final_price?.toString() || "");
 
     const st = STATUS_MAP[order.status];
     const nextStatuses = NEXT_STATUSES[order.status] || [];
@@ -216,6 +218,27 @@ function OrderDetailModal({ order, onClose }: { order: CustomDesignOrder; onClos
         await updateDesignOrderStatus(order.id, newStatus);
         setLoading(false);
         onClose();
+    };
+
+    const handleSendToCustomer = async () => {
+        const priceNum = parseFloat(finalPrice);
+        if (isNaN(priceNum) || priceNum <= 0) {
+            alert("يرجى إدخال سعر صحيح أكبر من الصفر.");
+            return;
+        }
+        if (!confirm("هل أنت متأكد من تسعير الطلب وإرساله للعميل؟ سيتم تغيير حالة الطلب وتسليمه كمنتج جاهز للسلة.")) return;
+
+        setLoading(true);
+        const res = await sendDesignOrderToCustomer(order.id, priceNum);
+        if (res.error) {
+            alert("فشل الإرسال: " + res.error);
+        } else {
+            order.is_sent_to_customer = true;
+            order.final_price = priceNum;
+            order.status = "awaiting_review";
+            alert("تم تسعير الطلب وإرساله بنجاح!");
+        }
+        setLoading(false);
     };
 
     const handleCopyPrompt = () => {
@@ -368,6 +391,44 @@ function OrderDetailModal({ order, onClose }: { order: CustomDesignOrder; onClos
                         </button>
                     )}
                 </div>
+
+                {/* Fulfillment / Send to Customer */}
+                {!order.is_sent_to_customer && order.user_id && order.status !== "cancelled" && (
+                    <div className="mt-6 p-4 rounded-xl bg-gold/5 border border-gold/20">
+                        <h4 className="text-sm font-bold text-gold mb-3 flex items-center gap-2"><Sparkles className="w-4 h-4" /> إرسال التصميم للعميل كمنتج</h4>
+                        <p className="text-xs text-fg/60 mb-4">
+                            عند الانتهاء من تجهيز التصميم وتسعير التطريز/الطباعة بناءً على التفاصيل، أدخل السعر النهائي وأرسله لتنبيه العميل ليتمكن من إضافته للسلة والدفع.
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-3">
+                            <div className="relative flex-1">
+                                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-fg/40 text-sm">ر.س</span>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    value={finalPrice}
+                                    onChange={(e) => setFinalPrice(e.target.value)}
+                                    placeholder="السعر النهائي..."
+                                    className="w-full px-4 pr-12 py-2.5 rounded-xl bg-white/[0.04] border border-gold/30 text-fg text-sm placeholder:text-fg/25 focus:outline-none focus:border-gold/60"
+                                />
+                            </div>
+                            <button
+                                onClick={handleSendToCustomer}
+                                disabled={loading || !finalPrice}
+                                className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-gold to-gold-light text-bg font-bold text-sm hover:shadow-lg hover:shadow-gold/20 transition-all disabled:opacity-50 sm:w-auto w-full"
+                            >
+                                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                                اعتماد وإرسال للعميل
+                            </button>
+                        </div>
+                    </div>
+                )}
+                {order.is_sent_to_customer && (
+                    <div className="mt-6 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-between">
+                        <span className="text-sm font-bold flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> تم الاعتماد والإرسال للعميل بنجاح</span>
+                        <span className="font-bold text-lg">{order.final_price} ر.س</span>
+                    </div>
+                )}
             </motion.div>
         </div>
     );
