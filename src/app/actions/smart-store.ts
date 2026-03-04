@@ -13,6 +13,7 @@ import type {
     CustomDesignStyle,
     CustomDesignArtStyle,
     CustomDesignColorPackage,
+    CustomDesignStudioItem,
 } from "@/types/database";
 
 // Use raw client to avoid type mismatch before migration is introspected
@@ -87,6 +88,16 @@ export async function getColorPackages(): Promise<CustomDesignColorPackage[]> {
     return (data as CustomDesignColorPackage[]) ?? [];
 }
 
+export async function getStudioItems(): Promise<CustomDesignStudioItem[]> {
+    const sb = getSmartStoreSb();
+    const { data } = await sb
+        .from("custom_design_studio_items")
+        .select("*")
+        .eq("is_active", true)
+        .order("sort_order");
+    return (data as CustomDesignStudioItem[]) ?? [];
+}
+
 // ─── Admin: Get All (including inactive) ─────────────────
 
 export async function getAllGarments(): Promise<CustomDesignGarment[]> {
@@ -130,6 +141,12 @@ export async function getAllColorPackages(): Promise<CustomDesignColorPackage[]>
     const sb = getSmartStoreSb();
     const { data } = await sb.from("custom_design_color_packages").select("*").order("sort_order");
     return (data as CustomDesignColorPackage[]) ?? [];
+}
+
+export async function getAllStudioItems(): Promise<CustomDesignStudioItem[]> {
+    const sb = getSmartStoreSb();
+    const { data } = await sb.from("custom_design_studio_items").select("*").order("sort_order");
+    return (data as CustomDesignStudioItem[]) ?? [];
 }
 
 // ─── Admin: Upsert ───────────────────────────────────────
@@ -270,6 +287,30 @@ export async function upsertColorPackage(formData: FormData) {
     return { success: true };
 }
 
+export async function upsertStudioItem(formData: FormData) {
+    const sb = getSmartStoreSb();
+    const id = formData.get("id") as string | null;
+    const payload = {
+        name: formData.get("name") as string,
+        description: (formData.get("description") as string) || null,
+        price: Number(formData.get("price") ?? 0),
+        main_image_url: (formData.get("main_image_url") as string) || null,
+        mockup_image_url: (formData.get("mockup_image_url") as string) || null,
+        model_image_url: (formData.get("model_image_url") as string) || null,
+        sort_order: Number(formData.get("sort_order") ?? 0),
+        is_active: formData.get("is_active") === "true",
+    };
+
+    if (id) {
+        const { error } = await sb.from("custom_design_studio_items").update(payload).eq("id", id);
+        if (error) return { error: error.message };
+    } else {
+        const { error } = await sb.from("custom_design_studio_items").insert(payload);
+        if (error) return { error: error.message };
+    }
+    return { success: true };
+}
+
 // ─── Admin: Delete ───────────────────────────────────────
 
 export async function deleteGarment(id: string) {
@@ -310,6 +351,13 @@ export async function deleteArtStyle(id: string) {
 export async function deleteColorPackage(id: string) {
     const sb = getSmartStoreSb();
     const { error } = await sb.from("custom_design_color_packages").delete().eq("id", id);
+    if (error) return { error: error.message };
+    return { success: true };
+}
+
+export async function deleteStudioItem(id: string) {
+    const sb = getSmartStoreSb();
+    const { error } = await sb.from("custom_design_studio_items").delete().eq("id", id);
     if (error) return { error: error.message };
     return { success: true };
 }
@@ -381,12 +429,12 @@ export async function submitDesignOrder(orderData: {
     color_hex: string;
     color_image_url?: string;
     size_name: string;
-    design_method: "from_text" | "from_image";
+    design_method: "from_text" | "from_image" | "studio";
     text_prompt?: string;
     reference_image_url?: string;
-    style_name: string;
+    style_name?: string;
     style_image_url?: string;
-    art_style_name: string;
+    art_style_name?: string;
     art_style_image_url?: string;
     color_package_name?: string;
     custom_colors?: any[];
@@ -409,17 +457,23 @@ export async function submitDesignOrder(orderData: {
             : `${orderData.color_name} (${orderData.color_hex})`;
 
     // 3. User prompt or image note
-    const userPrompt = orderData.design_method === "from_text"
-        ? (orderData.text_prompt ?? "")
-        : `[صورة مرجعية مرفقة: ${orderData.reference_image_url ?? "—"}]`;
+    // If studio, handle separately
+    let userPrompt = "—";
+    if (orderData.design_method === "from_text") {
+        userPrompt = orderData.text_prompt ?? "—";
+    } else if (orderData.design_method === "from_image") {
+        userPrompt = `[صورة مرجعية مرفقة: ${orderData.reference_image_url ?? "—"}]`;
+    } else if (orderData.design_method as unknown === "studio") {
+        userPrompt = `[تصميم من ستيديو وشّى: ${orderData.text_prompt ?? "—"}]`;
+    }
 
     // 4. Generate AI prompt
     const aiPrompt = generateAiPrompt(template, {
         garment_name: orderData.garment_name,
         color_name: orderData.color_name,
         color_hex: orderData.color_hex,
-        style_name: orderData.style_name,
-        art_style_name: orderData.art_style_name,
+        style_name: orderData.style_name || "—",
+        art_style_name: orderData.art_style_name || "—",
         colors: colorsStr,
         user_prompt: userPrompt,
     });
@@ -435,9 +489,9 @@ export async function submitDesignOrder(orderData: {
         design_method: orderData.design_method,
         text_prompt: orderData.text_prompt || null,
         reference_image_url: orderData.reference_image_url || null,
-        style_name: orderData.style_name,
+        style_name: orderData.style_name || "—",
         style_image_url: orderData.style_image_url || null,
-        art_style_name: orderData.art_style_name,
+        art_style_name: orderData.art_style_name || "—",
         art_style_image_url: orderData.art_style_image_url || null,
         color_package_name: orderData.color_package_name || null,
         custom_colors: orderData.custom_colors ?? [],

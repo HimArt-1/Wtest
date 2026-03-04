@@ -19,6 +19,7 @@ import {
     Check,
     Image as ImageIcon,
     Loader2,
+    Camera,
 } from "lucide-react";
 import {
     upsertGarment,
@@ -33,6 +34,8 @@ import {
     deleteStyle,
     deleteArtStyle,
     deleteColorPackage,
+    upsertStudioItem,
+    deleteStudioItem,
 } from "@/app/actions/smart-store";
 import type {
     CustomDesignGarment,
@@ -41,6 +44,7 @@ import type {
     CustomDesignStyle,
     CustomDesignArtStyle,
     CustomDesignColorPackage,
+    CustomDesignStudioItem,
 } from "@/types/database";
 
 // ─── Supabase Storage Upload ────────────────────────────
@@ -70,7 +74,7 @@ async function uploadToStorage(file: File, folder: string): Promise<string | nul
 
 // ─── Types ──────────────────────────────────────────────
 
-type TabId = "garments" | "colors" | "sizes" | "styles" | "artStyles" | "colorPackages";
+type TabId = "garments" | "colors" | "sizes" | "styles" | "artStyles" | "colorPackages" | "studioItems";
 
 interface Props {
     garments: CustomDesignGarment[];
@@ -79,6 +83,7 @@ interface Props {
     styles: CustomDesignStyle[];
     artStyles: CustomDesignArtStyle[];
     colorPackages: CustomDesignColorPackage[];
+    studioItems: CustomDesignStudioItem[];
 }
 
 const TABS: { id: TabId; label: string; icon: any }[] = [
@@ -88,11 +93,12 @@ const TABS: { id: TabId; label: string; icon: any }[] = [
     { id: "styles", label: "الأنماط", icon: Sparkles },
     { id: "artStyles", label: "الأساليب", icon: Paintbrush },
     { id: "colorPackages", label: "باقات الألوان", icon: SwatchBook },
+    { id: "studioItems", label: "ستيديو وشّى", icon: Camera },
 ];
 
 // ─── Component ──────────────────────────────────────────
 
-export function SmartStoreClient({ garments, colors, sizes, styles, artStyles, colorPackages }: Props) {
+export function SmartStoreClient({ garments, colors, sizes, styles, artStyles, colorPackages, studioItems }: Props) {
     const [activeTab, setActiveTab] = useState<TabId>("garments");
     const router = useRouter();
 
@@ -122,6 +128,7 @@ export function SmartStoreClient({ garments, colors, sizes, styles, artStyles, c
                     {activeTab === "styles" && <StylesTab items={styles} onRefresh={() => router.refresh()} />}
                     {activeTab === "artStyles" && <ArtStylesTab items={artStyles} onRefresh={() => router.refresh()} />}
                     {activeTab === "colorPackages" && <ColorPackagesTab items={colorPackages} onRefresh={() => router.refresh()} />}
+                    {activeTab === "studioItems" && <StudioItemsTab items={studioItems} onRefresh={() => router.refresh()} />}
                 </motion.div>
             </AnimatePresence>
         </div>
@@ -802,3 +809,130 @@ function ColorPackagesTab({ items, onRefresh }: { items: CustomDesignColorPackag
         </SectionCard>
     );
 }
+
+// ═══════════════════════════════════════════════════════════
+//  WUSHA Studio Tab
+// ═══════════════════════════════════════════════════════════
+
+function StudioItemsTab({ items, onRefresh }: { items: CustomDesignStudioItem[]; onRefresh: () => void }) {
+    const [editing, setEditing] = useState<CustomDesignStudioItem | null>(null);
+    const [isAdding, setIsAdding] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [mainImage, setMainImage] = useState("");
+    const [mockupImage, setMockupImage] = useState("");
+    const [modelImage, setModelImage] = useState("");
+
+    const openAdd = () => { setIsAdding(true); setMainImage(""); setMockupImage(""); setModelImage(""); };
+    const openEdit = (s: CustomDesignStudioItem) => {
+        setEditing(s);
+        setMainImage(s.main_image_url ?? "");
+        setMockupImage(s.mockup_image_url ?? "");
+        setModelImage(s.model_image_url ?? "");
+    };
+    const closeModal = () => { setEditing(null); setIsAdding(false); setMainImage(""); setMockupImage(""); setModelImage(""); };
+
+    const handleSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        setLoading(true);
+        const fd = new FormData(e.currentTarget);
+        if (editing) fd.set("id", editing.id);
+        fd.set("main_image_url", mainImage);
+        fd.set("mockup_image_url", mockupImage);
+        fd.set("model_image_url", modelImage);
+
+        const result = await upsertStudioItem(fd);
+        setLoading(false);
+        if (result.error) {
+            alert(`حدث خطأ أثناء الحفظ: ${result.error}`);
+            return;
+        }
+        closeModal();
+        onRefresh();
+    }, [editing, onRefresh, mainImage, mockupImage, modelImage]);
+
+    const handleDelete = useCallback(async (id: string) => {
+        if (!confirm("حذف هذا التصميم من ستيديو وشّى؟")) return;
+        await deleteStudioItem(id);
+        onRefresh();
+    }, [onRefresh]);
+
+    const form = (
+        <form onSubmit={handleSubmit} className="space-y-4">
+            <FormField label="اسم التصميم">
+                <input name="name" defaultValue={editing?.name ?? ""} required className={inputCls} placeholder="مثال: تصميم تراثي ملكي" />
+            </FormField>
+            <FormField label="وصف التصميم">
+                <textarea name="description" defaultValue={editing?.description ?? ""} className={inputCls} rows={3} placeholder="وصف قصير للتصميم..." />
+            </FormField>
+            <FormField label="السعر الإضافي (ر.س)">
+                <input name="price" type="number" step="0.01" min="0" defaultValue={editing?.price ?? 0} className={inputCls} />
+            </FormField>
+            <FormField label="صورة التصميم الرئيسية">
+                <ImageUploader value={mainImage} onChange={setMainImage} folder="studio-items" label="الصورة الرئيسية" />
+            </FormField>
+            <FormField label="صورة الـ Mockup (التفاصيل)">
+                <ImageUploader value={mockupImage} onChange={setMockupImage} folder="studio-items" label="صورة الموكب" />
+            </FormField>
+            <FormField label="صورة على المودل">
+                <ImageUploader value={modelImage} onChange={setModelImage} folder="studio-items" label="صورة المودل" />
+            </FormField>
+            <FormField label="الترتيب">
+                <input name="sort_order" type="number" defaultValue={editing?.sort_order ?? 0} className={inputCls} />
+            </FormField>
+            <FormField label="الحالة">
+                <select name="is_active" defaultValue={editing?.is_active !== false ? "true" : "false"} className={inputCls}>
+                    <option value="true">نشط</option>
+                    <option value="false">غير نشط</option>
+                </select>
+            </FormField>
+            <div className="flex gap-3 pt-2">
+                <button type="submit" disabled={loading} className={btnPrimary}>{loading ? "جاري الحفظ..." : "حفظ"}</button>
+                <button type="button" onClick={closeModal} className={btnSecondary}>إلغاء</button>
+            </div>
+        </form>
+    );
+
+    return (
+        <SectionCard title="ستيديو وشّى" onAdd={openAdd}>
+            {items.length === 0 ? <EmptyState text="لا توجد تصاميم ستيديو بعد." /> : (
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {items.map((item) => (
+                        <div key={item.id} className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] group overflow-hidden relative">
+                            <div className="relative mb-3 aspect-[3/4] rounded-lg overflow-hidden bg-white/5">
+                                {(item.model_image_url || item.mockup_image_url || item.main_image_url) ? (
+                                    <img
+                                        src={item.model_image_url || item.mockup_image_url || item.main_image_url!}
+                                        alt={item.name}
+                                        className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-700"
+                                    />
+                                ) : (
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <Camera className="w-8 h-8 text-fg/20" />
+                                    </div>
+                                )}
+                                <div className="absolute top-2 left-2 px-2 py-1 rounded bg-black/60 backdrop-blur-md text-gold text-xs font-bold border border-gold/20">
+                                    {item.price > 0 ? `+${item.price} ر.س` : "مجاني"}
+                                </div>
+                            </div>
+
+                            <p className="font-medium text-fg mb-1 truncate">{item.name}</p>
+                            {item.description && <p className="text-xs text-fg/50 line-clamp-2 mb-3">{item.description}</p>}
+
+                            <div className="flex items-center justify-between">
+                                <span className={`text-xs px-2 py-1 rounded-full ${item.is_active ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}>
+                                    {item.is_active ? "نشط" : "معطل"}
+                                </span>
+                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button onClick={() => openEdit(item)} className="p-2 hover:bg-white/5 rounded-lg"><Pencil className="w-4 h-4 text-fg/40" /></button>
+                                    <button onClick={() => handleDelete(item.id)} className="p-2 hover:bg-red-500/10 rounded-lg"><Trash2 className="w-4 h-4 text-red-400/60" /></button>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+            <Modal open={isAdding || !!editing} onClose={closeModal} title={editing ? "تعديل تصميم الاستوديو" : "إضافة تصميم استوديو جديد"}>{form}</Modal>
+        </SectionCard>
+    );
+}
+

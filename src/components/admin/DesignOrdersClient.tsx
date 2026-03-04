@@ -239,7 +239,15 @@ function OrderDetailModal({ order, onClose }: { order: CustomDesignOrder; onClos
         setUploading(field);
         const url = await uploadFile(file, `design-orders/${order.id}`);
         if (url) {
-            await uploadDesignResult(order.id, field, url);
+            const res = await uploadDesignResult(order.id, field, url);
+            if (res.error) {
+                alert(`فشل التحديث في قاعدة البيانات: ${res.error}`);
+            } else {
+                // Mutate local state so UI updates immediately
+                order[field] = url;
+            }
+        } else {
+            alert("فشل رفع الملف. يرجى المحاولة مرة أخرى.");
         }
         setUploading(null);
     };

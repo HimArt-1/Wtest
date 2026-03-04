@@ -19,7 +19,7 @@ const menuItems = [
     { icon: LayoutDashboard, label: "لوحة التحكم", href: "/studio" },
     { icon: Wand2, label: "تصميم قطعة", href: "/studio/design-piece" },
     { icon: Palette, label: "أعمالي", href: "/studio/artworks" },
-    { icon: Settings, label: "الإعدادات", href: "/studio/settings" },
+    { icon: Settings, label: "الإعدادات", href: "/account/settings" },
 ];
 
 export function Sidebar() {

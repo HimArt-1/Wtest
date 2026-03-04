@@ -37,6 +37,7 @@ import type {
     CustomDesignStyle,
     CustomDesignArtStyle,
     CustomDesignColorPackage,
+    CustomDesignStudioItem,
 } from "@/types/database";
 
 // ─── Types ──────────────────────────────────────────────
@@ -46,7 +47,8 @@ interface WizardState {
     garment: CustomDesignGarment | null;
     color: CustomDesignColor | null;
     size: CustomDesignSize | null;
-    method: "from_text" | "from_image" | null;
+    method: "from_text" | "from_image" | "studio" | null;
+    studioItem: CustomDesignStudioItem | null;
     style: CustomDesignStyle | null;
     artStyle: CustomDesignArtStyle | null;
     colorPackage: CustomDesignColorPackage | null;
@@ -66,6 +68,7 @@ const INITIAL_STATE: WizardState = {
     color: null,
     size: null,
     method: null,
+    studioItem: null,
     style: null,
     artStyle: null,
     colorPackage: null,
@@ -98,6 +101,7 @@ interface Props {
     styles: CustomDesignStyle[];
     artStyles: CustomDesignArtStyle[];
     colorPackages: CustomDesignColorPackage[];
+    studioItems: CustomDesignStudioItem[];
 }
 
 // ─── Main Wizard ────────────────────────────────────────
@@ -105,7 +109,7 @@ interface Props {
 import { OrderTracker, getStoredOrderId, storeOrderId, clearOrderId } from "./OrderTracker";
 import { getDesignOrderPublic } from "@/app/actions/smart-store";
 
-export function DesignYourPieceWizard({ garments, styles, artStyles, colorPackages }: Props) {
+export function DesignYourPieceWizard({ garments, styles, artStyles, colorPackages, studioItems }: Props) {
     const [state, setState] = useState<WizardState>(INITIAL_STATE);
     const [colors, setColors] = useState<CustomDesignColor[]>([]);
     const [sizes, setSizes] = useState<CustomDesignSize[]>([]);
@@ -148,8 +152,14 @@ export function DesignYourPieceWizard({ garments, styles, artStyles, colorPackag
         });
     }, [state.garment, state.color]);
 
-    const goNext = () => setState((s) => ({ ...s, step: Math.min(s.step + 1, TOTAL_STEPS) }));
-    const goBack = () => setState((s) => ({ ...s, step: Math.max(s.step - 1, 1) }));
+    const goNext = () => setState((s) => {
+        if (s.step === 5 && s.method === "studio") return { ...s, step: 9 };
+        return { ...s, step: Math.min(s.step + 1, TOTAL_STEPS) };
+    });
+    const goBack = () => setState((s) => {
+        if (s.step === 9 && s.method === "studio") return { ...s, step: 5 };
+        return { ...s, step: Math.max(s.step - 1, 1) };
+    });
 
     const handleSend = useCallback(async () => {
         setState((s) => ({ ...s, isSending: true }));
@@ -181,21 +191,21 @@ export function DesignYourPieceWizard({ garments, styles, artStyles, colorPackag
         try {
             const { submitDesignOrder } = await import("@/app/actions/smart-store");
             const result = await submitDesignOrder({
-                garment_name: state.garment?.name ?? "\u2014",
+                garment_name: state.garment?.name ?? "—",
                 garment_image_url: state.garment?.image_url ?? undefined,
-                color_name: state.color?.name ?? "\u2014",
+                color_name: state.color?.name ?? "—",
                 color_hex: state.color?.hex_code ?? "#000000",
                 color_image_url: state.color?.image_url ?? undefined,
-                size_name: state.size?.name ?? "\u2014",
+                size_name: state.size?.name ?? "—",
                 design_method: state.method ?? "from_text",
-                text_prompt: state.textPrompt || undefined,
-                reference_image_url: referenceImageUrl,
-                style_name: state.style?.name ?? "\u2014",
-                style_image_url: state.style?.image_url ?? undefined,
-                art_style_name: state.artStyle?.name ?? "\u2014",
-                art_style_image_url: state.artStyle?.image_url ?? undefined,
-                color_package_name: state.colorPackage?.name ?? undefined,
-                custom_colors: state.customColors.length > 0 ? state.customColors : undefined,
+                text_prompt: state.method === "studio" ? state.studioItem?.name : (state.textPrompt || undefined),
+                reference_image_url: state.method === "studio" ? (state.studioItem?.mockup_image_url || state.studioItem?.main_image_url || undefined) : referenceImageUrl,
+                style_name: state.method === "studio" ? "—" : (state.style?.name ?? "—"),
+                style_image_url: state.method === "studio" ? undefined : (state.style?.image_url ?? undefined),
+                art_style_name: state.method === "studio" ? "—" : (state.artStyle?.name ?? "—"),
+                art_style_image_url: state.method === "studio" ? undefined : (state.artStyle?.image_url ?? undefined),
+                color_package_name: state.method === "studio" ? undefined : (state.colorPackage?.name ?? undefined),
+                custom_colors: state.method === "studio" ? undefined : (state.customColors.length > 0 ? state.customColors : undefined),
                 print_position: state.printPosition ?? undefined,
                 print_size: state.printSize ?? undefined,
             });
@@ -224,24 +234,36 @@ export function DesignYourPieceWizard({ garments, styles, artStyles, colorPackag
             `🎨 **اللون:** ${state.color?.name ?? "—"} (${state.color?.hex_code ?? ""})`,
             `📏 **المقاس:** ${state.size?.name ?? "—"}`,
             `📍 **مكان وحجم الطباعة:** ${printLocation} (${printSizeAr})`,
-            `✍️ **طريقة التصميم:** ${state.method === "from_text" ? "من الوصف النصي" : "من صورة مرجعية"}`,
-            `🖌️ **نمط التصميم:** ${state.style?.name ?? "—"}`,
-            `🎭 **أسلوب الرسم:** ${state.artStyle?.name ?? "—"}`,
+            `✍️ **طريقة التصميم:** ${state.method === "from_text" ? "من الوصف النصي" : state.method === "from_image" ? "من صورة مرجعية" : "ستيديو وشّى"}`,
         ];
 
-        if (state.colorPackage) {
-            lines.push(`🌈 **الألوان المفضلة:** باقة ${state.colorPackage.name}`);
-        } else if (state.customColors.length > 0) {
-            lines.push(`🎨 **ألوان مخصصة:** ${state.customColors.join(" - ")}`);
+        if (state.method === "studio" && state.studioItem) {
+            lines.push(
+                `✨ **تصميم ستيديو وشّى:** ${state.studioItem.name}`
+            );
+            if (state.studioItem.price > 0) {
+                lines.push(`💰 **السعر الإضافي للتصميم:** +${state.studioItem.price} ر.س`);
+            }
         } else {
-            lines.push(`🌈 **الألوان المفضلة:** حسب رؤية المصمم`);
-        }
+            lines.push(
+                `🖌️ **نمط التصميم:** ${state.style?.name ?? "—"}`,
+                `🎭 **أسلوب الرسم:** ${state.artStyle?.name ?? "—"}`
+            );
 
-        if (state.textPrompt) {
-            lines.push("", `📝 **ما أتخيله للتصميم:**`, `"${state.textPrompt}"`);
-        }
-        if (state.imagePreview) {
-            lines.push("", "📸 لقد قمت بإرفاق صورة توضح الفكرة التي أريدها.");
+            if (state.colorPackage) {
+                lines.push(`🌈 **الألوان المفضلة:** باقة ${state.colorPackage.name}`);
+            } else if (state.customColors.length > 0) {
+                lines.push(`🎨 **ألوان مخصصة:** ${state.customColors.join(" - ")}`);
+            } else {
+                lines.push(`🌈 **الألوان المفضلة:** حسب رؤية المصمم`);
+            }
+
+            if (state.textPrompt) {
+                lines.push("", `📝 **ما أتخيله للتصميم:**`, `"${state.textPrompt}"`);
+            }
+            if (state.imagePreview) {
+                lines.push("", "📸 لقد قمت بإرفاق صورة توضح الفكرة التي أريدها.");
+            }
         }
 
         lines.push("", "بانتظار تواصلكم معي لتأكيد التفاصيل وتجهيز الطلب، شكراً لكم! 🤍");
@@ -379,6 +401,9 @@ export function DesignYourPieceWizard({ garments, styles, artStyles, colorPackag
                                     if (s.imagePreview) URL.revokeObjectURL(s.imagePreview);
                                     return { ...s, imageFile: file, imagePreview: preview };
                                 })}
+                                studioItems={studioItems}
+                                selectedStudioItem={state.studioItem}
+                                onSelectStudioItem={(si) => setState((s) => ({ ...s, studioItem: si }))}
                                 onBack={goBack}
                                 onNext={goNext}
                             />
@@ -622,13 +647,20 @@ function StepSize({ sizes, loading, selected, onSelect, onBack, onNext }: {
 //  Step 4: Design Method
 // ═══════════════════════════════════════════════════════════
 
-function StepMethod({ selected, onSelect, textPrompt, onTextChange, imagePreview, onImageChange, onBack, onNext }: {
-    selected: "from_text" | "from_image" | null;
-    onSelect: (m: "from_text" | "from_image") => void;
+function StepMethod({
+    selected, onSelect, textPrompt, onTextChange, imagePreview, onImageChange,
+    studioItems, selectedStudioItem, onSelectStudioItem,
+    onBack, onNext
+}: {
+    selected: "from_text" | "from_image" | "studio" | null;
+    onSelect: (m: "from_text" | "from_image" | "studio") => void;
     textPrompt: string;
     onTextChange: (t: string) => void;
     imagePreview: string | null;
     onImageChange: (file: File | null, preview: string | null) => void;
+    studioItems: CustomDesignStudioItem[];
+    selectedStudioItem: CustomDesignStudioItem | null;
+    onSelectStudioItem: (s: CustomDesignStudioItem | null) => void;
     onBack: () => void;
     onNext: () => void;
 }) {
@@ -641,16 +673,18 @@ function StepMethod({ selected, onSelect, textPrompt, onTextChange, imagePreview
 
     const canProceed = selected && (
         (selected === "from_text" && textPrompt.trim().length > 0) ||
-        (selected === "from_image" && !!imagePreview)
+        (selected === "from_image" && !!imagePreview) ||
+        (selected === "studio" && !!selectedStudioItem)
     );
 
     return (
         <>
             <StepHeader title="طريقة التصميم" desc="كيف تبغى تصمم قطعتك؟" />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                 {[
                     { id: "from_text" as const, label: "من نص", desc: "صف التصميم اللي تبغاه بالكلمات", icon: Type, emoji: "✍️" },
                     { id: "from_image" as const, label: "من صورة", desc: "ارفع صورة مرجعية لتصميمك", icon: ImageIcon, emoji: "🖼️" },
+                    { id: "studio" as const, label: "ستيديو وشّى", desc: "اختر تصميماً جاهزاً ومميزاً", icon: Sparkles, emoji: "✨" },
                 ].map((m) => {
                     const isActive = selected === m.id;
                     return (
@@ -660,7 +694,7 @@ function StepMethod({ selected, onSelect, textPrompt, onTextChange, imagePreview
                             whileTap={{ scale: 0.98 }}
                             onClick={() => onSelect(m.id)}
                             className={`
-                relative p-6 sm:p-8 rounded-2xl border-2 text-right transition-all
+                relative p-5 sm:p-6 rounded-2xl border-2 text-right transition-all
                 ${isActive ? "border-gold bg-gold/5" : "border-white/[0.08] hover:border-white/20 hover:bg-white/[0.02]"}
               `}
                         >
@@ -713,6 +747,66 @@ function StepMethod({ selected, onSelect, textPrompt, onTextChange, imagePreview
                                 <input type="file" accept="image/*" onChange={handleFile} className="hidden" />
                             </label>
                         )}
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* WUSHA Studio Selection */}
+            <AnimatePresence>
+                {selected === "studio" && (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}>
+                        {studioItems.length === 0 ? (
+                            <div className="text-center py-10 text-fg/40 border-2 border-dashed border-white/10 rounded-2xl">
+                                <p>لا توجد تصاميم متاحة حالياً في ستيديو وشّى.</p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                                {studioItems.map((item) => {
+                                    const isSelected = selectedStudioItem?.id === item.id;
+                                    return (
+                                        <motion.button
+                                            key={item.id}
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.98 }}
+                                            onClick={() => onSelectStudioItem(item)}
+                                            className={`
+                                                relative rounded-2xl overflow-hidden border-2 transition-all p-1 text-right
+                                                ${isSelected ? "border-gold shadow-lg shadow-gold/20" : "border-white/[0.08] hover:border-white/20"}
+                                            `}
+                                        >
+                                            <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-white/5 mb-2">
+                                                {(item.model_image_url || item.mockup_image_url || item.main_image_url) ? (
+                                                    <img
+                                                        src={item.model_image_url || item.mockup_image_url || item.main_image_url!}
+                                                        alt={item.name}
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center">
+                                                        <Sparkles className="w-8 h-8 text-fg/20" />
+                                                    </div>
+                                                )}
+                                                {item.price > 0 && (
+                                                    <div className="absolute top-2 left-2 px-2 py-1 rounded bg-black/60 backdrop-blur-md text-gold text-xs font-bold border border-gold/20">
+                                                        +{item.price} ر.س
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="px-2 pb-2">
+                                                <p className="font-bold text-sm text-fg truncate">{item.name}</p>
+                                                {item.description && <p className="text-xs text-fg/50 line-clamp-2 mt-1">{item.description}</p>}
+                                            </div>
+                                            {isSelected && (
+                                                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute top-3 right-3 w-6 h-6 rounded-full bg-gold flex items-center justify-center">
+                                                    <Check className="w-3.5 h-3.5 text-bg" />
+                                                </motion.div>
+                                            )}
+                                        </motion.button>
+                                    );
+                                })}
+                            </div>
+                        )}
+                        <p className="text-xs text-fg/40 mt-4 text-center">اختيارك لتصميم ستيديو وشّى سيأخذك مباشرة لتأكيد الطلب 🚀</p>
                     </motion.div>
                 )}
             </AnimatePresence>

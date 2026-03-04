@@ -99,7 +99,7 @@ export async function updateProfile(
             throw error;
         }
 
-        revalidatePath("/studio/settings");
+        revalidatePath("/account/settings");
         revalidatePath("/account");
 
         return { success: true, message: "تم تحديث الملف الشخصي بنجاح" };

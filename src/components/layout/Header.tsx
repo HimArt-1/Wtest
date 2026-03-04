@@ -6,6 +6,7 @@ import { Menu, X, Palette, Search, User, ShoppingBag } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 const navItems = [
   { label: "المعرض", href: "/gallery" },
@@ -84,6 +85,7 @@ export function Header() {
 
               <SignedIn>
                 <div className="flex items-center gap-3">
+                  <NotificationBell />
                   <Link href="/account">
                     <motion.button
                       className="btn-gold text-sm py-2.5 px-5 flex items-center gap-2 cursor-pointer"
@@ -127,6 +129,9 @@ export function Header() {
                   <Search className="w-5 h-5" />
                 </span>
               </Link>
+              <SignedIn>
+                <NotificationBell />
+              </SignedIn>
               <button
                 className="relative z-[110] p-3 -mr-1 text-white/90 hover:text-gold transition-colors rounded-xl hover:bg-white/5"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}

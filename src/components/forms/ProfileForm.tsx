@@ -10,9 +10,10 @@ import Image from "next/image";
 
 interface ProfileFormProps {
     initialData?: Partial<ProfileFormData>;
+    userRole?: "admin" | "wushsha" | "subscriber";
 }
 
-export function ProfileForm({ initialData }: ProfileFormProps) {
+export function ProfileForm({ initialData, userRole = "subscriber" }: ProfileFormProps) {
     const [isPending, startTransition] = useTransition();
     const [state, setState] = useState<{ message?: string; success?: boolean; errors?: any }>({});
     const [avatarUrl, setAvatarUrl] = useState(initialData?.avatar_url || "");
@@ -185,7 +186,7 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
                         <input
                             {...register("display_name")}
                             className="w-full p-3 rounded-xl bg-sand/20 border border-ink/10 focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-all"
-                            placeholder="اسمك الفني أو الحقيقي"
+                            placeholder={userRole === "wushsha" ? "اسمك الفني أو الحقيقي" : "أدخل اسمك"}
                         />
                         {errors.display_name && <p className="text-red-500 text-xs mt-1">{errors.display_name.message}</p>}
                     </div>
@@ -210,63 +211,65 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
                     <textarea
                         {...register("bio")}
                         className="w-full h-32 p-3 rounded-xl bg-sand/20 border border-ink/10 focus:border-gold focus:ring-1 focus:ring-gold outline-none resize-none transition-all"
-                        placeholder="اخبرنا قليلاً عن نفسك وفنك..."
+                        placeholder={userRole === "wushsha" ? "اخبرنا قليلاً عن نفسك وفنك..." : "نبذة قصيرة عنك..."}
                     />
                     {errors.bio && <p className="text-red-500 text-xs mt-1">{errors.bio.message}</p>}
                 </div>
             </div>
 
-            {/* Social Links */}
-            <div className="bg-white p-6 rounded-2xl border border-ink/5 shadow-sm space-y-6">
-                <h3 className="text-lg font-bold border-b border-ink/5 pb-4">التواجد الرقمي</h3>
+            {/* Social Links (Only for Wushsha & Admin) */}
+            {(userRole === "wushsha" || userRole === "admin") && (
+                <div className="bg-white p-6 rounded-2xl border border-ink/5 shadow-sm space-y-6">
+                    <h3 className="text-lg font-bold border-b border-ink/5 pb-4">التواجد الرقمي</h3>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label className="flex items-center gap-2 text-sm font-medium text-ink/80 mb-2">
-                            <Globe className="w-4 h-4" /> الموقع الشخصي
-                        </label>
-                        <input
-                            {...register("website")}
-                            className="w-full p-3 rounded-xl bg-sand/20 border border-ink/10 focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-all dir-ltr"
-                            placeholder="https://your-portfolio.com"
-                        />
-                        {errors.website && <p className="text-red-500 text-xs mt-1">{errors.website.message}</p>}
-                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="flex items-center gap-2 text-sm font-medium text-ink/80 mb-2">
+                                <Globe className="w-4 h-4" /> الموقع الشخصي
+                            </label>
+                            <input
+                                {...register("website")}
+                                className="w-full p-3 rounded-xl bg-sand/20 border border-ink/10 focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-all dir-ltr"
+                                placeholder="https://your-portfolio.com"
+                            />
+                            {errors.website && <p className="text-red-500 text-xs mt-1">{errors.website.message}</p>}
+                        </div>
 
-                    <div>
-                        <label className="flex items-center gap-2 text-sm font-medium text-ink/80 mb-2">
-                            <Instagram className="w-4 h-4" /> انستجرام
-                        </label>
-                        <input
-                            {...register("social_links.instagram")}
-                            className="w-full p-3 rounded-xl bg-sand/20 border border-ink/10 focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-all dir-ltr"
-                            placeholder="@username or URL"
-                        />
-                    </div>
+                        <div>
+                            <label className="flex items-center gap-2 text-sm font-medium text-ink/80 mb-2">
+                                <Instagram className="w-4 h-4" /> انستجرام
+                            </label>
+                            <input
+                                {...register("social_links.instagram")}
+                                className="w-full p-3 rounded-xl bg-sand/20 border border-ink/10 focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-all dir-ltr"
+                                placeholder="@username or URL"
+                            />
+                        </div>
 
-                    <div>
-                        <label className="flex items-center gap-2 text-sm font-medium text-ink/80 mb-2">
-                            <Twitter className="w-4 h-4" /> تويتر / X
-                        </label>
-                        <input
-                            {...register("social_links.twitter")}
-                            className="w-full p-3 rounded-xl bg-sand/20 border border-ink/10 focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-all dir-ltr"
-                            placeholder="@username or URL"
-                        />
-                    </div>
+                        <div>
+                            <label className="flex items-center gap-2 text-sm font-medium text-ink/80 mb-2">
+                                <Twitter className="w-4 h-4" /> تويتر / X
+                            </label>
+                            <input
+                                {...register("social_links.twitter")}
+                                className="w-full p-3 rounded-xl bg-sand/20 border border-ink/10 focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-all dir-ltr"
+                                placeholder="@username or URL"
+                            />
+                        </div>
 
-                    <div>
-                        <label className="flex items-center gap-2 text-sm font-medium text-ink/80 mb-2">
-                            <Dribbble className="w-4 h-4" /> Dribbble
-                        </label>
-                        <input
-                            {...register("social_links.dribbble")}
-                            className="w-full p-3 rounded-xl bg-sand/20 border border-ink/10 focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-all dir-ltr"
-                            placeholder="@username or URL"
-                        />
+                        <div>
+                            <label className="flex items-center gap-2 text-sm font-medium text-ink/80 mb-2">
+                                <Dribbble className="w-4 h-4" /> Dribbble
+                            </label>
+                            <input
+                                {...register("social_links.dribbble")}
+                                className="w-full p-3 rounded-xl bg-sand/20 border border-ink/10 focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-all dir-ltr"
+                                placeholder="@username or URL"
+                            />
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
 
             {/* Actions */}
             <div className="flex justify-end pt-4">

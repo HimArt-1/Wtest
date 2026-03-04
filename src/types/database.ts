@@ -144,6 +144,42 @@ export interface OrderItem {
     total_price: number;
 }
 
+// ─── User Notifications ────────────────────────────────────
+
+export type UserNotificationType = "order_update" | "support_reply" | "system_alert";
+
+export interface UserNotification extends Timestamps {
+    id: string;
+    user_id: string;              // FK → profiles.id
+    type: UserNotificationType | string;
+    title: string;
+    message: string;
+    link: string | null;
+    is_read: boolean;
+    metadata: any;
+}
+
+// ─── Support Tickets & Messages ──────────────────────────
+
+export type SupportTicketStatus = "open" | "in_progress" | "resolved" | "closed";
+export type SupportTicketPriority = "low" | "normal" | "high";
+
+export interface SupportTicket extends Timestamps {
+    id: string;
+    user_id: string;              // FK → profiles.id
+    subject: string;
+    status: SupportTicketStatus;
+    priority: SupportTicketPriority;
+}
+
+export interface SupportMessage extends Timestamps {
+    id: string;
+    ticket_id: string;            // FK → support_tickets.id
+    sender_id: string;            // FK → profiles.id
+    message: string;
+    is_admin_reply: boolean;
+}
+
 // ─── Applications ────────────────────────────────────────
 
 export interface Application extends Timestamps {
@@ -283,6 +319,20 @@ export interface CustomDesignColorPackage {
     updated_at: string;
 }
 
+export interface CustomDesignStudioItem {
+    id: string;
+    name: string;
+    description: string | null;
+    price: number;
+    main_image_url: string | null;
+    mockup_image_url: string | null;
+    model_image_url: string | null;
+    sort_order: number;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+}
+
 // ─── Database Schema (Supabase-compatible) ───────────────
 
 export interface Database {
@@ -363,6 +413,11 @@ export interface Database {
                 Insert: Omit<CustomDesignColorPackage, "id" | "created_at" | "updated_at" | "sort_order" | "is_active"> & { sort_order?: number; is_active?: boolean };
                 Update: Partial<Omit<CustomDesignColorPackage, "id" | "created_at">>;
             };
+            custom_design_studio_items: {
+                Row: CustomDesignStudioItem;
+                Insert: Omit<CustomDesignStudioItem, "id" | "created_at" | "updated_at" | "sort_order" | "is_active" | "price"> & { sort_order?: number; is_active?: boolean; price?: number };
+                Update: Partial<Omit<CustomDesignStudioItem, "id" | "created_at">>;
+            };
             custom_design_orders: {
                 Row: CustomDesignOrder;
                 Insert: Omit<CustomDesignOrder, "id" | "created_at" | "updated_at" | "order_number" | "status" | "skip_results"> & { status?: CustomDesignOrderStatus; skip_results?: boolean };
@@ -372,6 +427,59 @@ export interface Database {
                 Row: CustomDesignSettings;
                 Insert: Partial<CustomDesignSettings>;
                 Update: Partial<CustomDesignSettings>;
+            };
+            user_notifications: {
+                Row: UserNotification;
+                Insert: {
+                    id?: string;
+                    user_id: string;
+                    type: UserNotificationType | string;
+                    title: string;
+                    message: string;
+                    link?: string | null;
+                    is_read?: boolean;
+                    metadata?: any;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    user_id?: string;
+                    type?: UserNotificationType | string;
+                    title?: string;
+                    message?: string;
+                    link?: string | null;
+                    is_read?: boolean;
+                    metadata?: any;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+            };
+            support_tickets: {
+                Row: { id: string, user_id: string, subject: string, status: string, priority: string, created_at: string, updated_at: string };
+                Insert: { id?: string, user_id: string, subject: string, status?: string, priority?: string, created_at?: string, updated_at?: string };
+                Update: { id?: string, user_id?: string, subject?: string, status?: string, priority?: string, created_at?: string, updated_at?: string };
+            };
+            support_messages: {
+                Row: SupportMessage;
+                Insert: {
+                    id?: string;
+                    ticket_id: string;
+                    sender_id: string;
+                    message: string;
+                    is_admin_reply?: boolean;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    ticket_id?: string;
+                    sender_id?: string;
+                    message?: string;
+                    is_admin_reply?: boolean;
+                    created_at?: string;
+                    updated_at?: string;
+                };
             };
         };
     };
@@ -399,7 +507,7 @@ export interface CustomDesignOrder {
     size_name: string;
 
     // Design Method
-    design_method: "from_text" | "from_image";
+    design_method: "from_text" | "from_image" | "studio";
     text_prompt: string | null;
     reference_image_url: string | null;
 

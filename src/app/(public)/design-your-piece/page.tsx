@@ -4,6 +4,7 @@ import {
     getDesignStyles,
     getArtStyles,
     getColorPackages,
+    getStudioItems,
 } from "@/app/actions/smart-store";
 import type { Metadata } from "next";
 
@@ -14,11 +15,12 @@ export const metadata: Metadata = {
 };
 
 export default async function DesignYourPiecePage() {
-    const [garments, styles, artStyles, colorPackages] = await Promise.all([
+    const [garments, styles, artStyles, colorPackages, studioItems] = await Promise.all([
         getActiveGarments(),
         getDesignStyles(),
         getArtStyles(),
         getColorPackages(),
+        getStudioItems(),
     ]);
 
     return (
@@ -34,6 +36,7 @@ export default async function DesignYourPiecePage() {
                     styles={styles}
                     artStyles={artStyles}
                     colorPackages={colorPackages}
+                    studioItems={studioItems}
                 />
             </div>
         </div>

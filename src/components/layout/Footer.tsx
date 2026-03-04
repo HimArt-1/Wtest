@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Logo } from "@/components/ui/Logo";
 import { Instagram, Twitter, MessageCircle, Mail, MapPin, Phone, Check, Loader2 } from "lucide-react";
 import { subscribeNewsletter } from "@/app/actions/forms";
+import { JoinCommunityModal } from "@/components/modals/JoinCommunityModal";
 
 // ─── Custom SVG Icons ──────────────────────────────────────
 
@@ -33,7 +34,6 @@ const footerLinks = [
       { label: "المعرض", href: "/gallery" },
       { label: "المتجر", href: "/store" },
       { label: "البحث", href: "/search" },
-      { label: "انضم إلينا", href: "/#join" },
     ],
   },
   {
@@ -53,6 +53,12 @@ const footerLinks = [
       { label: "حقوق الملكية", href: "/#copyright" },
     ],
   },
+  {
+    title: "كن جزءاً من وشّى",
+    links: [
+      { label: "انضم إلى المجتمع", action: "openJoinModal" },
+    ],
+  },
 ];
 
 const socialLinks = [
@@ -66,6 +72,7 @@ const socialLinks = [
 export function Footer() {
   const [submitting, setSubmitting] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
+  const [isJoinModalOpen, setJoinModalOpen] = useState(false);
 
   const handleSubscribe = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -141,14 +148,23 @@ export function Footer() {
             <div key={column.title}>
               <h4 className="font-bold mb-6 text-white/90">{column.title}</h4>
               <ul className="space-y-3">
-                {column.links.map((link) => (
+                {column.links.map((link: any) => (
                   <li key={link.label}>
-                    <a
-                      href={link.href}
-                      className="text-sm text-white/40 hover:text-gold transition-colors"
-                    >
-                      {link.label}
-                    </a>
+                    {link.action === "openJoinModal" ? (
+                      <button
+                        onClick={() => setJoinModalOpen(true)}
+                        className="text-sm text-white/40 hover:text-gold transition-colors text-right"
+                      >
+                        {link.label}
+                      </button>
+                    ) : (
+                      <a
+                        href={link.href}
+                        className="text-sm text-white/40 hover:text-gold transition-colors"
+                      >
+                        {link.label}
+                      </a>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -213,6 +229,11 @@ export function Footer() {
           </div>
         </div>
       </div>
+
+      <JoinCommunityModal
+        isOpen={isJoinModalOpen}
+        onClose={() => setJoinModalOpen(false)}
+      />
     </footer>
   );
 }

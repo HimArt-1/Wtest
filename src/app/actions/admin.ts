@@ -926,7 +926,7 @@ export async function updateOrderStatus(orderId: string, newStatus: string) {
 
     const { data: currentOrder } = await supabase
         .from("orders")
-        .select("status")
+        .select("status, buyer_id, order_number")
         .eq("id", orderId)
         .single();
 
@@ -950,6 +950,29 @@ export async function updateOrderStatus(orderId: string, newStatus: string) {
     if ((newStatus === "cancelled" || newStatus === "refunded") && hadStockDeducted) {
         const { restoreStockForOrder } = await import("@/lib/inventory");
         await restoreStockForOrder(orderId);
+    }
+
+    if (currentOrder?.buyer_id && newStatus !== currentOrder.status) {
+        let statusAr = "";
+        switch (newStatus) {
+            case "confirmed": statusAr = "تم تأكيد"; break;
+            case "processing": statusAr = "جاري تجهيز"; break;
+            case "shipped": statusAr = "تم شحن"; break;
+            case "delivered": statusAr = "تم توصيل"; break;
+            case "cancelled": statusAr = "تم إلغاء"; break;
+            case "refunded": statusAr = "تم إرجاع مبلغ"; break;
+        }
+
+        if (statusAr) {
+            await supabase.from("user_notifications").insert({
+                user_id: currentOrder.buyer_id,
+                type: "order_update",
+                title: "تحديث حالة الطلب",
+                message: `${statusAr} طلبك #${currentOrder.order_number}`,
+                link: `/account/orders`,
+                metadata: { order_id: orderId, new_status: newStatus }
+            });
+        }
     }
 
     revalidatePath("/dashboard/orders");
