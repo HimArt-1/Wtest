@@ -107,10 +107,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trg_design_orders_updated_at ON custom_design_orders;
 CREATE TRIGGER trg_design_orders_updated_at
     BEFORE UPDATE ON custom_design_orders
     FOR EACH ROW EXECUTE FUNCTION update_design_order_updated_at();
 
+DROP TRIGGER IF EXISTS trg_design_settings_updated_at ON custom_design_settings;
 CREATE TRIGGER trg_design_settings_updated_at
     BEFORE UPDATE ON custom_design_settings
     FOR EACH ROW EXECUTE FUNCTION update_design_order_updated_at();

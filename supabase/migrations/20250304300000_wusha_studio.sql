@@ -33,6 +33,7 @@ ON custom_design_studio_items FOR SELECT USING (true);
 --  Auto-update updated_at trigger
 -- ═══════════════════════════════════════════════════════════
 
+DROP TRIGGER IF EXISTS set_cd_studio_items_updated_at ON custom_design_studio_items;
 CREATE TRIGGER set_cd_studio_items_updated_at 
 BEFORE UPDATE ON custom_design_studio_items 
 FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

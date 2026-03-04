@@ -112,11 +112,22 @@ CREATE POLICY "Smart store color_packages public read" ON custom_design_color_pa
 --  Auto-update updated_at triggers
 -- ═══════════════════════════════════════════════════════════
 
+DROP TRIGGER IF EXISTS set_cd_garments_updated_at ON custom_design_garments;
 CREATE TRIGGER set_cd_garments_updated_at BEFORE UPDATE ON custom_design_garments FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS set_cd_colors_updated_at ON custom_design_colors;
 CREATE TRIGGER set_cd_colors_updated_at BEFORE UPDATE ON custom_design_colors FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS set_cd_sizes_updated_at ON custom_design_sizes;
 CREATE TRIGGER set_cd_sizes_updated_at BEFORE UPDATE ON custom_design_sizes FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS set_cd_styles_updated_at ON custom_design_styles;
 CREATE TRIGGER set_cd_styles_updated_at BEFORE UPDATE ON custom_design_styles FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS set_cd_art_styles_updated_at ON custom_design_art_styles;
 CREATE TRIGGER set_cd_art_styles_updated_at BEFORE UPDATE ON custom_design_art_styles FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS set_cd_color_packages_updated_at ON custom_design_color_packages;
 CREATE TRIGGER set_cd_color_packages_updated_at BEFORE UPDATE ON custom_design_color_packages FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- ═══════════════════════════════════════════════════════════
