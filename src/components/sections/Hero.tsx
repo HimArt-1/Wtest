@@ -166,7 +166,11 @@ export function Hero({ showAuthButtons = true }: HeroProps) {
           loop
           playsInline
           preload="auto"
-          className="video-bg"
+          disablePictureInPicture
+          disableRemotePlayback
+          controlsList="nodownload nofullscreen noremoteplayback"
+          className="video-bg pointer-events-none"
+          style={{ objectFit: "cover" }}
         >
           <source src="/videos/HERO1.mp4" type="video/mp4" />
         </video>

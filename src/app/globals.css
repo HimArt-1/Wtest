@@ -199,8 +199,17 @@ h6 {
 }
 
 @keyframes neonPulse {
-  0%, 100% { opacity: 1; filter: drop-shadow(0 0 8px var(--neon-gold)); }
-  50% { opacity: 0.9; filter: drop-shadow(0 0 20px var(--neon-gold)); }
+
+  0%,
+  100% {
+    opacity: 1;
+    filter: drop-shadow(0 0 8px var(--neon-gold));
+  }
+
+  50% {
+    opacity: 0.9;
+    filter: drop-shadow(0 0 20px var(--neon-gold));
+  }
 }
 
 .animate-neon-pulse {
@@ -569,6 +578,23 @@ h6 {
   height: 100%;
   object-fit: cover;
   z-index: 0;
+  pointer-events: none;
+}
+
+/* Hide native video controls / play button on all browsers */
+.video-bg::-webkit-media-controls,
+.video-bg::-webkit-media-controls-panel,
+.video-bg::-webkit-media-controls-play-button,
+.video-bg::-webkit-media-controls-start-playback-button,
+.video-bg::-webkit-media-controls-overlay-play-button {
+  display: none !important;
+  -webkit-appearance: none;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.video-bg::-moz-media-controls {
+  display: none !important;
 }
 
 .video-overlay {
