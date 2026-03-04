@@ -3,6 +3,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { arSA } from "@clerk/localizations";
 import { FloatingJoinButton } from "@/components/ui/FloatingJoinButton";
 import { ServiceWorkerRegister } from "@/components/notifications/ServiceWorkerRegister";
+import Script from "next/script";
 import "./globals.css";
 
 export const viewport: Viewport = {
@@ -98,6 +99,36 @@ export default function RootLayout({
           <ServiceWorkerRegister />
           {/* Floating Join Button */}
           <FloatingJoinButton />
+
+          {/* Re:amaze — دعم فني (GoDaddy) */}
+          <Script id="reamaze-config" strategy="lazyOnload">{`
+            var _support = _support || { 'ui': {}, 'user': {} };
+            _support['account'] = 'e0b4e5a7-7c09-4071-882e-2477bd1f3d20';
+            _support['ui']['contactMode'] = 'default';
+            _support['ui']['enableKb'] = 'false';
+            _support['ui']['mailbox'] = '77652573';
+            _support['ui']['styles'] = { widgetColor: '#ceae7f' };
+            _support['ui']['shoutboxFacesMode'] = 'brand-avatar';
+            _support['ui']['widget'] = {
+              icon: 'webChat',
+              allowBotProcessing: 'false',
+              slug: 'washa',
+              label: {
+                text: 'أهلاً وسهلاً..\\nحياك الله في وشّى ..\\nأكتب مشكلتك ..',
+                mode: "notification",
+                delay: 10,
+                secondary: '',
+              },
+              position: 'bottom-right'
+            };
+            _support['ui']['overrides'] = _support['ui']['overrides'] || {};
+            _support['ui']['overrides']['confirmationMessage'] = 'شكراً .. بيرد عليك موظفنا بس يخلص الشغله اللي عنده .. معليش اذا تأخرنا عليك 🤍🐢';
+            _support['ui']['user'] = {"authpath":"/m/api/reamaze/v2/customers/auth?brand=38752227"};
+          `}</Script>
+          <Script
+            src="https://cdn.reamaze.com/assets/reamaze-godaddy-loader.js"
+            strategy="lazyOnload"
+          />
         </body>
       </html>
     </ClerkProvider>
