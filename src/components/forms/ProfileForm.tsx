@@ -7,6 +7,7 @@ import { updateProfile, uploadProfileImage } from "@/app/actions/profile";
 import { useState, useTransition } from "react";
 import { Loader2, Save, AtSign, Globe, Instagram, Twitter, Youtube, Dribbble, ImagePlus, X } from "lucide-react";
 import Image from "next/image";
+import { compressImage } from "@/lib/image-compress";
 
 interface ProfileFormProps {
     initialData?: Partial<ProfileFormData>;
@@ -101,12 +102,17 @@ export function ProfileForm({ initialData, userRole = "subscriber" }: ProfileFor
                                             const file = e.target.files?.[0];
                                             if (!file) return;
                                             setUploadingAvatar(true);
-                                            const fd = new FormData();
-                                            fd.append("file", file);
-                                            const res = await uploadProfileImage(fd, "avatar");
+                                            try {
+                                                const compressed = await compressImage(file, "avatar");
+                                                const fd = new FormData();
+                                                fd.append("file", compressed);
+                                                const res = await uploadProfileImage(fd, "avatar");
+                                                if (res.success) setAvatarUrl(res.url);
+                                                else setState({ success: false, message: res.error });
+                                            } catch {
+                                                setState({ success: false, message: "فشل ضغط الصورة" });
+                                            }
                                             setUploadingAvatar(false);
-                                            if (res.success) setAvatarUrl(res.url);
-                                            else setState({ success: false, message: res.error });
                                         }}
                                     />
                                     <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gold/10 text-gold text-sm font-medium hover:bg-gold/20 transition-colors">
@@ -148,12 +154,17 @@ export function ProfileForm({ initialData, userRole = "subscriber" }: ProfileFor
                                             const file = e.target.files?.[0];
                                             if (!file) return;
                                             setUploadingCover(true);
-                                            const fd = new FormData();
-                                            fd.append("file", file);
-                                            const res = await uploadProfileImage(fd, "cover");
+                                            try {
+                                                const compressed = await compressImage(file, "cover");
+                                                const fd = new FormData();
+                                                fd.append("file", compressed);
+                                                const res = await uploadProfileImage(fd, "cover");
+                                                if (res.success) setCoverUrl(res.url);
+                                                else setState({ success: false, message: res.error });
+                                            } catch {
+                                                setState({ success: false, message: "فشل ضغط الصورة" });
+                                            }
                                             setUploadingCover(false);
-                                            if (res.success) setCoverUrl(res.url);
-                                            else setState({ success: false, message: res.error });
                                         }}
                                     />
                                     <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gold/10 text-gold text-sm font-medium hover:bg-gold/20 transition-colors">
