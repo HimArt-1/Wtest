@@ -102,6 +102,14 @@ export function Header() {
                       appearance={{
                         elements: {
                           avatarBox: "w-10 h-10 border-2 border-gold/30 hover:border-gold transition-colors duration-300",
+                          userButtonPopoverCard: "bg-[#111111] border border-[#ceae7f]/15 shadow-2xl shadow-black/40 rounded-2xl",
+                          userButtonPopoverActions: "[&>button]:text-[#f0ebe3] [&>button]:hover:bg-[#ceae7f]/10",
+                          userButtonPopoverActionButton: "text-[#f0ebe3]/80 hover:text-[#ceae7f] hover:bg-[#ceae7f]/10",
+                          userButtonPopoverActionButtonText: "text-[#f0ebe3]/80",
+                          userButtonPopoverActionButtonIconBox: "text-[#ceae7f]/60",
+                          userButtonPopoverFooter: "hidden",
+                          userPreviewMainIdentifier: "text-[#f0ebe3]",
+                          userPreviewSecondaryIdentifier: "text-[#f0ebe3]/50",
                         },
                       }}
                     />
@@ -218,6 +226,14 @@ export function Header() {
                     appearance={{
                       elements: {
                         avatarBox: "w-12 h-12 border-2 border-gold/30",
+                        userButtonPopoverCard: "bg-[#111111] border border-[#ceae7f]/15 shadow-2xl shadow-black/40 rounded-2xl",
+                        userButtonPopoverActions: "[&>button]:text-[#f0ebe3] [&>button]:hover:bg-[#ceae7f]/10",
+                        userButtonPopoverActionButton: "text-[#f0ebe3]/80 hover:text-[#ceae7f] hover:bg-[#ceae7f]/10",
+                        userButtonPopoverActionButtonText: "text-[#f0ebe3]/80",
+                        userButtonPopoverActionButtonIconBox: "text-[#ceae7f]/60",
+                        userButtonPopoverFooter: "hidden",
+                        userPreviewMainIdentifier: "text-[#f0ebe3]",
+                        userPreviewSecondaryIdentifier: "text-[#f0ebe3]/50",
                       },
                     }}
                   />
