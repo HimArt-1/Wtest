@@ -28,6 +28,7 @@ import {
     UserX,
     X,
     AlertTriangle,
+    Eye,
 } from "lucide-react";
 
 interface UsersClientProps {
@@ -393,6 +394,13 @@ export function UsersClient({
                                                 )}
                                                 <option value="__custom__">— أدخل دوراً —</option>
                                             </select>
+                                            <Link
+                                                href={`/dashboard/users/${user.id}`}
+                                                className="p-2 rounded-lg text-fg/40 hover:text-blue-400 hover:bg-blue-500/10 transition-all"
+                                                title="عرض الملف الشخصي"
+                                            >
+                                                <Eye className="w-4 h-4" />
+                                            </Link>
                                             <button
                                                 onClick={() => { setEditingUser(user); clearFeedback(); }}
                                                 className="p-2 rounded-lg text-fg/40 hover:text-gold hover:bg-gold/10 transition-all"

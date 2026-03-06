@@ -691,6 +691,47 @@ export async function getAdminUserById(userId: string) {
     return data as Record<string, unknown>;
 }
 
+export async function getCustomerProfile(userId: string) {
+    noStore();
+    const { supabase } = await requireAdmin();
+
+    const [profileRes, ordersRes, ticketsRes] = await Promise.allSettled([
+        supabase.from("profiles").select("*").eq("id", userId).single(),
+        supabase.from("orders")
+            .select("id, order_number, total, status, payment_status, created_at, order_items(id, quantity, unit_price, total_price, size, product:products(title, image_url), custom_title)")
+            .eq("buyer_id", userId)
+            .order("created_at", { ascending: false })
+            .limit(50),
+        supabase.from("support_tickets")
+            .select("id, subject, status, priority, created_at, updated_at")
+            .eq("user_id", userId)
+            .order("created_at", { ascending: false })
+            .limit(20),
+    ]);
+
+    const profile = profileRes.status === "fulfilled" && profileRes.value.data ? profileRes.value.data : null;
+    if (!profile) return null;
+
+    const orders = (ordersRes.status === "fulfilled" && ordersRes.value.data ? ordersRes.value.data : []) as any[];
+    const tickets = (ticketsRes.status === "fulfilled" && ticketsRes.value.data ? ticketsRes.value.data : []) as any[];
+
+    const totalSpent = orders
+        .filter((o: any) => o.payment_status === "paid")
+        .reduce((sum: number, o: any) => sum + (Number(o.total) || 0), 0);
+
+    return {
+        profile: profile as Record<string, unknown>,
+        orders,
+        tickets,
+        stats: {
+            totalOrders: orders.length,
+            totalSpent,
+            paidOrders: orders.filter((o: any) => o.payment_status === "paid").length,
+            openTickets: tickets.filter((t: any) => t.status === "open" || t.status === "in_progress").length,
+        },
+    };
+}
+
 export async function getAdminUsersStats() {
     noStore();
     const { supabase } = await requireAdmin();
