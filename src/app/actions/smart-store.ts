@@ -521,6 +521,15 @@ export async function submitDesignOrder(orderData: {
         .single();
 
     if (error) return { error: error.message };
+
+    // Notify all admins about the new design order
+    await createAdminNotification({
+        type: "order_alert",
+        title: "طلب تصميم جديد 🎨",
+        message: `طلب تصميم جديد #${(data as any)?.order_number} — ${orderData.garment_name} (${orderData.color_name}) من ${orderData.customer_name || "عميل"}`,
+        link: "/dashboard/design-orders",
+    });
+
     return { success: true, orderId: (data as any)?.id, orderNumber: (data as any)?.order_number };
 }
 
@@ -761,3 +770,52 @@ export async function confirmDesignOrder(id: string, position?: string | null, s
     return { success: true };
 }
 
+// ─── Assign Design Order to Admin ────────────────────────
+
+export async function assignDesignOrder(orderId: string, adminProfileId: string | null) {
+    const sb = getSmartStoreSb();
+    const { error } = await sb
+        .from("custom_design_orders")
+        .update({ assigned_to: adminProfileId })
+        .eq("id", orderId);
+    if (error) return { error: error.message };
+    return { success: true };
+}
+
+// ─── Design Order Stats ──────────────────────────────────
+
+export async function getDesignOrderStats() {
+    const sb = getSmartStoreSb();
+
+    const [newRes, inProgRes, awaitRes, compRes, cancelRes, revenueRes] = await Promise.all([
+        sb.from("custom_design_orders").select("id", { count: "exact", head: true }).eq("status", "new"),
+        sb.from("custom_design_orders").select("id", { count: "exact", head: true }).eq("status", "in_progress"),
+        sb.from("custom_design_orders").select("id", { count: "exact", head: true }).eq("status", "awaiting_review"),
+        sb.from("custom_design_orders").select("id", { count: "exact", head: true }).eq("status", "completed"),
+        sb.from("custom_design_orders").select("id", { count: "exact", head: true }).eq("status", "cancelled"),
+        sb.from("custom_design_orders").select("final_price").eq("status", "completed").not("final_price", "is", null),
+    ]);
+
+    const revenue = ((revenueRes.data as any[]) || []).reduce((sum: number, r: any) => sum + (r.final_price || 0), 0);
+
+    return {
+        new: newRes.count ?? 0,
+        in_progress: inProgRes.count ?? 0,
+        awaiting_review: awaitRes.count ?? 0,
+        completed: compRes.count ?? 0,
+        cancelled: cancelRes.count ?? 0,
+        revenue,
+    };
+}
+
+// ─── Get Admin List ──────────────────────────────────────
+
+export async function getAdminList() {
+    const sb = getSmartStoreSb();
+    const { data } = await sb
+        .from("profiles")
+        .select("id, display_name, avatar_url")
+        .eq("role", "admin")
+        .order("display_name");
+    return (data as { id: string; display_name: string; avatar_url: string | null }[]) ?? [];
+}

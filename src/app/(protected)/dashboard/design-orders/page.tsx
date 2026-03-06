@@ -1,28 +1,30 @@
-import { getDesignOrders, getDesignPromptTemplate } from "@/app/actions/smart-store";
+import { getDesignOrders, getDesignPromptTemplate, getDesignOrderStats, getAdminList } from "@/app/actions/smart-store";
 import { DesignOrdersClient } from "@/components/admin/DesignOrdersClient";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 
 export const dynamic = "force-dynamic";
 
 interface PageProps {
-    searchParams?: { page?: string; status?: string };
+    searchParams?: Promise<{ page?: string; status?: string; admin?: string; search?: string }>;
 }
 
 export default async function DesignOrdersPage({ searchParams }: PageProps) {
-    const params = searchParams ?? {};
+    const params = (await searchParams) ?? {} as Record<string, string | undefined>;
     const page = Number(params.page) || 1;
     const status = params.status || "all";
 
-    const [ordersResult, promptTemplate] = await Promise.all([
+    const [ordersResult, promptTemplate, stats, adminList] = await Promise.all([
         getDesignOrders(page, status),
         getDesignPromptTemplate(),
+        getDesignOrderStats(),
+        getAdminList(),
     ]);
 
     return (
         <div className="space-y-6">
             <AdminHeader
                 title="طلبات التصميم"
-                subtitle="إدارة طلبات التصميم المخصص من العملاء — مراجعة، تنفيذ، وإرسال النتائج."
+                subtitle="إدارة طلبات التصميم المخصص — مراجعة ، تنفيذ ، تعيين ، وإرسال النتائج."
             />
             <DesignOrdersClient
                 orders={ordersResult.data}
@@ -31,6 +33,8 @@ export default async function DesignOrdersPage({ searchParams }: PageProps) {
                 currentPage={page}
                 currentStatus={status}
                 promptTemplate={promptTemplate}
+                stats={stats}
+                adminList={adminList}
             />
         </div>
     );

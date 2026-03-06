@@ -39,18 +39,17 @@ const footerLinks = [
   {
     title: "الدعم",
     links: [
-      { label: "الأسئلة الشائعة", href: "/#faq" },
-      { label: "الشحن والتوصيل", href: "/#shipping" },
-      { label: "سياسة الاسترجاع", href: "/#returns" },
-      { label: "تواصل معنا", href: "/#contact" },
+      { label: "الأسئلة الشائعة", href: "/faq" },
+      { label: "الشحن والتوصيل", href: "/shipping" },
+      { label: "تواصل معنا", href: "/contact" },
     ],
   },
   {
     title: "القانونية",
     links: [
-      { label: "الشروط والأحكام", href: "/#terms" },
-      { label: "سياسة الخصوصية", href: "/#privacy" },
-      { label: "حقوق الملكية", href: "/#copyright" },
+      { label: "الشروط والأحكام", href: "/terms#terms" },
+      { label: "سياسة الخصوصية", href: "/terms#privacy" },
+      { label: "حقوق الملكية", href: "/terms#copyright" },
     ],
   },
   {

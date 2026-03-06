@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@supabase/supabase-js";
@@ -9,6 +9,8 @@ import {
     ChevronLeft, ChevronRight, Clock, Loader2, Slash,
     Paintbrush, Palette, Ruler, Shirt, Sparkles, SwatchBook,
     AlertCircle, CheckCircle2, Settings2, Save,
+    Search, UserCircle2, DollarSign, TrendingUp, XCircle,
+    Users,
 } from "lucide-react";
 import {
     updateDesignOrderStatus,
@@ -17,6 +19,7 @@ import {
     updateDesignOrderNotes,
     updateDesignPromptTemplate,
     sendDesignOrderToCustomer,
+    assignDesignOrder,
 } from "@/app/actions/smart-store";
 import type { CustomDesignOrder, CustomDesignOrderStatus } from "@/types/database";
 import { DesignOrderAdminChat } from "./DesignOrderAdminChat";
@@ -67,7 +70,18 @@ const FILTER_STATUSES = [
     { value: "cancelled", label: "ملغي" },
 ];
 
-// ─── Props ───────────────────────────────────────────────
+// ─── Types ───────────────────────────────────────────────
+
+type AdminProfile = { id: string; display_name: string; avatar_url: string | null };
+
+interface DesignOrderStats {
+    new: number;
+    in_progress: number;
+    awaiting_review: number;
+    completed: number;
+    cancelled: number;
+    revenue: number;
+}
 
 interface Props {
     orders: CustomDesignOrder[];
@@ -76,14 +90,18 @@ interface Props {
     currentPage: number;
     currentStatus: string;
     promptTemplate: string;
+    stats: DesignOrderStats;
+    adminList: AdminProfile[];
 }
 
 // ─── Main Component ─────────────────────────────────────
 
-export function DesignOrdersClient({ orders, count, totalPages, currentPage, currentStatus, promptTemplate }: Props) {
+export function DesignOrdersClient({ orders, count, totalPages, currentPage, currentStatus, promptTemplate, stats, adminList }: Props) {
     const router = useRouter();
     const [selectedOrder, setSelectedOrder] = useState<CustomDesignOrder | null>(null);
     const [showSettings, setShowSettings] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [filterAdmin, setFilterAdmin] = useState("all");
 
     const navigate = (params: Record<string, string>) => {
         const sp = new URLSearchParams();
@@ -92,11 +110,47 @@ export function DesignOrdersClient({ orders, count, totalPages, currentPage, cur
         router.push(`/dashboard/design-orders?${sp.toString()}`);
     };
 
+    // Client-side filtering for search + admin filter
+    const filteredOrders = useMemo(() => {
+        let result = orders;
+        if (searchTerm.trim()) {
+            const q = searchTerm.toLowerCase();
+            result = result.filter(o =>
+                String(o.order_number).includes(q) ||
+                o.garment_name.toLowerCase().includes(q) ||
+                (o.customer_name && o.customer_name.toLowerCase().includes(q)) ||
+                (o.customer_email && o.customer_email.toLowerCase().includes(q))
+            );
+        }
+        if (filterAdmin !== "all") {
+            result = result.filter(o =>
+                filterAdmin === "unassigned" ? !o.assigned_to : o.assigned_to === filterAdmin
+            );
+        }
+        return result;
+    }, [orders, searchTerm, filterAdmin]);
+
+    const getAdminName = (id: string | null) => {
+        if (!id) return null;
+        return adminList.find(a => a.id === id)?.display_name ?? null;
+    };
+
     return (
         <div className="space-y-6">
-            {/* Filters & Actions */}
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex flex-wrap gap-2">
+            {/* ══ Stats Cards ══ */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                <StatCard icon={AlertCircle} label="جديد" value={stats.new} color="text-blue-400" bg="bg-blue-400/10" onClick={() => navigate({ status: "new", page: "1" })} active={currentStatus === "new"} />
+                <StatCard icon={Clock} label="قيد التنفيذ" value={stats.in_progress} color="text-amber-400" bg="bg-amber-400/10" onClick={() => navigate({ status: "in_progress", page: "1" })} active={currentStatus === "in_progress"} />
+                <StatCard icon={Eye} label="بانتظار المراجعة" value={stats.awaiting_review} color="text-purple-400" bg="bg-purple-400/10" onClick={() => navigate({ status: "awaiting_review", page: "1" })} active={currentStatus === "awaiting_review"} />
+                <StatCard icon={CheckCircle2} label="مكتمل" value={stats.completed} color="text-emerald-400" bg="bg-emerald-400/10" onClick={() => navigate({ status: "completed", page: "1" })} active={currentStatus === "completed"} />
+                <StatCard icon={XCircle} label="ملغي" value={stats.cancelled} color="text-red-400" bg="bg-red-400/10" onClick={() => navigate({ status: "cancelled", page: "1" })} active={currentStatus === "cancelled"} />
+                <StatCard icon={DollarSign} label="الإيرادات" value={`${stats.revenue.toLocaleString()} ر.س`} color="text-gold" bg="bg-gold/10" />
+            </div>
+
+            {/* ══ Toolbar ══ */}
+            <div className="flex flex-wrap items-center gap-3">
+                {/* Status Filter */}
+                <div className="flex flex-wrap gap-2 flex-1 min-w-0">
                     {FILTER_STATUSES.map((s) => (
                         <button
                             key={s.value}
@@ -107,7 +161,8 @@ export function DesignOrdersClient({ orders, count, totalPages, currentPage, cur
                         </button>
                     ))}
                 </div>
-                <div className="flex gap-2">
+                {/* Actions */}
+                <div className="flex items-center gap-2">
                     <span className="text-xs text-fg/40">{count} طلب</span>
                     <button onClick={() => setShowSettings(true)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.08] text-fg/60 text-xs hover:text-fg transition-colors">
                         <Settings2 className="w-3.5 h-3.5" /> إعدادات البرومبت
@@ -115,57 +170,121 @@ export function DesignOrdersClient({ orders, count, totalPages, currentPage, cur
                 </div>
             </div>
 
-            {/* Orders List */}
-            {orders.length === 0 ? (
+            {/* ══ Search & Admin Filter ══ */}
+            <div className="flex flex-wrap gap-3">
+                {/* Search */}
+                <div className="relative flex-1 min-w-[200px]">
+                    <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg/30" />
+                    <input
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="بحث بالاسم أو رقم الطلب..."
+                        className="w-full pr-10 pl-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-fg text-sm placeholder:text-fg/25 focus:outline-none focus:border-gold/30 transition-colors"
+                    />
+                </div>
+                {/* Admin Filter */}
+                <select
+                    value={filterAdmin}
+                    onChange={(e) => setFilterAdmin(e.target.value)}
+                    className="px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-fg text-sm focus:outline-none focus:border-gold/30 transition-colors min-w-[180px]"
+                >
+                    <option value="all">كل الأدمن</option>
+                    <option value="unassigned">غير معيّن</option>
+                    {adminList.map(a => (
+                        <option key={a.id} value={a.id}>{a.display_name}</option>
+                    ))}
+                </select>
+            </div>
+
+            {/* ══ Orders Table ══ */}
+            {filteredOrders.length === 0 ? (
                 <div className="text-center py-20 text-fg/30">
                     <Paintbrush className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                    <p>لا توجد طلبات تصميم {currentStatus !== "all" && `بحالة "${FILTER_STATUSES.find(s => s.value === currentStatus)?.label}"`}</p>
+                    <p>لا توجد طلبات تصميم {searchTerm ? `تطابق "${searchTerm}"` : currentStatus !== "all" && `بحالة "${FILTER_STATUSES.find(s => s.value === currentStatus)?.label}"`}</p>
                 </div>
             ) : (
-                <div className="space-y-3">
-                    {orders.map((order) => {
-                        const st = STATUS_MAP[order.status];
-                        const StIcon = st.icon;
-                        return (
-                            <motion.div
-                                key={order.id}
-                                initial={{ opacity: 0, y: 5 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="flex items-center gap-4 p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:bg-white/[0.04] transition-colors cursor-pointer group"
-                                onClick={() => setSelectedOrder(order)}
-                            >
-                                {/* Order Number */}
-                                <div className="w-12 h-12 rounded-xl bg-gold/10 flex items-center justify-center font-bold text-gold text-sm">
-                                    #{order.order_number}
-                                </div>
-                                {/* Details */}
-                                <div className="flex-1 min-w-0">
-                                    <p className="font-medium text-fg text-sm truncate">
-                                        {order.garment_name} — {order.color_name} — {order.size_name}
-                                    </p>
-                                    <p className="text-xs text-fg/40 mt-0.5">
-                                        {order.style_name} · {order.art_style_name}
-                                        {order.customer_name && ` · ${order.customer_name}`}
-                                    </p>
-                                </div>
-                                {/* Status Badge */}
-                                <span className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border ${st.color}`}>
-                                    <StIcon className="w-3.5 h-3.5" />
-                                    {st.label}
-                                </span>
-                                {/* Results indicator */}
-                                <div className="flex gap-1">
-                                    {order.result_design_url && <div className="w-2 h-2 rounded-full bg-emerald-400" title="تصميم" />}
-                                    {order.result_mockup_url && <div className="w-2 h-2 rounded-full bg-blue-400" title="موكاب" />}
-                                    {order.result_pdf_url && <div className="w-2 h-2 rounded-full bg-amber-400" title="PDF" />}
-                                </div>
-                                {/* Date */}
-                                <span className="text-xs text-fg/30 hidden sm:block">
-                                    {new Date(order.created_at).toLocaleDateString("ar-SA")}
-                                </span>
-                            </motion.div>
-                        );
-                    })}
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                        <thead>
+                            <tr className="border-b border-white/[0.06]">
+                                <th className="text-right text-xs text-fg/40 font-medium px-4 py-3">#</th>
+                                <th className="text-right text-xs text-fg/40 font-medium px-4 py-3">العميل</th>
+                                <th className="text-right text-xs text-fg/40 font-medium px-4 py-3">القطعة</th>
+                                <th className="text-right text-xs text-fg/40 font-medium px-4 py-3">الحالة</th>
+                                <th className="text-right text-xs text-fg/40 font-medium px-4 py-3">المسؤول</th>
+                                <th className="text-right text-xs text-fg/40 font-medium px-4 py-3">النتائج</th>
+                                <th className="text-right text-xs text-fg/40 font-medium px-4 py-3">التاريخ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filteredOrders.map((order) => {
+                                const st = STATUS_MAP[order.status];
+                                const StIcon = st.icon;
+                                const adminName = getAdminName(order.assigned_to);
+                                return (
+                                    <tr
+                                        key={order.id}
+                                        onClick={() => setSelectedOrder(order)}
+                                        className="border-b border-white/[0.03] hover:bg-white/[0.03] transition-colors cursor-pointer group"
+                                    >
+                                        {/* Order Number */}
+                                        <td className="px-4 py-3">
+                                            <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gold/10 text-gold text-xs font-bold">
+                                                {order.order_number}
+                                            </span>
+                                        </td>
+                                        {/* Customer */}
+                                        <td className="px-4 py-3">
+                                            <p className="font-medium text-fg text-sm truncate max-w-[140px]">
+                                                {order.customer_name || "—"}
+                                            </p>
+                                            {order.customer_phone && (
+                                                <p className="text-[10px] text-fg/30 mt-0.5" dir="ltr">{order.customer_phone}</p>
+                                            )}
+                                        </td>
+                                        {/* Garment */}
+                                        <td className="px-4 py-3">
+                                            <p className="text-fg/80 text-sm">{order.garment_name}</p>
+                                            <p className="text-[10px] text-fg/30 mt-0.5">{order.color_name} · {order.size_name}</p>
+                                        </td>
+                                        {/* Status */}
+                                        <td className="px-4 py-3">
+                                            <span className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border ${st.color}`}>
+                                                <StIcon className="w-3 h-3" />
+                                                {st.label}
+                                            </span>
+                                        </td>
+                                        {/* Assigned Admin */}
+                                        <td className="px-4 py-3">
+                                            {adminName ? (
+                                                <span className="inline-flex items-center gap-1.5 text-xs text-fg/60">
+                                                    <UserCircle2 className="w-3.5 h-3.5 text-gold/50" />
+                                                    {adminName}
+                                                </span>
+                                            ) : (
+                                                <span className="text-xs text-fg/20">غير معيّن</span>
+                                            )}
+                                        </td>
+                                        {/* Results */}
+                                        <td className="px-4 py-3">
+                                            <div className="flex gap-1">
+                                                {order.result_design_url && <div className="w-2 h-2 rounded-full bg-emerald-400" title="تصميم" />}
+                                                {order.result_mockup_url && <div className="w-2 h-2 rounded-full bg-blue-400" title="موكاب" />}
+                                                {order.result_pdf_url && <div className="w-2 h-2 rounded-full bg-amber-400" title="PDF" />}
+                                                {!order.result_design_url && !order.result_mockup_url && !order.result_pdf_url && (
+                                                    <span className="text-[10px] text-fg/15">—</span>
+                                                )}
+                                            </div>
+                                        </td>
+                                        {/* Date */}
+                                        <td className="px-4 py-3 text-xs text-fg/30 whitespace-nowrap">
+                                            {new Date(order.created_at).toLocaleDateString("ar-SA")}
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
                 </div>
             )}
 
@@ -185,7 +304,7 @@ export function DesignOrdersClient({ orders, count, totalPages, currentPage, cur
             {/* Detail Modal */}
             <AnimatePresence>
                 {selectedOrder && (
-                    <OrderDetailModal order={selectedOrder} onClose={() => { setSelectedOrder(null); router.refresh(); }} />
+                    <OrderDetailModal order={selectedOrder} adminList={adminList} onClose={() => { setSelectedOrder(null); router.refresh(); }} />
                 )}
             </AnimatePresence>
 
@@ -200,15 +319,37 @@ export function DesignOrdersClient({ orders, count, totalPages, currentPage, cur
 }
 
 // ═══════════════════════════════════════════════════════════
+//  Stats Card
+// ═══════════════════════════════════════════════════════════
+
+function StatCard({ icon: Icon, label, value, color, bg, onClick, active }: {
+    icon: any; label: string; value: string | number; color: string; bg: string; onClick?: () => void; active?: boolean;
+}) {
+    return (
+        <button
+            onClick={onClick}
+            className={`p-4 rounded-xl border transition-all text-right ${active ? "border-gold/30 bg-gold/[0.07]" : "border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04]"} ${onClick ? "cursor-pointer" : "cursor-default"}`}
+        >
+            <div className={`w-8 h-8 rounded-lg ${bg} flex items-center justify-center mb-2`}>
+                <Icon className={`w-4 h-4 ${color}`} />
+            </div>
+            <p className="text-lg font-bold text-fg">{value}</p>
+            <p className="text-[10px] text-fg/40 mt-0.5">{label}</p>
+        </button>
+    );
+}
+
+// ═══════════════════════════════════════════════════════════
 //  Order Detail Modal
 // ═══════════════════════════════════════════════════════════
 
-function OrderDetailModal({ order, onClose }: { order: CustomDesignOrder; onClose: () => void }) {
+function OrderDetailModal({ order, adminList, onClose }: { order: CustomDesignOrder; adminList: AdminProfile[]; onClose: () => void }) {
     const [loading, setLoading] = useState(false);
     const [copied, setCopied] = useState(false);
     const [notes, setNotes] = useState(order.admin_notes ?? "");
     const [uploading, setUploading] = useState<string | null>(null);
     const [finalPrice, setFinalPrice] = useState(order.final_price?.toString() || "");
+    const [assignedTo, setAssignedTo] = useState(order.assigned_to ?? "");
 
     const st = STATUS_MAP[order.status];
     const nextStatuses = NEXT_STATUSES[order.status] || [];
@@ -218,6 +359,11 @@ function OrderDetailModal({ order, onClose }: { order: CustomDesignOrder; onClos
         await updateDesignOrderStatus(order.id, newStatus);
         setLoading(false);
         onClose();
+    };
+
+    const handleAssign = async (adminId: string) => {
+        setAssignedTo(adminId);
+        await assignDesignOrder(order.id, adminId || null);
     };
 
     const handleSendToCustomer = async () => {
@@ -267,7 +413,6 @@ function OrderDetailModal({ order, onClose }: { order: CustomDesignOrder; onClos
             if (res.error) {
                 alert(`فشل التحديث في قاعدة البيانات: ${res.error}`);
             } else {
-                // Mutate local state so UI updates immediately
                 order[field] = url;
             }
         } else {
@@ -299,6 +444,24 @@ function OrderDetailModal({ order, onClose }: { order: CustomDesignOrder; onClos
                             {st.label}
                         </span>
                         <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-lg"><X className="w-5 h-5 text-fg/40" /></button>
+                    </div>
+                </div>
+
+                {/* Assign Admin */}
+                <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] mb-4 flex items-center gap-3">
+                    <Users className="w-5 h-5 text-gold/60 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                        <p className="text-xs text-fg/40 mb-1">الأدمن المسؤول</p>
+                        <select
+                            value={assignedTo}
+                            onChange={(e) => handleAssign(e.target.value)}
+                            className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.08] text-fg text-sm focus:outline-none focus:border-gold/30 transition-colors"
+                        >
+                            <option value="">غير معيّن</option>
+                            {adminList.map(a => (
+                                <option key={a.id} value={a.id}>{a.display_name}</option>
+                            ))}
+                        </select>
                     </div>
                 </div>
 

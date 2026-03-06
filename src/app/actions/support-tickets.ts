@@ -5,6 +5,7 @@ import { SupportTicketPriority, SupportTicketStatus } from "@/types/database";
 import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { createUserNotification } from "./user-notifications";
+import { createAdminNotification } from "./notifications";
 
 export async function createSupportTicket(data: { subject: string; message: string; priority: SupportTicketPriority }) {
     const user = await currentUser();
@@ -41,7 +42,13 @@ export async function createSupportTicket(data: { subject: string; message: stri
         console.error("[createSupportTicket] Error creating initial message:", msgError);
     }
 
-    // TODO: Notify admin (Push + DB)
+    // Notify admin about new support ticket
+    await createAdminNotification({
+        type: "system_alert",
+        title: "تذكرة دعم جديدة 🎫",
+        message: `تذكرة جديدة من ${user.firstName || "مستخدم"}: ${data.subject}`,
+        link: `/dashboard/support`,
+    });
 
     revalidatePath("/account/support");
     return { success: true, ticketId: ticket.id };
