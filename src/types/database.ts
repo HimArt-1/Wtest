@@ -458,6 +458,21 @@ export interface Database {
                 Insert: Omit<ArtworkLike, "created_at">;
                 Update: never;
             };
+            artist_follows: {
+                Row: ArtistFollow;
+                Insert: Omit<ArtistFollow, "id" | "created_at"> & { id?: string; created_at?: string };
+                Update: never;
+            };
+            product_wishlist: {
+                Row: ProductWishlistItem;
+                Insert: Omit<ProductWishlistItem, "id" | "created_at"> & { id?: string; created_at?: string };
+                Update: never;
+            };
+            product_likes: {
+                Row: ProductLike;
+                Insert: Omit<ProductLike, "id" | "created_at"> & { id?: string; created_at?: string };
+                Update: never;
+            };
             newsletter_subscribers: {
                 Row: NewsletterSubscriber;
                 Insert: Omit<NewsletterSubscriber, "id" | "subscribed_at" | "is_active"> & { is_active?: boolean };
