@@ -1,145 +1,33 @@
-import { getAdminOverview } from "@/app/actions/admin";
-import { StatCard } from "@/components/admin/StatCard";
-import { StatusBadge } from "@/components/admin/StatusBadge";
+import { getAdminOverview, getAdminAnalytics, getAdminInventory } from "@/app/actions/admin";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { AdminQuickActions } from "@/components/admin/AdminQuickActions";
-import { AdminCard } from "@/components/admin/AdminCard";
-import Link from "next/link";
+import { DashboardClient } from "./DashboardClient";
 
 export default async function AdminDashboardPage() {
-    const overview = await getAdminOverview();
+    const [overview, analytics, inventory] = await Promise.all([
+        getAdminOverview(),
+        getAdminAnalytics("7d"),
+        getAdminInventory("low"),
+    ]);
+
     const { stats, recentOrders, pendingApplications } = overview;
 
     return (
-        <div className="space-y-10">
-            {/* ─── Header ─── */}
+        <div className="space-y-8">
             <AdminHeader
-                title="نظرة عامة"
-                subtitle="مرحباً بك في لوحة إدارة وشّى — ملخص أداء المنصة وأدوات سريعة."
+                title="لوحة المؤشرات"
+                subtitle="ملخص شامل لأداء المنصة — الإيرادات والطلبات والمخزون والعملاء."
                 actions={<AdminQuickActions pendingCount={stats.pendingApplications} />}
             />
-
-            {/* ─── Stats Grid (Primary) ─── */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                <StatCard
-                    title="إجمالي الإيرادات"
-                    value={`${stats.totalRevenue.toLocaleString()} ر.س`}
-                    icon="DollarSign"
-                    variant="gold"
-                    growth={stats.revenueGrowth}
-                    subtitle={`هذا الشهر: ${stats.thisMonthRevenue.toLocaleString()} ر.س`}
-                    delay={0}
-                />
-                <StatCard
-                    title="الطلبات"
-                    value={stats.totalOrders}
-                    icon="ShoppingCart"
-                    variant="forest"
-                    delay={0.05}
-                    href="/dashboard/orders"
-                />
-                <StatCard
-                    title="الوشّايون"
-                    value={stats.totalArtists}
-                    icon="Palette"
-                    variant="accent"
-                    subtitle={`من أصل ${stats.totalUsers} مستخدم`}
-                    delay={0.1}
-                    href="/dashboard/users"
-                />
-                <StatCard
-                    title="طلبات الانضمام"
-                    value={stats.pendingApplications}
-                    icon="FileText"
-                    variant={stats.pendingApplications > 0 ? "gold" : "default"}
-                    subtitle={stats.pendingApplications > 0 ? "بانتظار المراجعة" : "لا توجد طلبات معلقة"}
-                    delay={0.15}
-                    href="/dashboard/applications"
-                />
-            </div>
-
-            {/* ─── Secondary Stats (Clickable) ─── */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-                <StatCard title="المستخدمون" value={stats.totalUsers} icon="Users" delay={0.2} href="/dashboard/users" />
-                <StatCard title="أعضاء المنصة" value={stats.totalBuyers} icon="Users" delay={0.25} href="/dashboard/users" />
-                <StatCard title="الأعمال الفنية" value={stats.totalArtworks} icon="Palette" delay={0.3} href="/dashboard/artworks" />
-                <StatCard title="المنتجات" value={stats.totalProducts} icon="Package" delay={0.35} href="/dashboard/products" />
-                <StatCard title="مشتركو النشرة" value={stats.totalSubscribers} icon="Mail" delay={0.4} href="/dashboard/newsletter" />
-            </div>
-
-            {/* ─── Bottom Grid: Recent Orders + Pending Apps ─── */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Recent Orders Table */}
-                <AdminCard
-                    title="آخر الطلبات"
-                    action={
-                        <Link href="/dashboard/orders" className="text-xs text-gold hover:text-gold-light transition-colors font-medium">
-                            عرض الكل ←
-                        </Link>
-                    }
-                    className="lg:col-span-2"
-                >
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                            <thead>
-                                <tr className="border-b border-white/[0.04]">
-                                    <th className="text-right px-6 py-3 text-fg/30 font-medium text-xs">رقم الطلب</th>
-                                    <th className="text-right px-4 py-3 text-fg/30 font-medium text-xs">المشترك</th>
-                                    <th className="text-right px-4 py-3 text-fg/30 font-medium text-xs">المبلغ</th>
-                                    <th className="text-right px-4 py-3 text-fg/30 font-medium text-xs">الحالة</th>
-                                    <th className="text-right px-6 py-3 text-fg/30 font-medium text-xs">التاريخ</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {recentOrders.length > 0 ? recentOrders.map((order: any) => (
-                                    <tr key={order.id} className="border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors">
-                                        <td className="px-6 py-3.5 font-mono text-xs text-gold">{order.order_number}</td>
-                                        <td className="px-4 py-3.5 text-fg/70">{order.buyer?.display_name || "—"}</td>
-                                        <td className="px-4 py-3.5 font-bold text-fg">{Number(order.total).toLocaleString()} ر.س</td>
-                                        <td className="px-4 py-3.5"><StatusBadge status={order.status} type="order" /></td>
-                                        <td className="px-6 py-3.5 text-fg/30 text-xs" dir="ltr">
-                                            {new Date(order.created_at).toLocaleDateString("ar-SA", { month: "short", day: "numeric" })}
-                                        </td>
-                                    </tr>
-                                )) : (
-                                    <tr>
-                                        <td colSpan={5} className="text-center py-12 text-fg/20 text-sm">لا توجد طلبات بعد</td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </AdminCard>
-
-                {/* Pending Applications */}
-                <AdminCard
-                    title="طلبات الانضمام"
-                    subtitle={stats.pendingApplications > 0 ? `${stats.pendingApplications} بانتظار المراجعة` : undefined}
-                    action={
-                        <Link href="/dashboard/applications" className="text-xs text-gold hover:text-gold-light transition-colors font-medium">
-                            عرض الكل ←
-                        </Link>
-                    }
-                >
-                    <div className="divide-y divide-white/[0.03]">
-                        {pendingApplications.length > 0 ? pendingApplications.map((app: any) => (
-                            <div key={app.id} className="px-6 py-4 hover:bg-white/[0.02] transition-colors">
-                                <div className="flex items-center justify-between mb-1">
-                                    <span className="font-bold text-fg text-sm">{app.full_name}</span>
-                                    <span className="text-[10px] text-fg/20">
-                                        {new Date(app.created_at).toLocaleDateString("ar-SA")}
-                                    </span>
-                                </div>
-                                <p className="text-fg/40 text-xs">{app.art_style} · {app.email}</p>
-                            </div>
-                        )) : (
-                            <div className="px-6 py-12 text-center text-fg/20 text-sm">
-                                لا توجد طلبات معلقة
-                            </div>
-                        )}
-                    </div>
-                </AdminCard>
-            </div>
+            <DashboardClient
+                stats={stats}
+                recentOrders={recentOrders}
+                pendingApplications={pendingApplications}
+                topProducts={analytics.topProducts.slice(0, 5)}
+                revenueByDay={analytics.revenueByDay}
+                lowStockProducts={inventory.products.slice(0, 5)}
+                lowStockCount={inventory.lowStockCount}
+            />
         </div>
     );
 }
