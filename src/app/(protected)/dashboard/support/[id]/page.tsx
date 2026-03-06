@@ -1,9 +1,10 @@
 import { getSupportTicketDetails } from "@/app/actions/support-tickets";
 import { AdminSupportTicketChat } from "@/components/admin/support/AdminSupportTicketChat";
+import { AdminHeader } from "@/components/admin/AdminHeader";
 import { notFound } from "next/navigation";
 
 export const metadata = {
-    title: "محادثة الدعم | لوحة التحكم",
+    title: "محادثة الدعم | لوحة الإدارة",
 };
 
 export default async function AdminSupportTicketPage({ params }: { params: { id: string } }) {
@@ -15,7 +16,10 @@ export default async function AdminSupportTicketPage({ params }: { params: { id:
 
     return (
         <div className="space-y-6">
-            <h1 className="text-2xl font-bold text-white">تذكرة #{details.ticket.id.slice(0, 8)}</h1>
+            <AdminHeader
+                title={`تذكرة: ${details.ticket.subject}`}
+                subtitle={`#${details.ticket.id.slice(0, 8)} — ${details.ticket.profile?.display_name || "مستخدم"}`}
+            />
             <AdminSupportTicketChat ticket={details.ticket} initialMessages={details.messages} />
         </div>
     );

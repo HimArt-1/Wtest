@@ -75,6 +75,7 @@ export function AdminSidebar({ pendingApps = 0 }: { pendingApps?: number }) {
             title: "الإشعارات والتواصل",
             items: [
                 { icon: Bell, label: "الإشعارات", href: "/dashboard/notifications" },
+                { icon: HeadphonesIcon, label: "الدعم الفني", href: "/dashboard/support" },
                 { icon: Mail, label: "النشرة البريدية", href: "/dashboard/newsletter" },
             ],
         },
