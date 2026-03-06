@@ -1,26 +1,30 @@
-import { getAdminProducts, getAdminArtistsForSelect } from "@/app/actions/settings";
+import { getAdminProducts, getAdminArtistsForSelect, getCategories } from "@/app/actions/settings";
+import { getSKUs } from "@/app/actions/erp/inventory";
 import { ProductsClient } from "./ProductsClient";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 
 interface PageProps {
-    searchParams: Promise<{ page?: string; type?: string }>;
+    searchParams: { page?: string; type?: string };
 }
 
 export default async function AdminProductsPage({ searchParams }: PageProps) {
-    const params = await searchParams;
-    const page = Number(params.page) || 1;
-    const type = params.type || "all";
+    const page = Number(searchParams.page) || 1;
+    const type = searchParams.type || "all";
 
-    const [{ data: products, count, totalPages }, artists] = await Promise.all([
+    const [{ data: products, count, totalPages }, artists, { data: categories }, skusResult] = await Promise.all([
         getAdminProducts(page, type),
         getAdminArtistsForSelect(),
+        getCategories(),
+        getSKUs(),
     ]);
+
+    const skus = (skusResult as any)?.skus || [];
 
     return (
         <div className="space-y-6">
             <AdminHeader
                 title="إدارة المنتجات"
-                subtitle="عرض وإضافة وتعديل وحذف المنتجات والأسعار والمخزون."
+                subtitle="إدارة شاملة للمنتجات والمخزون والباركود والفئات."
             />
 
             <ProductsClient
@@ -30,6 +34,8 @@ export default async function AdminProductsPage({ searchParams }: PageProps) {
                 currentPage={page}
                 currentType={type}
                 artists={artists}
+                categories={categories || []}
+                skus={skus || []}
             />
         </div>
     );
