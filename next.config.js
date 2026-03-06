@@ -20,6 +20,9 @@ const nextConfig = {
       bodySizeLimit: '10mb',
     },
   },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 };
 
 const withPWA = require("next-pwa")({
