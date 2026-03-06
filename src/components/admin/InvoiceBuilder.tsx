@@ -273,7 +273,7 @@ export function InvoiceBuilder({ order, onClose }: InvoiceBuilderProps) {
                                             />
                                             {config.hiddenColumns?.quantity && <div className="w-2.5 h-2.5 rounded-sm bg-gold" />}
                                         </div>
-                                        <span className="text-sm text-fg/80 select-none text-red-400">إخفاء عمود "الكمية"</span>
+                                        <span className="text-sm text-fg/80 select-none text-red-400">إخفاء عمود {"\"الكمية\""}</span>
                                     </label>
 
                                     <label className="flex items-center gap-3 cursor-pointer group">
@@ -286,7 +286,7 @@ export function InvoiceBuilder({ order, onClose }: InvoiceBuilderProps) {
                                             />
                                             {config.hiddenColumns?.unitPrice && <div className="w-2.5 h-2.5 rounded-sm bg-gold" />}
                                         </div>
-                                        <span className="text-sm text-fg/80 select-none text-red-400">إخفاء عمود "سعر الوحدة"</span>
+                                        <span className="text-sm text-fg/80 select-none text-red-400">إخفاء عمود {"\"سعر الوحدة\""}</span>
                                     </label>
 
                                     <label className="flex items-center gap-3 cursor-pointer group">
@@ -299,7 +299,7 @@ export function InvoiceBuilder({ order, onClose }: InvoiceBuilderProps) {
                                             />
                                             {config.hiddenColumns?.subtotal && <div className="w-2.5 h-2.5 rounded-sm bg-gold" />}
                                         </div>
-                                        <span className="text-sm text-fg/80 select-none text-red-400">إخفاء عمود "الإجمالي"</span>
+                                        <span className="text-sm text-fg/80 select-none text-red-400">إخفاء عمود {"\"الإجمالي\""}</span>
                                     </label>
                                 </div>
                             </div>
