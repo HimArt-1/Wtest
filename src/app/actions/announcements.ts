@@ -3,6 +3,8 @@
 import { createClient } from "@supabase/supabase-js";
 import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
+import type { Announcement, AnnouncementTrigger } from "@/lib/announcement-types";
+import { DEFAULT_TRIGGER } from "@/lib/announcement-types";
 
 // ─── Admin Supabase Client ──────────────────────────────────
 
@@ -21,23 +23,6 @@ async function requireAdmin() {
     return user;
 }
 
-// ─── Announcement Types ─────────────────────────────────────
-
-export interface Announcement {
-    id: string;
-    title: string;
-    body: string;
-    type: "banner" | "popup" | "toast" | "marquee";
-    template: "gold" | "gradient" | "minimal" | "alert" | "promo";
-    link?: string;
-    linkText?: string;
-    isActive: boolean;
-    startDate?: string; // ISO
-    endDate?: string;   // ISO
-    priority: number;   // sort order
-    createdAt: string;
-}
-
 // ─── GET Announcements ──────────────────────────────────────
 
 export async function getAnnouncements(): Promise<Announcement[]> {
@@ -50,7 +35,12 @@ export async function getAnnouncements(): Promise<Announcement[]> {
 
     const raw = (data as any)?.value;
     if (!raw || !Array.isArray(raw)) return [];
-    return raw as Announcement[];
+
+    // Migrate old announcements that don't have trigger field
+    return raw.map((a: any) => ({
+        ...a,
+        trigger: a.trigger || DEFAULT_TRIGGER,
+    })) as Announcement[];
 }
 
 // ─── GET Active Public Announcements ────────────────────────
@@ -76,6 +66,7 @@ export async function createAnnouncement(data: Omit<Announcement, "id" | "create
     const existing = await getAnnouncements();
     const newAnnouncement: Announcement = {
         ...data,
+        trigger: data.trigger || DEFAULT_TRIGGER,
         id: crypto.randomUUID(),
         createdAt: new Date().toISOString(),
     };

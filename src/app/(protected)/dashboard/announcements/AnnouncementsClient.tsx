@@ -6,12 +6,16 @@ import { useRouter } from "next/navigation";
 import {
     Plus, Pencil, Trash2, X, Loader2, Eye, EyeOff, Clock, Megaphone,
     Calendar, Link as LinkIcon, ArrowUpDown, Zap, AlertTriangle, Gift,
-    Sparkles, ChevronDown, Save, Search,
+    Sparkles, ChevronDown, Save, Search, Target, Timer, LogOut,
+    MousePointerClick, ArrowDown, Globe2,
 } from "lucide-react";
 import {
     createAnnouncement, updateAnnouncement, deleteAnnouncement, toggleAnnouncementActive,
-    type Announcement,
 } from "@/app/actions/announcements";
+import {
+    type Announcement, type AnnouncementTrigger, type TriggerType,
+    PAGE_OPTIONS, DEFAULT_TRIGGER,
+} from "@/lib/announcement-types";
 
 // ─── Template Definitions ───────────────────────────────
 
@@ -30,6 +34,21 @@ const typeLabels: Record<string, { label: string; icon: any }> = {
     marquee: { label: "شريط متحرك", icon: ArrowUpDown },
 };
 
+const triggerLabels: Record<TriggerType, { label: string; desc: string; icon: any }> = {
+    on_load: { label: "عند الدخول", desc: "يظهر فوراً عند فتح الموقع", icon: Globe2 },
+    after_delay: { label: "بعد مدة", desc: "يظهر بعد مرور وقت محدد", icon: Timer },
+    page_enter: { label: "دخول صفحة", desc: "يظهر عند الانتقال لصفحة معينة", icon: MousePointerClick },
+    exit_intent: { label: "نية المغادرة", desc: "يظهر عند محاولة مغادرة الصفحة", icon: LogOut },
+    scroll_depth: { label: "عمق التمرير", desc: "يظهر بعد التمرير لنسبة من الصفحة", icon: ArrowDown },
+    always: { label: "دائماً", desc: "يظهر في كل صفحة بشكل مستمر", icon: Target },
+};
+
+const frequencyLabels: Record<string, string> = {
+    once: "مرة واحدة فقط",
+    session: "كل جلسة",
+    always: "في كل مرة",
+};
+
 // ─── Main Component ─────────────────────────────────────
 
 export function AnnouncementsClient({ announcements: initial }: { announcements: Announcement[] }) {
@@ -46,12 +65,17 @@ export function AnnouncementsClient({ announcements: initial }: { announcements:
         template: "gold" as Announcement["template"],
         link: "", linkText: "", isActive: true,
         startDate: "", endDate: "", priority: 0,
+        trigger: { ...DEFAULT_TRIGGER } as AnnouncementTrigger,
     });
 
     const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
 
     const resetForm = () => {
-        setForm({ title: "", body: "", type: "banner", template: "gold", link: "", linkText: "", isActive: true, startDate: "", endDate: "", priority: 0 });
+        setForm({
+            title: "", body: "", type: "banner", template: "gold", link: "", linkText: "",
+            isActive: true, startDate: "", endDate: "", priority: 0,
+            trigger: { ...DEFAULT_TRIGGER },
+        });
         setEditingId(null);
         setShowForm(false);
     };
@@ -63,6 +87,7 @@ export function AnnouncementsClient({ announcements: initial }: { announcements:
             startDate: a.startDate ? a.startDate.slice(0, 16) : "",
             endDate: a.endDate ? a.endDate.slice(0, 16) : "",
             priority: a.priority,
+            trigger: a.trigger ? { ...a.trigger } : { ...DEFAULT_TRIGGER },
         });
         setEditingId(a.id);
         setShowForm(true);
@@ -83,6 +108,7 @@ export function AnnouncementsClient({ announcements: initial }: { announcements:
             startDate: form.startDate ? new Date(form.startDate).toISOString() : undefined,
             endDate: form.endDate ? new Date(form.endDate).toISOString() : undefined,
             priority: form.priority,
+            trigger: form.trigger,
         };
 
         const result = editingId
@@ -116,6 +142,10 @@ export function AnnouncementsClient({ announcements: initial }: { announcements:
         if (result.success) { showToast("تم التبديل ✓"); router.refresh(); }
     };
 
+    const updateTrigger = (updates: Partial<AnnouncementTrigger>) => {
+        setForm((f) => ({ ...f, trigger: { ...f.trigger, ...updates } }));
+    };
+
     // ─── Stats
     const stats = useMemo(() => {
         const now = new Date();
@@ -138,7 +168,6 @@ export function AnnouncementsClient({ announcements: initial }: { announcements:
         );
     }, [initial, search]);
 
-    // ─── Template Preview
     const templatePreview = templates.find((t) => t.id === form.template);
 
     return (
@@ -271,6 +300,112 @@ export function AnnouncementsClient({ announcements: initial }: { announcements:
                                 </div>
                             </div>
 
+                            {/* ═══ TRIGGER SETTINGS ═══ */}
+                            <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 space-y-4">
+                                <h4 className="text-xs font-bold text-gold flex items-center gap-2">
+                                    <Target className="w-4 h-4" /> إعدادات الظهور والمحفّزات
+                                </h4>
+
+                                {/* Trigger Type */}
+                                <div>
+                                    <label className="block text-[11px] font-medium text-fg/40 mb-2">متى يظهر الإعلان؟</label>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                        {(Object.entries(triggerLabels) as [TriggerType, typeof triggerLabels[TriggerType]][]).map(([key, val]) => (
+                                            <button key={key}
+                                                onClick={() => updateTrigger({ type: key })}
+                                                className={`p-2.5 rounded-lg border text-right transition-all ${form.trigger.type === key
+                                                    ? "border-gold/30 bg-gold/5"
+                                                    : "border-white/[0.06] hover:border-white/[0.12]"}`}
+                                            >
+                                                <div className="flex items-center gap-2 mb-0.5">
+                                                    <val.icon className={`w-3.5 h-3.5 ${form.trigger.type === key ? "text-gold" : "text-fg/30"}`} />
+                                                    <span className={`text-[11px] font-bold ${form.trigger.type === key ? "text-gold" : "text-fg/50"}`}>{val.label}</span>
+                                                </div>
+                                                <p className="text-[9px] text-fg/25 leading-tight">{val.desc}</p>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Conditional Fields based on trigger type */}
+                                {form.trigger.type === "after_delay" && (
+                                    <div>
+                                        <label className="block text-[11px] font-medium text-fg/40 mb-1.5">
+                                            <Timer className="w-3 h-3 inline ml-1" /> المدة بالثواني
+                                        </label>
+                                        <input type="number" min="1" max="300"
+                                            value={form.trigger.delaySeconds || 5}
+                                            onChange={(e) => updateTrigger({ delaySeconds: parseInt(e.target.value) || 5 })}
+                                            className="w-32 px-3 py-2 bg-white/[0.03] border border-white/[0.08] rounded-lg text-sm text-fg focus:outline-none focus:border-gold/30" />
+                                        <p className="text-[9px] text-fg/20 mt-1">سيظهر الإعلان بعد {form.trigger.delaySeconds || 5} ثانية من دخول الزائر</p>
+                                    </div>
+                                )}
+
+                                {form.trigger.type === "page_enter" && (
+                                    <div>
+                                        <label className="block text-[11px] font-medium text-fg/40 mb-2">
+                                            <MousePointerClick className="w-3 h-3 inline ml-1" /> الصفحات المستهدفة
+                                        </label>
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                            {PAGE_OPTIONS.map((p) => {
+                                                const selected = form.trigger.targetPages?.includes(p.value) || false;
+                                                return (
+                                                    <button key={p.value}
+                                                        onClick={() => {
+                                                            const current = form.trigger.targetPages || [];
+                                                            const next = selected
+                                                                ? current.filter((v) => v !== p.value)
+                                                                : [...current, p.value];
+                                                            updateTrigger({ targetPages: next });
+                                                        }}
+                                                        className={`px-3 py-2 rounded-lg border text-xs font-medium transition-all ${selected
+                                                            ? "border-gold/30 bg-gold/10 text-gold"
+                                                            : "border-white/[0.06] text-fg/40 hover:border-white/[0.12]"}`}
+                                                    >
+                                                        {p.label}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {form.trigger.type === "scroll_depth" && (
+                                    <div>
+                                        <label className="block text-[11px] font-medium text-fg/40 mb-1.5">
+                                            <ArrowDown className="w-3 h-3 inline ml-1" /> نسبة التمرير (%)
+                                        </label>
+                                        <input type="number" min="10" max="100" step="10"
+                                            value={form.trigger.scrollPercent || 50}
+                                            onChange={(e) => updateTrigger({ scrollPercent: parseInt(e.target.value) || 50 })}
+                                            className="w-32 px-3 py-2 bg-white/[0.03] border border-white/[0.08] rounded-lg text-sm text-fg focus:outline-none focus:border-gold/30" />
+                                        <p className="text-[9px] text-fg/20 mt-1">يظهر عند تمرير {form.trigger.scrollPercent || 50}% من الصفحة</p>
+                                    </div>
+                                )}
+
+                                {/* Frequency + Dismissible */}
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-[11px] font-medium text-fg/40 mb-1.5">تكرار الظهور</label>
+                                        <select value={form.trigger.frequency}
+                                            onChange={(e) => updateTrigger({ frequency: e.target.value as any })}
+                                            className="w-full px-3 py-2 bg-white/[0.03] border border-white/[0.08] rounded-lg text-sm text-fg focus:outline-none focus:border-gold/30">
+                                            {Object.entries(frequencyLabels).map(([k, v]) => (
+                                                <option key={k} value={k}>{v}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="flex items-end pb-1">
+                                        <label className="flex items-center gap-2 cursor-pointer">
+                                            <input type="checkbox" checked={form.trigger.dismissible}
+                                                onChange={(e) => updateTrigger({ dismissible: e.target.checked })}
+                                                className="rounded border-white/20" />
+                                            <span className="text-xs text-fg/50">يمكن إغلاقه</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
                             {/* Link */}
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
@@ -350,6 +485,7 @@ export function AnnouncementsClient({ announcements: initial }: { announcements:
                         {filtered.map((a, i) => {
                             const tmpl = templates.find((t) => t.id === a.template);
                             const typeInfo = typeLabels[a.type];
+                            const triggerInfo = a.trigger ? triggerLabels[a.trigger.type] : null;
                             const now = new Date();
                             const isScheduled = a.startDate && new Date(a.startDate) > now;
                             const isExpired = a.endDate && new Date(a.endDate) < now;
@@ -370,7 +506,6 @@ export function AnnouncementsClient({ announcements: initial }: { announcements:
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2 mb-0.5">
                                                 <h4 className="text-sm font-bold text-fg/80 truncate">{a.title}</h4>
-                                                {/* Status Badge */}
                                                 {isLive && (
                                                     <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-bold flex items-center gap-0.5">
                                                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> نشط
@@ -387,10 +522,18 @@ export function AnnouncementsClient({ announcements: initial }: { announcements:
                                                 )}
                                             </div>
                                             <p className="text-xs text-fg/30 truncate">{a.body}</p>
-                                            <div className="flex items-center gap-2 mt-1 text-[10px] text-fg/20">
+                                            <div className="flex items-center gap-2 mt-1 text-[10px] text-fg/20 flex-wrap">
                                                 <span className="flex items-center gap-0.5">
                                                     {typeInfo?.icon && <typeInfo.icon className="w-2.5 h-2.5" />} {typeInfo?.label}
                                                 </span>
+                                                {triggerInfo && (
+                                                    <span className="flex items-center gap-0.5 text-gold/50">
+                                                        <triggerInfo.icon className="w-2.5 h-2.5" /> {triggerInfo.label}
+                                                    </span>
+                                                )}
+                                                {a.trigger?.frequency && (
+                                                    <span className="text-fg/15">· {frequencyLabels[a.trigger.frequency]}</span>
+                                                )}
                                                 {a.startDate && <span>من: {new Date(a.startDate).toLocaleDateString("ar-SA")}</span>}
                                                 {a.endDate && <span>إلى: {new Date(a.endDate).toLocaleDateString("ar-SA")}</span>}
                                             </div>

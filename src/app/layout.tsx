@@ -3,8 +3,10 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { arSA } from "@clerk/localizations";
 import { FloatingJoinButton } from "@/components/ui/FloatingJoinButton";
 import { FloatingChatButton } from "@/components/ui/FloatingChatButton";
+import { AnnouncementLoader } from "@/components/ui/AnnouncementLoader";
 import { ServiceWorkerRegister } from "@/components/notifications/ServiceWorkerRegister";
 import Script from "next/script";
+import { Suspense } from "react";
 import "./globals.css";
 
 export const viewport: Viewport = {
@@ -92,6 +94,11 @@ export default function RootLayout({
         <body className="font-arabic bg-[#080808] text-[#f0ebe3]" suppressHydrationWarning>
           {/* Noise Texture Overlay */}
           <div className="noise-overlay" aria-hidden="true" />
+
+          {/* Announcements */}
+          <Suspense fallback={null}>
+            <AnnouncementLoader />
+          </Suspense>
 
           {/* Main Content */}
           {children}
