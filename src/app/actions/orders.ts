@@ -47,7 +47,11 @@ const TAX_RATE = 0.15;
 export async function createOrder(
     items: OrderItemInput[],
     shippingAddress: ShippingAddressInput,
-    options?: { paymentMethod?: "cod" | "stripe" }
+    options?: {
+        paymentMethod?: "cod" | "stripe";
+        couponId?: string | null;
+        discountAmount?: number;
+    }
 ) {
     // 1. Verify authenticated user
     const user = await currentUser();
@@ -95,8 +99,10 @@ export async function createOrder(
 
     // 4. Calculate totals
     const subtotal = items.reduce((sum, item) => sum + item.unit_price * item.quantity, 0);
-    const tax = subtotal * TAX_RATE;
-    const total = subtotal + SHIPPING_COST + tax;
+    const discount = options?.discountAmount || 0;
+    const taxableAmount = Math.max(0, subtotal - discount);
+    const tax = taxableAmount * TAX_RATE;
+    const total = taxableAmount + SHIPPING_COST + tax;
 
     const isCod = options?.paymentMethod !== "stripe";
 
@@ -115,6 +121,8 @@ export async function createOrder(
             shipping_address: shippingAddress,
             status: isCod ? "confirmed" : "pending",
             payment_status: isCod ? "pending" : "pending",
+            coupon_id: options?.couponId || null,
+            discount_amount: options?.discountAmount || 0,
         })
         .select("id, order_number")
         .single();
@@ -154,6 +162,12 @@ export async function createOrder(
         };
     }
 
+    if (options?.couponId) {
+        // Increment coupon current_uses atomically via RPC
+        await supabase.rpc("increment_coupon_uses_by_id", { p_coupon_id: options.couponId });
+    }
+
+
     // خصم المخزون عند التأكيد (COD مؤكد مباشرة، Stripe يخصم عند confirmOrderPayment)
     if (isCod) {
         await decrementStockForOrder(order.id);
@@ -173,11 +187,11 @@ export async function createOrder(
         message: `طلب #${order.order_number} — ${total.toLocaleString()} ر.س`,
         link: `/dashboard/orders`,
         metadata: { order_id: order.id, order_number: order.order_number, total },
-    }).catch(() => {});
+    }).catch(() => { });
 
     sendAdminOrderNotificationEmail(order.order_number, total, "new_order").catch(console.error);
 
-    sendPushToAll("طلب جديد", `طلب #${order.order_number} — ${total.toLocaleString()} ر.س`, "/dashboard/orders").catch(() => {});
+    sendPushToAll("طلب جديد", `طلب #${order.order_number} — ${total.toLocaleString()} ر.س`, "/dashboard/orders").catch(() => { });
 
     return {
         success: true,
@@ -225,9 +239,9 @@ export async function confirmOrderPayment(
             message: `طلب #${ord.order_number} — ${ord.total.toLocaleString()} ر.س`,
             link: "/dashboard/orders",
             metadata: { order_id: orderId },
-        }).catch(() => {});
+        }).catch(() => { });
         sendAdminOrderNotificationEmail(ord.order_number, ord.total, "payment_received").catch(console.error);
-        sendPushToAll("تم استلام الدفع", `طلب #${ord.order_number} — ${ord.total.toLocaleString()} ر.س`, "/dashboard/orders").catch(() => {});
+        sendPushToAll("تم استلام الدفع", `طلب #${ord.order_number} — ${ord.total.toLocaleString()} ر.س`, "/dashboard/orders").catch(() => { });
     }
     const email = options?.customerEmail;
     if (ord && email) {

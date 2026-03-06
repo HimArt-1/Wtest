@@ -1,22 +1,39 @@
-import { getAdminInventory } from "@/app/actions/admin";
-import { InventoryClient } from "@/components/admin/InventoryClient";
-import { AdminHeader } from "@/components/admin/AdminHeader";
+import { getInventoryLevels, getWarehouses, getSKUs } from "@/app/actions/erp/inventory";
+import InventoryClient from "@/components/admin/erp/InventoryClient";
 
-export const dynamic = "force-dynamic";
+export const metadata = {
+    title: "المخزون - وشّى | WUSHA",
+};
 
 export default async function InventoryPage() {
-    const data = await getAdminInventory("all");
+    const [invRes, whRes, skusRes] = await Promise.all([
+        getInventoryLevels(),
+        getWarehouses(),
+        getSKUs()
+    ]);
+
+    if (invRes.error || whRes.error || skusRes.error) {
+        return (
+            <div className="p-8 text-center text-red-400">
+                <p>خطأ في جلب بيانات المخزون</p>
+            </div>
+        );
+    }
+
     return (
-        <div className="space-y-6">
-            <AdminHeader
-                title="إدارة المخزون"
-                subtitle="مراقبة وتحديث كميات المنتجات وتنبيهات نقص المخزون"
-            />
+        <main className="p-8 max-w-7xl mx-auto space-y-8">
+            <header className="flex flex-col gap-2">
+                <h1 className="text-3xl font-bold text-fg">إدارة المخزون</h1>
+                <p className="text-fg/60">
+                    تتبع مستويات المخزون، قم بإضافة كميات جديدة، واطلع على حركات المستودعات.
+                </p>
+            </header>
+
             <InventoryClient
-                initialProducts={data.products}
-                lowStockCount={data.lowStockCount}
-                outOfStockCount={data.outOfStockCount}
+                initialInventory={invRes.inventory || []}
+                warehouses={whRes.warehouses || []}
+                skus={skusRes.skus || []}
             />
-        </div>
+        </main>
     );
 }

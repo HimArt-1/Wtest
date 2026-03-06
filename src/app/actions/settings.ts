@@ -320,7 +320,7 @@ export async function createProductAdmin(data: {
             type: data.type,
             price: Number(data.price),
             image_url: data.image_url.trim(),
-            sizes: data.sizes || null,
+            sizes: data.sizes && data.sizes.length > 0 ? data.sizes : null,
             in_stock: data.in_stock ?? true,
             stock_quantity: data.stock_quantity ?? null,
             store_name: data.store_name?.trim() || null,
@@ -331,9 +331,52 @@ export async function createProductAdmin(data: {
 
     if (error) return { success: false, error: error.message };
 
+    const productId = created?.id;
+
+    // ERP: Auto-generate SKUs & Initial Inventory
+    if (productId) {
+        const sizesToCreate = data.sizes && data.sizes.length > 0 ? data.sizes : [null];
+        const totalQty = data.stock_quantity != null ? data.stock_quantity : (data.in_stock ? 100 : 0);
+        const qtyPerSku = Math.floor(totalQty / sizesToCreate.length);
+
+        let warehouseId = null;
+        const { data: wh } = await supabase.from("warehouses").select("id").limit(1).single();
+        if (wh) warehouseId = wh.id;
+
+        for (const size of sizesToCreate) {
+            const typeStr = data.type === 'apparel' ? 't' : data.type === 'print' ? 'p' : 'o';
+            const seq = Math.floor(1000 + Math.random() * 9000);
+            const sizeStr = size ? size.toUpperCase().replace(/\s+/g, '') : 'BASE';
+            const finalSku = `wsh-${typeStr}-${seq}-${sizeStr}`;
+
+            const { data: newSku } = await supabase.from("product_skus").insert({
+                product_id: productId,
+                sku: finalSku,
+                size: size ? size.trim() : null,
+            }).select("id").single();
+
+            if (newSku && warehouseId && qtyPerSku > 0) {
+                await supabase.from("inventory_levels").insert({
+                    sku_id: newSku.id,
+                    warehouse_id: warehouseId,
+                    quantity: qtyPerSku
+                });
+                await supabase.from("inventory_transactions").insert({
+                    sku_id: newSku.id,
+                    warehouse_id: warehouseId,
+                    type: 'adjustment',
+                    quantity_change: qtyPerSku,
+                    reference_id: `init-${productId}`,
+                    notes: 'Initial stock creation from Admin Product Form'
+                });
+            }
+        }
+    }
+
     revalidatePath("/dashboard/products");
     revalidatePath("/store");
-    return { success: true, productId: created?.id };
+    revalidatePath("/dashboard/erp/inventory");
+    return { success: true, productId };
 }
 
 export async function getAdminArtistsForSelect() {

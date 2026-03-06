@@ -30,7 +30,7 @@ type PaymentMethod = "cod" | "stripe";
 type CheckoutStep = "address" | "paying";
 
 function CheckoutContent() {
-    const { items, getCartTotal, clearCart } = useCartStore();
+    const { items, getCartTotal, clearCart, getSubtotal, getDiscountAmount, coupon } = useCartStore();
     const searchParams = useSearchParams();
     const [isClient, setIsClient] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -92,10 +92,12 @@ function CheckoutContent() {
         );
     }
 
-    const subtotal = getCartTotal();
+    const subtotal = getSubtotal();
+    const discount = getDiscountAmount();
+    const taxableAmount = Math.max(0, subtotal - discount);
     const shipping = 30;
-    const tax = subtotal * 0.15;
-    const total = subtotal + shipping + tax;
+    const tax = taxableAmount * 0.15;
+    const total = getCartTotal() + shipping + tax;
 
     async function onSubmit(data: AddressFormValues) {
         setIsSubmitting(true);
@@ -124,6 +126,8 @@ function CheckoutContent() {
         const address = { ...data, state: "" };
         const result = await createOrder(orderItems, address, {
             paymentMethod: paymentMethod === "stripe" ? "stripe" : "cod",
+            couponId: coupon?.id,
+            discountAmount: discount
         });
 
         if (!result.success) {
@@ -336,16 +340,14 @@ function CheckoutContent() {
                                 <button
                                     type="button"
                                     onClick={() => setPaymentMethod("cod")}
-                                    className={`w-full p-4 rounded-xl border flex items-center justify-between transition-all text-right ${
-                                        paymentMethod === "cod"
+                                    className={`w-full p-4 rounded-xl border flex items-center justify-between transition-all text-right ${paymentMethod === "cod"
                                             ? "border-gold/40 bg-gold/10"
                                             : "border-white/10 bg-white/[0.02] hover:border-white/20"
-                                    }`}
+                                        }`}
                                 >
                                     <div className="flex items-center gap-3">
-                                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                                            paymentMethod === "cod" ? "border-gold bg-gold" : "border-white/30"
-                                        }`}>
+                                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${paymentMethod === "cod" ? "border-gold bg-gold" : "border-white/30"
+                                            }`}>
                                             {paymentMethod === "cod" && <div className="w-1.5 h-1.5 rounded-full bg-black" />}
                                         </div>
                                         <span className="font-bold">الدفع عند الاستلام</span>
@@ -357,16 +359,14 @@ function CheckoutContent() {
                                     <button
                                         type="button"
                                         onClick={() => setPaymentMethod("stripe")}
-                                        className={`w-full p-4 rounded-xl border flex items-center justify-between transition-all text-right ${
-                                            paymentMethod === "stripe"
+                                        className={`w-full p-4 rounded-xl border flex items-center justify-between transition-all text-right ${paymentMethod === "stripe"
                                                 ? "border-gold/40 bg-gold/10"
                                                 : "border-white/10 bg-white/[0.02] hover:border-white/20"
-                                        }`}
+                                            }`}
                                     >
                                         <div className="flex items-center gap-3">
-                                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                                                paymentMethod === "stripe" ? "border-gold bg-gold" : "border-white/30"
-                                            }`}>
+                                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${paymentMethod === "stripe" ? "border-gold bg-gold" : "border-white/30"
+                                                }`}>
                                                 {paymentMethod === "stripe" && <div className="w-1.5 h-1.5 rounded-full bg-black" />}
                                             </div>
                                             <span className="font-bold">الدفع الإلكتروني</span>

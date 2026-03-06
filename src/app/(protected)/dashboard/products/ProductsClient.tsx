@@ -371,6 +371,7 @@ function ProductFormModal({
         in_stock: true,
         stock_quantity: "",
         store_name: "",
+        sizes: "",
     });
 
     useEffect(() => {
@@ -391,6 +392,7 @@ function ProductFormModal({
                 in_stock: product.in_stock ?? true,
                 stock_quantity: product.stock_quantity != null ? String(product.stock_quantity) : "",
                 store_name: product.store_name || "",
+                sizes: product.sizes ? product.sizes.join(", ") : "",
             });
         } else if (mode === "add") {
             setForm({
@@ -403,6 +405,7 @@ function ProductFormModal({
                 in_stock: true,
                 stock_quantity: "",
                 store_name: "WASHA.STOR",
+                sizes: "",
             });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -440,6 +443,10 @@ function ProductFormModal({
             return;
         }
 
+        const parsedSizes = form.sizes
+            ? form.sizes.split(",").map((s) => s.trim()).filter((s) => s.length > 0)
+            : undefined;
+
         setLoading(true);
         onError("");
 
@@ -472,6 +479,7 @@ function ProductFormModal({
                 in_stock: form.in_stock,
                 stock_quantity: form.stock_quantity ? parseInt(form.stock_quantity, 10) : undefined,
                 store_name: form.store_name.trim() || undefined,
+                sizes: parsedSizes,
             });
             setLoading(false);
             if (result.success) {
@@ -664,6 +672,18 @@ function ProductFormModal({
                             rows={2}
                             className="w-full px-4 py-2.5 bg-white/[0.03] border border-white/[0.08] rounded-xl text-sm text-fg placeholder:text-fg/20 focus:outline-none focus:border-gold/30 resize-none"
                         />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-fg/50 mb-1.5">المقاسات المتاحة (اختياري)</label>
+                        <input
+                            type="text"
+                            value={form.sizes}
+                            onChange={(e) => setForm((f) => ({ ...f, sizes: e.target.value }))}
+                            placeholder="S, M, L, XL"
+                            className="w-full px-4 py-2.5 bg-white/[0.03] border border-white/[0.08] rounded-xl text-sm text-fg placeholder:text-fg/20 focus:outline-none focus:border-gold/30"
+                            dir="ltr"
+                        />
+                        <p className="text-[10px] text-fg/30 mt-1">افصل بين المقاسات بفاصلة. سيتم توليد باركود SKU لكل مقاس تلقائيًا.</p>
                     </div>
                     <div>
                         <label className="block text-xs font-medium text-fg/50 mb-1.5">اسم المتجر (اختياري)</label>

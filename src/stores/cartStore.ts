@@ -1,5 +1,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import type { Database } from "@/types/database";
+
+type DiscountCoupon = Database["public"]["Tables"]["discount_coupons"]["Row"];
 
 export interface CartItem {
     id: string; // Product ID أو custom-{garment}-{timestamp}
@@ -20,11 +23,20 @@ export interface CartItem {
 interface CartState {
     items: CartItem[];
     isOpen: boolean;
+    coupon: DiscountCoupon | null;
     addItem: (item: Omit<CartItem, "quantity">) => void;
     removeItem: (id: string, size?: string | null) => void;
     updateQuantity: (id: string, quantity: number, size?: string | null) => void;
     clearCart: () => void;
     toggleCart: (open?: boolean) => void;
+
+    // Coupons
+    applyCoupon: (coupon: DiscountCoupon) => void;
+    removeCoupon: () => void;
+
+    // Calculations
+    getSubtotal: () => number;
+    getDiscountAmount: () => number;
     getCartTotal: () => number;
     getCartCount: () => number;
 }
@@ -34,6 +46,7 @@ export const useCartStore = create<CartState>()(
         (set, get) => ({
             items: [],
             isOpen: false,
+            coupon: null,
 
             addItem: (newItem) => {
                 set((state) => {
@@ -85,14 +98,36 @@ export const useCartStore = create<CartState>()(
                 }));
             },
 
-            clearCart: () => set({ items: [] }),
+            clearCart: () => set({ items: [], coupon: null }),
 
             toggleCart: (open) => set((state) => ({
                 isOpen: open !== undefined ? open : !state.isOpen
             })),
 
-            getCartTotal: () => {
+            applyCoupon: (coupon) => set({ coupon }),
+            removeCoupon: () => set({ coupon: null }),
+
+            getSubtotal: () => {
                 return get().items.reduce((total, item) => total + item.price * item.quantity, 0);
+            },
+
+            getDiscountAmount: () => {
+                const subtotal = get().getSubtotal();
+                const coupon = get().coupon;
+
+                if (!coupon) return 0;
+
+                if (coupon.discount_type === 'percentage') {
+                    return Number(((subtotal * coupon.discount_value) / 100).toFixed(2));
+                } else {
+                    return Math.min(coupon.discount_value, subtotal); // Don't discount more than the cart value
+                }
+            },
+
+            getCartTotal: () => {
+                const subtotal = get().getSubtotal();
+                const discount = get().getDiscountAmount();
+                return Math.max(0, subtotal - discount);
             },
 
             getCartCount: () => {

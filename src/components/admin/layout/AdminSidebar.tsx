@@ -26,6 +26,7 @@ import {
     Palette,
     Wand2,
     Brush,
+    QrCode,
 } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 
@@ -68,6 +69,8 @@ export function AdminSidebar({ pendingApps = 0 }: { pendingApps?: number }) {
             items: [
                 { icon: TrendingUp, label: "إدارة المبيعات", href: "/dashboard/sales" },
                 { icon: Warehouse, label: "إدارة المخزون", href: "/dashboard/inventory" },
+                { icon: QrCode, label: "إعدادات الباركود (SKU)", href: "/dashboard/barcodes" },
+                { icon: Tag, label: "كوبونات الخصم", href: "/dashboard/coupons" },
             ],
         },
         {

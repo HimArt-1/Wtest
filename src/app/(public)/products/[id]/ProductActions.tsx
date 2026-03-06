@@ -17,10 +17,16 @@ import { useRouter } from "next/navigation";
 import { SignedIn, SignedOut } from "@clerk/nextjs";
 import Link from "next/link";
 
-export function ProductActions({ product }: { product: any }) {
+export function ProductActions({ product, isCurrentlyInStock, erpAvailableSizes }: { product: any, isCurrentlyInStock?: boolean, erpAvailableSizes?: string[] }) {
     const addItem = useCartStore((s) => s.addItem);
     const router = useRouter();
-    const [selectedSize, setSelectedSize] = useState<string>(product.sizes?.[0] || "");
+
+    // Fall back to product.sizes if ERP sizes aren't explicitly provided (or empty)
+    const sizesToUse = erpAvailableSizes && erpAvailableSizes.length > 0 ? erpAvailableSizes : product.sizes || [];
+    const [selectedSize, setSelectedSize] = useState<string>(sizesToUse[0] || "");
+
+    // Fall back to product.in_stock if ERP flag isn't provided
+    const inStock = isCurrentlyInStock !== undefined ? isCurrentlyInStock : product.in_stock;
     const [inWishlist, setInWishlist] = useState(false);
     const [liked, setLiked] = useState(false);
     const [likesCount, setLikesCount] = useState(0);
@@ -85,17 +91,17 @@ export function ProductActions({ product }: { product: any }) {
     return (
         <div className="space-y-4">
             {/* Size Selector */}
-            {product.sizes && product.sizes.length > 0 && (
+            {sizesToUse.length > 0 && (
                 <div>
                     <label className="text-xs text-fg/30 mb-2 block">اختر المقاس</label>
                     <div className="flex gap-2 flex-wrap">
-                        {product.sizes.map((size: string) => (
+                        {sizesToUse.map((size: string) => (
                             <button
                                 key={size}
                                 onClick={() => setSelectedSize(size)}
                                 className={`px-4 py-2 rounded-xl text-sm font-medium transition-all border ${selectedSize === size
-                                        ? "bg-gold/10 border-gold/40 text-gold"
-                                        : "border-white/[0.08] text-fg/40 hover:border-white/20"
+                                    ? "bg-gold/10 border-gold/40 text-gold"
+                                    : "border-white/[0.08] text-fg/40 hover:border-white/20"
                                     }`}
                             >
                                 {size}
@@ -118,22 +124,21 @@ export function ProductActions({ product }: { product: any }) {
                         size: selectedSize || null,
                         maxQuantity: product.stock_quantity || 99,
                     })}
-                    disabled={!product.in_stock}
+                    disabled={!inStock}
                     className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-gold text-bg font-bold rounded-2xl hover:bg-gold-light transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                    whileHover={product.in_stock ? { scale: 1.02 } : {}}
-                    whileTap={product.in_stock ? { scale: 0.98 } : {}}
+                    whileHover={inStock ? { scale: 1.02 } : {}}
+                    whileTap={inStock ? { scale: 0.98 } : {}}
                 >
                     <ShoppingBag className="w-4 h-4" />
-                    {product.in_stock ? "أضف للسلة" : "غير متوفر"}
+                    {inStock ? "أضف للسلة" : "غير متوفر"}
                 </motion.button>
 
                 <SignedIn>
                     <motion.button
                         onClick={handleWishlist}
                         disabled={loadingWishlist}
-                        className={`p-3.5 border rounded-2xl transition-colors ${
-                            inWishlist ? "border-gold/40 bg-gold/10 text-gold" : "border-white/[0.08] text-fg/40 hover:text-gold hover:border-gold/30"
-                        }`}
+                        className={`p-3.5 border rounded-2xl transition-colors ${inWishlist ? "border-gold/40 bg-gold/10 text-gold" : "border-white/[0.08] text-fg/40 hover:text-gold hover:border-gold/30"
+                            }`}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         title={inWishlist ? "إزالة من المحفوظات" : "إضافة للمحفوظات"}
@@ -143,9 +148,8 @@ export function ProductActions({ product }: { product: any }) {
                     <motion.button
                         onClick={handleLike}
                         disabled={loadingLike}
-                        className={`p-3.5 border rounded-2xl transition-colors flex items-center gap-1 ${
-                            liked ? "border-red-500/40 bg-red-500/10 text-red-400" : "border-white/[0.08] text-fg/40 hover:text-red-400 hover:border-red-500/20"
-                        }`}
+                        className={`p-3.5 border rounded-2xl transition-colors flex items-center gap-1 ${liked ? "border-red-500/40 bg-red-500/10 text-red-400" : "border-white/[0.08] text-fg/40 hover:text-red-400 hover:border-red-500/20"
+                            }`}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         title={liked ? "إلغاء الإعجاب" : "إعجاب"}

@@ -108,6 +108,18 @@ export interface Product extends Timestamps {
 
 // ─── Orders ──────────────────────────────────────────────
 
+export interface DiscountCoupon extends Timestamps {
+    id: string;
+    code: string;
+    discount_type: "percentage" | "fixed";
+    discount_value: number;
+    is_active: boolean;
+    max_uses: number;
+    current_uses: number;
+    valid_until: string | null;
+    details: string | null;
+}
+
 export interface Order extends Timestamps {
     id: string;
     buyer_id: string;             // FK → profiles.id
@@ -121,6 +133,8 @@ export interface Order extends Timestamps {
     currency: string;
     shipping_address: ShippingAddress | null;
     notes: string | null;
+    coupon_id: string | null;     // FK → discount_coupons.id
+    discount_amount: number;
 }
 
 export interface ShippingAddress {
@@ -333,6 +347,62 @@ export interface CustomDesignStudioItem {
     updated_at: string;
 }
 
+// ─── ERP (Inventory, SKUs, Sales) ────────────────────────
+
+export interface ProductSKU extends Timestamps {
+    id: string;
+    product_id: string;
+    sku: string;
+    size: string | null;
+    color_code: string | null;
+    barcode_url: string | null;
+}
+
+export interface Warehouse extends Timestamps {
+    id: string;
+    name: string;
+    location: string | null;
+    is_active: boolean;
+}
+
+export interface InventoryLevel extends Timestamps {
+    id: string;
+    sku_id: string;
+    warehouse_id: string;
+    quantity: number;
+}
+
+export type InventoryTransactionType = 'addition' | 'sale' | 'adjustment' | 'transfer' | 'return';
+
+export interface InventoryTransaction {
+    id: string;
+    sku_id: string;
+    warehouse_id: string;
+    transaction_type: InventoryTransactionType;
+    quantity_change: number;
+    previous_quantity: number;
+    new_quantity: number;
+    reference_id: string | null;
+    notes: string | null;
+    created_by: string | null;
+    created_at: string;
+}
+
+export type SalesMethodType = 'online_store' | 'booth_manual' | 'custom_design';
+
+export interface SalesRecord extends Timestamps {
+    id: string;
+    sales_method: SalesMethodType;
+    order_id: string | null;
+    sku_id: string | null;
+    quantity: number;
+    unit_price: number;
+    total_price: number;
+    status: string;
+    notes: string | null;
+    created_by: string | null;
+}
+
 // ─── Database Schema (Supabase-compatible) ───────────────
 
 export interface Database {
@@ -358,9 +428,19 @@ export interface Database {
                 Insert: Omit<Product, "id" | "created_at" | "updated_at" | "reviews_count" | "is_featured" | "in_stock" | "rating" | "images"> & { is_featured?: boolean; in_stock?: boolean; rating?: number; images?: string[] };
                 Update: Partial<Omit<Product, "id" | "created_at" | "artist_id">>;
             };
+            discount_coupons: {
+                Row: DiscountCoupon;
+                Insert: Omit<DiscountCoupon, "id" | "current_uses" | "created_at" | "updated_at"> & {
+                    id?: string;
+                    current_uses?: number;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+                Update: Partial<Omit<DiscountCoupon, "id" | "created_at">>;
+            };
             orders: {
                 Row: Order;
-                Insert: Omit<Order, "id" | "created_at" | "updated_at" | "order_number" | "status" | "payment_status" | "shipping_cost" | "tax"> & { status?: OrderStatus; payment_status?: PaymentStatus; shipping_cost?: number; tax?: number };
+                Insert: Omit<Order, "id" | "created_at" | "updated_at" | "order_number" | "status" | "payment_status" | "shipping_cost" | "tax" | "discount_amount"> & { status?: OrderStatus; payment_status?: PaymentStatus; shipping_cost?: number; tax?: number; discount_amount?: number; coupon_id?: string | null; };
                 Update: Partial<Omit<Order, "id" | "created_at" | "buyer_id">>;
             };
             order_items: {
@@ -488,6 +568,31 @@ export interface Database {
                     created_at?: string;
                 };
                 Update: Partial<Omit<DesignOrderMessage, "id" | "created_at">>;
+            };
+            product_skus: {
+                Row: ProductSKU;
+                Insert: Omit<ProductSKU, "id" | "created_at" | "updated_at">;
+                Update: Partial<Omit<ProductSKU, "id" | "created_at">>;
+            };
+            warehouses: {
+                Row: Warehouse;
+                Insert: Omit<Warehouse, "id" | "created_at" | "updated_at">;
+                Update: Partial<Omit<Warehouse, "id" | "created_at">>;
+            };
+            inventory_levels: {
+                Row: InventoryLevel;
+                Insert: Omit<InventoryLevel, "id" | "created_at" | "updated_at">;
+                Update: Partial<Omit<InventoryLevel, "id" | "created_at">>;
+            };
+            inventory_transactions: {
+                Row: InventoryTransaction;
+                Insert: Omit<InventoryTransaction, "id" | "created_at">;
+                Update: Partial<Omit<InventoryTransaction, "id" | "created_at">>;
+            };
+            sales_records: {
+                Row: SalesRecord;
+                Insert: Omit<SalesRecord, "id" | "created_at" | "updated_at" | "status"> & { status?: string };
+                Update: Partial<Omit<SalesRecord, "id" | "created_at">>;
             };
         };
     };

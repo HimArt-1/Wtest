@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { openInvoicePrint } from "@/lib/invoice";
 import Image from "next/image";
+import { InvoiceBuilder } from "./InvoiceBuilder";
 
 interface OrdersClientProps {
     orders: any[];
@@ -55,6 +56,7 @@ export function OrdersClient({
     const [isPending, startTransition] = useTransition();
     const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
     const [updatingOrder, setUpdatingOrder] = useState<string | null>(null);
+    const [invoiceOrder, setInvoiceOrder] = useState<any | null>(null);
 
     const navigate = (params: Record<string, string>) => {
         const sp = new URLSearchParams();
@@ -74,6 +76,8 @@ export function OrdersClient({
 
     return (
         <div className="space-y-6">
+            <InvoiceBuilder order={invoiceOrder} onClose={() => setInvoiceOrder(null)} />
+
             {/* ─── Status Tabs ─── */}
             <div className="flex gap-1 p-1 bg-surface/50 rounded-xl border border-white/[0.06] overflow-x-auto">
                 {statuses.map((s) => (
@@ -81,8 +85,8 @@ export function OrdersClient({
                         key={s.value}
                         onClick={() => navigate({ status: s.value, page: "1" })}
                         className={`px-4 py-2 text-xs font-bold rounded-lg transition-all whitespace-nowrap ${currentStatus === s.value
-                                ? "bg-gold/10 text-gold"
-                                : "text-fg/40 hover:text-fg/60 hover:bg-white/[0.03]"
+                            ? "bg-gold/10 text-gold"
+                            : "text-fg/40 hover:text-fg/60 hover:bg-white/[0.03]"
                             }`}
                     >
                         {s.label}
@@ -160,7 +164,7 @@ export function OrdersClient({
                                             <td className="px-6 py-3.5">
                                                 <div className="flex items-center gap-2">
                                                     <button
-                                                        onClick={() => openInvoicePrint(order)}
+                                                        onClick={() => setInvoiceOrder(order)}
                                                         className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-[10px] font-bold rounded-lg border border-white/10 text-fg/60 hover:text-gold hover:border-gold/20 hover:bg-gold/5 transition-all"
                                                         title="تصدير فاتورة"
                                                     >
@@ -175,8 +179,8 @@ export function OrdersClient({
                                                                     onClick={() => handleStatusChange(order.id, s)}
                                                                     disabled={updatingOrder === order.id}
                                                                     className={`px-3 py-1.5 text-[10px] font-bold rounded-lg border transition-all disabled:opacity-50 ${s === "cancelled"
-                                                                            ? "border-red-500/20 text-red-400 hover:bg-red-500/10"
-                                                                            : "border-gold/20 text-gold hover:bg-gold/10"
+                                                                        ? "border-red-500/20 text-red-400 hover:bg-red-500/10"
+                                                                        : "border-gold/20 text-gold hover:bg-gold/10"
                                                                         }`}
                                                                 >
                                                                     {s === "confirmed" ? "تأكيد" :

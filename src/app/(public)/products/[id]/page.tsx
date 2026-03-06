@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Metadata } from "next";
 import { ProductActions } from "./ProductActions";
 import { ProductReviews } from "@/components/reviews/ProductReviews";
+import { getSupabaseServerClient } from "@/lib/supabase";
 
 // ─── Dynamic Metadata ───────────────────────────────────────
 
@@ -31,6 +32,40 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     if (!product) notFound();
 
     const reviews = await getProductReviews(id);
+
+    // Fetch Live ERP Inventory for SKUs
+    const supabase = getSupabaseServerClient();
+    const { data: skuData } = await supabase
+        .from("product_skus")
+        .select(`
+            id, size, color_code,
+            inventory_levels(quantity)
+        `)
+        .eq("product_id", id);
+
+    let hasErpStock = false;
+    let erpTotalStock = 0;
+    const availableSizes = new Set<string>();
+
+    if (skuData && skuData.length > 0) {
+        skuData.forEach((sku: any) => {
+            const skuStock = sku.inventory_levels?.reduce((sum: number, level: any) => sum + (level.quantity || 0), 0) || 0;
+            erpTotalStock += skuStock;
+            if (skuStock > 0 && sku.size) {
+                availableSizes.add(sku.size.toUpperCase());
+            }
+        });
+        hasErpStock = erpTotalStock > 0;
+    } else {
+        // Fallback to old system if no SKUs
+        hasErpStock = product.in_stock && product.stock_quantity > 0;
+        if (hasErpStock && product.sizes) {
+            product.sizes.forEach((s: string) => availableSizes.add(s.toUpperCase()));
+        }
+    }
+
+    // Determine final stock status
+    const isCurrentlyInStock = hasErpStock;
 
     // Related products
     const related = await getProducts(1, product.type || "all");
@@ -95,16 +130,16 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                                 <span className="text-xs text-fg/30">النوع</span>
                                 <span className="text-sm text-fg/70">{product.type}</span>
                             </div>
-                            {product.sizes && product.sizes.length > 0 && (
+                            {availableSizes.size > 0 && (
                                 <div className="flex items-center justify-between py-3 border-b border-white/[0.04]">
-                                    <span className="text-xs text-fg/30">المقاسات المتاحة</span>
-                                    <span className="text-sm text-fg/70">{product.sizes.join(", ")}</span>
+                                    <span className="text-xs text-fg/30">المقاسات المتاحة المتوفرة</span>
+                                    <span className="text-sm text-fg/70 font-semibold">{Array.from(availableSizes).join(" ، ")}</span>
                                 </div>
                             )}
                             <div className="flex items-center justify-between py-3 border-b border-white/[0.04]">
                                 <span className="text-xs text-fg/30">الحالة</span>
-                                <span className={`text-sm font-medium ${product.in_stock ? "text-emerald-400" : "text-red-400"}`}>
-                                    {product.in_stock ? "متوفر" : "غير متوفر"}
+                                <span className={`text-sm font-medium ${isCurrentlyInStock ? "text-emerald-400" : "text-red-400"}`}>
+                                    {isCurrentlyInStock ? "متوفر" : "غير متوفر"}
                                 </span>
                             </div>
                         </div>
@@ -115,8 +150,11 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                             <span className="text-xs text-fg/20 mr-2">{product.currency || "SAR"}</span>
                         </div>
 
-                        {/* Client Actions (Size Selector + Add to Cart) */}
-                        <ProductActions product={product} />
+                        <ProductActions
+                            product={product}
+                            isCurrentlyInStock={isCurrentlyInStock}
+                            erpAvailableSizes={Array.from(availableSizes)}
+                        />
                     </div>
                 </div>
 

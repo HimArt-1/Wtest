@@ -3,10 +3,36 @@
 import { useCartStore } from "@/stores/cartStore";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingBag, X, Plus, Minus, Trash2, ArrowRight } from "lucide-react";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { validateDiscountCoupon } from "@/app/actions/discount-coupons";
 export function CartSheet() {
-    const { items, isOpen, toggleCart, removeItem, updateQuantity, getCartTotal } = useCartStore();
+    const {
+        items, isOpen, toggleCart, removeItem, updateQuantity,
+        getCartTotal, coupon, applyCoupon, removeCoupon,
+        getSubtotal, getDiscountAmount
+    } = useCartStore();
+
+    const [promoCode, setPromoCode] = useState("");
+    const [promoError, setPromoError] = useState("");
+    const [isValidating, setIsValidating] = useState(false);
+
+    const handleApplyPromo = async () => {
+        setPromoError("");
+        if (!promoCode.trim()) return;
+
+        setIsValidating(true);
+        const res = await validateDiscountCoupon(promoCode);
+        setIsValidating(false);
+
+        if (res.error) {
+            setPromoError(res.error);
+        } else if (res.data) {
+            applyCoupon(res.data);
+            setPromoCode("");
+        }
+    };
 
     return (
         <AnimatePresence>
@@ -138,14 +164,75 @@ export function CartSheet() {
                         {/* Footer */}
                         {items.length > 0 && (
                             <div className="p-5 border-t border-white/[0.06] bg-surface/80 backdrop-blur-sm space-y-4">
-                                <div className="flex items-center justify-between text-sm">
-                                    <span className="text-fg/60">المجموع</span>
-                                    <span className="text-xl font-bold text-gold">{getCartTotal().toLocaleString()} ر.س</span>
+
+                                {/* Promo Code Section */}
+                                <div className="space-y-2">
+                                    {!coupon ? (
+                                        <>
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    placeholder="كود الخصم"
+                                                    value={promoCode}
+                                                    onChange={(e) => setPromoCode(e.target.value)}
+                                                    className="flex-1 bg-white/[0.03] border border-white/[0.06] rounded-xl px-4 text-sm focus:outline-none focus:border-gold/50 transition-colors uppercase"
+                                                />
+                                                <button
+                                                    onClick={handleApplyPromo}
+                                                    disabled={isValidating || !promoCode.trim()}
+                                                    className="px-4 py-2 bg-white/5 hover:bg-white/10 text-gold text-sm font-medium rounded-xl transition-colors disabled:opacity-50 min-w-[#80px]"
+                                                >
+                                                    {isValidating ? "جاري التحقق..." : "تطبيق"}
+                                                </button>
+                                            </div>
+                                            {promoError && (
+                                                <p className="text-red-400 text-xs px-1">{promoError}</p>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <div className="flex items-center justify-between p-3 bg-gold/10 border border-gold/20 rounded-xl">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-8 h-8 rounded-lg bg-gold/20 flex items-center justify-center">
+                                                    <span className="text-gold font-bold">%</span>
+                                                </div>
+                                                <div>
+                                                    <p className="text-gold font-medium text-sm">تم تفعيل كود الخصم!</p>
+                                                    <p className="text-gold/60 text-xs font-mono uppercase">{coupon.code}</p>
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={removeCoupon}
+                                                className="text-gold/60 hover:text-red-400 transition-colors"
+                                            >
+                                                <X className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
+
+                                <div className="space-y-2 pt-2 border-t border-white/[0.03]">
+                                    <div className="flex items-center justify-between text-sm text-fg/60">
+                                        <span>المجموع الفرعي</span>
+                                        <span>{getSubtotal().toLocaleString()} ر.س</span>
+                                    </div>
+
+                                    {coupon && (
+                                        <div className="flex items-center justify-between text-sm text-green-400">
+                                            <span>الخصم ({coupon.discount_type === 'percentage' ? `${coupon.discount_value}%` : `${coupon.discount_value} ر.س`})</span>
+                                            <span>-{getDiscountAmount().toLocaleString()} ر.س</span>
+                                        </div>
+                                    )}
+
+                                    <div className="flex items-center justify-between pt-2">
+                                        <span className="text-fg font-bold">المجموع الإجمالي</span>
+                                        <span className="text-xl font-bold text-gold">{getCartTotal().toLocaleString()} ر.س</span>
+                                    </div>
+                                </div>
+
                                 <Link
                                     href="/checkout"
                                     onClick={() => toggleCart(false)}
-                                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-gold to-gold/90 text-bg font-bold py-3.5 rounded-xl hover:shadow-lg hover:shadow-gold/20 transition-all duration-300"
+                                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-gold to-gold/90 text-bg font-bold py-3.5 rounded-xl hover:shadow-lg hover:shadow-gold/20 transition-all duration-300 mt-2"
                                 >
                                     إتمام الشراء
                                     <ArrowRight className="w-4 h-4" />

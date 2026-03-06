@@ -1,18 +1,40 @@
-import { getAdminSales } from "@/app/actions/admin";
-import { SalesClient } from "@/components/admin/SalesClient";
-import { AdminHeader } from "@/components/admin/AdminHeader";
+import { getSalesRecords } from "@/app/actions/erp/sales";
+import { getWarehouses, getSKUs } from "@/app/actions/erp/inventory";
+import SalesClient from "@/components/admin/erp/SalesClient";
 
-export const dynamic = "force-dynamic";
+export const metadata = {
+    title: "المبيعات ونقاط البيع - وشّى | WUSHA",
+};
 
 export default async function SalesPage() {
-    const data = await getAdminSales("30d");
+    const [salesRes, whRes, skusRes] = await Promise.all([
+        getSalesRecords(),
+        getWarehouses(),
+        getSKUs()
+    ]);
+
+    if (salesRes.error || whRes.error || skusRes.error) {
+        return (
+            <div className="p-8 text-center text-red-400">
+                <p>خطأ في جلب بيانات المبيعات</p>
+            </div>
+        );
+    }
+
     return (
-        <div className="space-y-6">
-            <AdminHeader
-                title="إدارة المبيعات"
-                subtitle="متابعة المبيعات والإيرادات حسب المنتج والفترة"
+        <main className="p-8 max-w-7xl mx-auto space-y-8">
+            <header className="flex flex-col gap-2">
+                <h1 className="text-3xl font-bold text-fg">إدارة المبيعات ونقاط البيع (POS)</h1>
+                <p className="text-fg/60">
+                    تسجيل المبيعات اليدوية (مثل البوثات) ومتابعة سجل المبيعات الشامل.
+                </p>
+            </header>
+
+            <SalesClient
+                initialSales={salesRes.records || []}
+                warehouses={whRes.warehouses || []}
+                skus={skusRes.skus || []}
             />
-            <SalesClient initialData={data} />
-        </div>
+        </main>
     );
 }
