@@ -69,7 +69,7 @@ export function Hero({ showAuthButtons = true }: HeroProps) {
   return (
     <section
       ref={containerRef}
-      className="relative min-h-screen min-h-[100dvh] flex items-center justify-center overflow-hidden px-2 sm:px-0 -mt-[64px] sm:-mt-[72px] pt-[64px] sm:pt-[72px]"
+      className="relative min-h-screen min-h-[100dvh] flex items-center justify-center overflow-hidden px-2 sm:px-0"
     >
       {/* ═══ Loading Curtain ═══ */}
       <AnimatePresence>
