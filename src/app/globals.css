@@ -288,8 +288,8 @@ h6 {
 
   .btn-gold {
     @apply px-8 py-4 font-bold rounded-lg transition-all duration-500 hover:scale-[1.02] active:scale-[0.98];
-    background: linear-gradient(to right, #ceae7f, #b8964f);
-    color: #0a0a0a;
+    background: linear-gradient(to right, #5A3E2B, #ceae7f, #5A3E2B);
+    color: #fff;
   }
 
   .btn-gold:hover {
@@ -324,7 +324,7 @@ h6 {
 ═══════════════════════════════════════════════════════════ */
 
 .text-gradient {
-  background: linear-gradient(135deg, #e0c99a 0%, #ceae7f 40%, #b8964f 70%, #ceae7f 100%);
+  background: linear-gradient(135deg, #5A3E2B 0%, #ceae7f 30%, #e0c99a 50%, #ceae7f 70%, #5A3E2B 100%);
   background-size: 200% 200%;
   animation: gradient 8s ease infinite;
   -webkit-background-clip: text;

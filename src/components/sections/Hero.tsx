@@ -259,8 +259,8 @@ export function Hero({ showAuthButtons = true }: HeroProps) {
                 type="button"
                 className="group relative px-8 py-4 font-bold rounded-2xl overflow-hidden transition-all duration-500 hover:scale-[1.03] active:scale-[0.98]"
                 style={{
-                  background: "linear-gradient(135deg, #ceae7f 0%, #b8964f 50%, #ceae7f 100%)",
-                  color: "#0a0a0a",
+                  background: "linear-gradient(to right, #5A3E2B, #ceae7f, #5A3E2B)",
+                  color: "#fff",
                   boxShadow: "0 4px 24px rgba(206, 174, 127, 0.25)",
                 }}
                 whileHover={{ boxShadow: "0 8px 40px rgba(206, 174, 127, 0.4)" }}
@@ -286,8 +286,8 @@ export function Hero({ showAuthButtons = true }: HeroProps) {
                     href="/sign-up"
                     className="group flex items-center justify-center gap-2.5 px-8 py-4 font-bold rounded-2xl transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] w-full sm:w-auto min-w-[160px]"
                     style={{
-                      background: "linear-gradient(135deg, #ceae7f 0%, #b8964f 50%, #ceae7f 100%)",
-                      color: "#0a0a0a",
+                      background: "linear-gradient(to right, #5A3E2B, #ceae7f, #5A3E2B)",
+                      color: "#fff",
                       boxShadow: "0 4px 24px rgba(206, 174, 127, 0.25)",
                     }}
                   >

@@ -9,7 +9,7 @@ import {
     ShoppingCart, FileText, Image as ImageIcon, ChevronRight, Shield, Sparkles,
     Menu, X, Tag, Package, Mail, Settings, Palette, Wand2, Brush, QrCode,
     Bell, Activity, ClipboardList, Ticket, CreditCard, Store,
-    HeadphonesIcon, UserCog, History, Megaphone,
+    HeadphonesIcon, UserCog, History, Megaphone, Home,
 } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 
@@ -232,11 +232,16 @@ export function AdminSidebar({ pendingApps = 0 }: { pendingApps?: number }) {
                             exit={{ opacity: 0 }}
                         >
                             <Link
-                                href="/studio"
-                                className="mt-2 flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-fg/30 hover:text-fg/50 hover:bg-white/[0.02] transition-colors"
+                                href="/"
+                                className="mt-2 flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                                style={{
+                                    background: "linear-gradient(to right, #5A3E2B, #ceae7f, #5A3E2B)",
+                                    color: "#fff",
+                                    boxShadow: "0 2px 12px rgba(206, 174, 127, 0.2)",
+                                }}
                             >
-                                <Sparkles className="w-3.5 h-3.5" />
-                                العودة للاستوديو
+                                <Home className="w-4 h-4" />
+                                العودة للصفحة الرئيسية
                             </Link>
                         </motion.div>
                     )}

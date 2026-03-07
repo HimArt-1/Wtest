@@ -39,7 +39,7 @@ export function Logo({ className = "", size = "md" }: LogoProps) {
           height={dims.height}
           className="object-contain select-none"
           style={{
-            filter: "sepia(0.3) saturate(1.8) hue-rotate(5deg) brightness(1.1)",
+            filter: "sepia(0.4) saturate(2.2) hue-rotate(5deg) brightness(1.05) drop-shadow(0 0 6px rgba(206, 174, 127, 0.35))",
           }}
           priority
           sizes="(max-width: 640px) 40px, 48px"
