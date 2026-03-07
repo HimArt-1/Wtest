@@ -69,7 +69,7 @@ export function Hero({ showAuthButtons = true }: HeroProps) {
   return (
     <section
       ref={containerRef}
-      className="relative min-h-screen min-h-[100dvh] flex items-center justify-center overflow-hidden px-2 sm:px-0"
+      className="relative min-h-screen min-h-[100dvh] flex items-center justify-center overflow-hidden px-2 sm:px-0 -mt-[64px] sm:-mt-[72px] pt-[64px] sm:pt-[72px]"
     >
       {/* ═══ Loading Curtain ═══ */}
       <AnimatePresence>
@@ -217,7 +217,7 @@ export function Hero({ showAuthButtons = true }: HeroProps) {
       >
         {/* Main Title */}
         <motion.div
-          className="mb-2 sm:mb-3 mt-16 sm:mt-20 md:mt-24 flex justify-center cursor-pointer select-none"
+          className="mb-2 sm:mb-3 flex justify-center cursor-pointer select-none"
           initial={{ opacity: 0, y: 60, filter: "blur(10px)" }}
           animate={curtainLifted ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
           transition={{ duration: 1.2, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
