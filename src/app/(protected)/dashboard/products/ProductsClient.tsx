@@ -14,6 +14,8 @@ import {
 import { createSKU } from "@/app/actions/erp/inventory";
 import Image from "next/image";
 import Link from "next/link";
+import Barcode from 'react-barcode';
+import { QRCodeSVG } from 'qrcode.react';
 
 // ─── Types & Labels ─────────────────────────────────────────
 
@@ -517,6 +519,8 @@ function BarcodeModal({ product, sku, onClose, onCreated }: {
     product: any; sku: any; onClose: () => void; onCreated: () => void;
 }) {
     const [loading, setLoading] = useState(false);
+    const [codeType, setCodeType] = useState<"barcode" | "qr">("barcode");
+    const printRef = useRef<HTMLDivElement>(null);
 
     // For manual creation
     const [size, setSize] = useState("");
@@ -547,31 +551,35 @@ function BarcodeModal({ product, sku, onClose, onCreated }: {
     };
 
     const handlePrint = () => {
-        const code = sku?.sku || "";
-        const win = window.open("", "_blank", "width=400,height=300");
+        const win = window.open("", "_blank", "width=400,height=400");
         if (!win) return;
         win.document.write(`
             <!DOCTYPE html>
-            <html dir="rtl"><head><title>ملصق — ${code}</title>
+            <html dir="rtl"><head><title>ملصق المنتجات — ${sku?.sku || ""}</title>
             <style>
-                body { font-family: system-ui; text-align: center; padding: 20px; margin: 0; }
-                .sticker { border: 2px dashed #ccc; padding: 20px; display: inline-block; border-radius: 12px; }
-                .title { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
-                .price { font-size: 18px; font-weight: 800; color: #5A3E2B; margin: 10px 0; }
-                .code { font-family: monospace; font-size: 12px; color: #666; letter-spacing: 2px; }
-                .brand { font-size: 10px; color: #999; margin-top: 8px; }
-                @media print { .sticker { border: none; } body { padding: 0; } }
+                body { margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; background: #fff; width: 100%; height: 100%; font-family: system-ui, Tahoma, sans-serif; }
+                .label-container { width: 50mm; height: 30mm; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; box-sizing: border-box; padding: 2mm; overflow: hidden; page-break-after: always; }
+                @media print {
+                    @page { size: 50mm 30mm; margin: 0; }
+                    body { width: 50mm; height: 30mm; }
+                    .label-container { border: none; }
+                }
             </style></head><body>
-            <div class="sticker">
-                <div class="title">${product?.title || ""}</div>
-                <div class="price">${Number(product?.price || 0).toLocaleString()} ر.س</div>
-                <div class="code">${code}</div>
-                <div class="brand">WUSHA</div>
-            </div>
-            <script>setTimeout(() => window.print(), 500)</script>
+            <div class="label-container" id="print-area"></div>
             </body></html>
         `);
         win.document.close();
+
+        // Copy the react-rendered SVG into the print window
+        setTimeout(() => {
+            const sourceDiv = printRef.current;
+            const targetDiv = win.document.getElementById('print-area');
+            if (sourceDiv && targetDiv) {
+                targetDiv.innerHTML = sourceDiv.innerHTML;
+            }
+            win.focus();
+            win.print();
+        }, 500);
     };
 
     if (!product) return null;
@@ -634,15 +642,78 @@ function BarcodeModal({ product, sku, onClose, onCreated }: {
                         </div>
                     </div>
                 ) : (
-                    <div className="space-y-3 pt-2">
-                        <div>
-                            <label className="block text-xs font-medium text-fg/50 mb-1.5">رمز SKU الحالي</label>
-                            <input type="text" value={sku.sku} readOnly dir="ltr"
-                                className="w-full px-4 py-2.5 bg-white/[0.03] border border-white/[0.08] rounded-xl text-sm text-fg font-mono tracking-wider focus:outline-none opacity-60" />
+                    <div className="space-y-4 pt-2">
+                        {/* Current SKU Info */}
+                        <div className="space-y-3">
+                            <div>
+                                <label className="block text-xs font-medium text-fg/50 mb-1.5">رمز SKU الحالي</label>
+                                <input type="text" value={sku.sku} readOnly dir="ltr"
+                                    className="w-full px-4 py-2 bg-white/[0.03] border border-white/[0.08] rounded-xl text-sm text-fg font-mono tracking-wider focus:outline-none opacity-60" />
+                            </div>
+                            <div className="flex gap-2">
+                                {sku.size && <span className="px-2 py-1 text-xs bg-white/5 rounded-md border border-white/10 text-fg/60">المقاس: {sku.size}</span>}
+                                {sku.color_code && <span className="px-2 py-1 text-xs bg-white/5 rounded-md border border-white/10 text-fg/60">اللون: {sku.color_code}</span>}
+                            </div>
                         </div>
-                        <div className="flex gap-2">
-                            {sku.size && <span className="px-2 py-1 text-xs bg-white/5 rounded-md border border-white/10 text-fg/60">المقاس: {sku.size}</span>}
-                            {sku.color_code && <span className="px-2 py-1 text-xs bg-white/5 rounded-md border border-white/10 text-fg/60">اللون: {sku.color_code}</span>}
+
+                        {/* Format Toggle */}
+                        <div className="flex gap-2 border-t border-white/5 pt-4">
+                            <button onClick={() => setCodeType("barcode")}
+                                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors border ${codeType === "barcode" ? "bg-gold/10 text-gold border-gold/30" : "bg-white/5 border-transparent text-fg/40"}`}>
+                                Code 128
+                            </button>
+                            <button onClick={() => setCodeType("qr")}
+                                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors border ${codeType === "qr" ? "bg-gold/10 text-gold border-gold/30" : "bg-white/5 border-transparent text-fg/40"}`}>
+                                QR Code
+                            </button>
+                        </div>
+
+                        {/* Visual Preview */}
+                        <div className="bg-white text-black p-4 rounded-xl flex flex-col items-center w-[50mm] min-h-[30mm] transform scale-[1.2] origin-top mx-auto pointer-events-none my-2 shadow-inner">
+                            <div className="text-[8px] font-bold mb-[2px] text-center w-full truncate relative z-10">
+                                {product?.title || 'WUSHA Product'}
+                            </div>
+                            {(sku.size || sku.color_code) && (
+                                <div className="text-[7px] mb-[2px] text-center w-full relative z-10">
+                                    {sku.size ? `Size: ${sku.size} ` : ''}
+                                    {sku.color_code ? `Color: ${sku.color_code}` : ''}
+                                </div>
+                            )}
+                            <div className="flex-1 flex items-center justify-center mt-1 relative z-10">
+                                {codeType === "barcode" ? (
+                                    <Barcode value={sku.sku} format="CODE128" width={1.2} height={30} displayValue={true} fontSize={10} background="transparent" margin={0} />
+                                ) : (
+                                    <div className="flex flex-col items-center gap-1">
+                                        <QRCodeSVG value={sku.sku} size={64} level="M" />
+                                        <span className="text-[8px] font-mono tracking-widest mt-1">{sku.sku}</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Hidden Print Container */}
+                        <div className="hidden">
+                            <div ref={printRef} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '50mm', height: '30mm', overflow: 'hidden', backgroundColor: 'white' }}>
+                                <div style={{ fontSize: '8px', fontWeight: 'bold', marginBottom: '2px', textAlign: 'center', whiteSpace: 'nowrap', width: '100%', textOverflow: 'ellipsis', overflow: 'hidden', color: 'black' }}>
+                                    {product?.title || 'WUSHA Product'}
+                                </div>
+                                {(sku.size || sku.color_code) && (
+                                    <div style={{ fontSize: '7px', marginBottom: '2px', color: 'black' }}>
+                                        {sku.size ? `Size: ${sku.size} ` : ''}
+                                        {sku.color_code ? `Color: ${sku.color_code}` : ''}
+                                    </div>
+                                )}
+                                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    {codeType === "barcode" ? (
+                                        <Barcode value={sku.sku} format="CODE128" width={1.2} height={30} displayValue={true} fontSize={10} background="transparent" margin={0} />
+                                    ) : (
+                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                            <QRCodeSVG value={sku.sku} size={64} level="M" />
+                                            <span style={{ fontSize: '8px', fontFamily: 'monospace', letterSpacing: '2px', marginTop: '4px', color: 'black' }}>{sku.sku}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 )}
