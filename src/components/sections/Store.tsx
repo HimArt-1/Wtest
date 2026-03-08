@@ -53,7 +53,7 @@ export function Store() {
             <span className="text-gradient">المتجر</span>
           </motion.h2>
           <motion.p
-            className="text-white/40 max-w-2xl mx-auto"
+            className="text-theme-subtle max-w-2xl mx-auto"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -64,7 +64,7 @@ export function Store() {
         </div>
 
         {loading ? (
-          <div className="text-center py-20 text-white/30">جاري تحميل المنتجات...</div>
+          <div className="text-center py-20 text-theme-subtle">جاري تحميل المنتجات...</div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
             {products.map((product, index) => (
@@ -92,7 +92,7 @@ export function Store() {
 
                 <div className="p-3 sm:p-5">
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs text-white/40 bg-white/5 px-3 py-1 rounded-full border border-white/5">
+                    <span className="text-xs text-theme-subtle bg-theme-subtle px-3 py-1 rounded-full border border-theme-soft">
                       {product.type === 'print' ? 'طباعة' : product.type === 'apparel' ? 'ملابس' : product.type}
                     </span>
                     <div className="flex items-center gap-1 text-gold text-sm">
@@ -101,7 +101,7 @@ export function Store() {
                     </div>
                   </div>
 
-                  <h3 className="font-bold text-sm sm:text-base mb-2 sm:mb-3 text-white/90 truncate">{product.title}</h3>
+                  <h3 className="font-bold text-sm sm:text-base mb-2 sm:mb-3 text-theme-strong truncate">{product.title}</h3>
                   <div className="flex items-center justify-between mt-auto">
                     <span className="text-sm sm:text-lg font-bold text-gold">
                       {product.price} {product.currency}
@@ -132,7 +132,7 @@ export function Store() {
         )}
 
         {!loading && products.length === 0 && (
-          <div className="text-center text-white/30">لا توجد منتجات حالياً.</div>
+          <div className="text-center text-theme-subtle">لا توجد منتجات حالياً.</div>
         )}
       </div>
     </section>

@@ -54,7 +54,7 @@ export default function JoinPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#080808] relative overflow-hidden" dir="rtl">
+        <div className="min-h-screen relative overflow-hidden" style={{ backgroundColor: "var(--wusha-bg)" }} dir="rtl">
             {/* ─── Background Effects ─── */}
             <div className="absolute inset-0 pointer-events-none">
                 {/* Radial gold glow */}
@@ -74,7 +74,7 @@ export default function JoinPage() {
             <div className="relative z-10 flex items-center justify-between px-6 sm:px-10 py-6">
                 <Link
                     href="/"
-                    className="flex items-center gap-2 text-white/40 hover:text-white/70 transition-colors group"
+                    className="flex items-center gap-2 text-theme-subtle hover:text-theme-soft transition-colors group"
                 >
                     <Image
                         src="/logo.png"
@@ -86,7 +86,7 @@ export default function JoinPage() {
                 </Link>
                 <Link
                     href="/"
-                    className="flex items-center gap-1.5 text-sm text-white/30 hover:text-gold transition-colors"
+                    className="flex items-center gap-1.5 text-sm text-theme-subtle hover:text-[var(--wusha-gold)] transition-colors"
                 >
                     العودة للرئيسية
                     <ArrowLeft className="w-4 h-4" />
@@ -114,7 +114,8 @@ export default function JoinPage() {
                                     <CheckCircle className="w-24 h-24 text-gold mx-auto mb-6" />
                                 </motion.div>
                                 <motion.h2
-                                    className="text-3xl font-bold text-white mb-3"
+                                    className="text-3xl font-bold mb-3"
+                                    style={{ color: "var(--wusha-text)" }}
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: 0.3 }}
@@ -122,7 +123,7 @@ export default function JoinPage() {
                                     تم التسجيل بنجاح!
                                 </motion.h2>
                                 <motion.p
-                                    className="text-white/50 text-lg mb-8"
+                                    className="text-theme-soft text-lg mb-8"
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: 0.4 }}
@@ -164,21 +165,21 @@ export default function JoinPage() {
                                         <Sparkles className="w-3.5 h-3.5" />
                                         كن من أوائل المنضمين
                                     </motion.div>
-                                    <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3">
+                                    <h1 className="text-3xl sm:text-4xl font-bold mb-3" style={{ color: "var(--wusha-text)" }}>
                                         انضم إلى{" "}
                                         <span className="text-gradient">وشّى</span>
                                     </h1>
-                                    <p className="text-white/40 text-base sm:text-lg max-w-sm mx-auto">
+                                    <p className="text-theme-subtle text-base sm:text-lg max-w-sm mx-auto">
                                         سجّل اهتمامك وسنخبرك فور الإطلاق
                                     </p>
                                 </div>
 
                                 {/* Form Card */}
-                                <div className="bg-white/[0.03] border border-white/[0.06] rounded-3xl p-6 sm:p-8 backdrop-blur-sm">
+                                <div className="rounded-3xl p-6 sm:p-8 backdrop-blur-sm bg-theme-subtle border border-theme-soft">
                                     <form onSubmit={handleSubmit} className="space-y-5">
                                         {/* Name */}
                                         <div>
-                                            <label className="block text-sm text-white/60 mb-2 font-medium">
+                                            <label className="block text-sm text-theme-soft mb-2 font-medium">
                                                 الاسم <span className="text-gold">*</span>
                                             </label>
                                             <input
@@ -187,13 +188,13 @@ export default function JoinPage() {
                                                 onChange={(e) => setName(e.target.value)}
                                                 required
                                                 placeholder="اسمك الكامل"
-                                                className="w-full px-5 py-3.5 bg-white/[0.04] border border-white/[0.08] rounded-2xl text-white placeholder-white/20 focus:border-gold/30 focus:outline-none focus:ring-2 focus:ring-gold/10 transition-all text-base"
+                                                className="input-dark w-full px-5 py-3.5 rounded-2xl text-base"
                                             />
                                         </div>
 
                                         {/* Email */}
                                         <div>
-                                            <label className="block text-sm text-white/60 mb-2 font-medium">
+                                            <label className="block text-sm text-theme-soft mb-2 font-medium">
                                                 البريد الإلكتروني <span className="text-gold">*</span>
                                             </label>
                                             <input
@@ -203,13 +204,13 @@ export default function JoinPage() {
                                                 required
                                                 placeholder="example@email.com"
                                                 dir="ltr"
-                                                className="w-full px-5 py-3.5 bg-white/[0.04] border border-white/[0.08] rounded-2xl text-white placeholder-white/20 focus:border-gold/30 focus:outline-none focus:ring-2 focus:ring-gold/10 transition-all text-left text-base"
+                                                className="input-dark w-full px-5 py-3.5 rounded-2xl text-left text-base"
                                             />
                                         </div>
 
                                         {/* Phone */}
                                         <div>
-                                            <label className="block text-sm text-white/60 mb-2 font-medium">
+                                            <label className="block text-sm text-theme-soft mb-2 font-medium">
                                                 رقم الجوال
                                             </label>
                                             <input
@@ -218,20 +219,20 @@ export default function JoinPage() {
                                                 onChange={(e) => setPhone(e.target.value)}
                                                 placeholder="05XXXXXXXX"
                                                 dir="ltr"
-                                                className="w-full px-5 py-3.5 bg-white/[0.04] border border-white/[0.08] rounded-2xl text-white placeholder-white/20 focus:border-gold/30 focus:outline-none focus:ring-2 focus:ring-gold/10 transition-all text-left text-base"
+                                                className="input-dark w-full px-5 py-3.5 rounded-2xl text-left text-base"
                                             />
                                         </div>
 
                                         {/* Divider */}
                                         <div className="flex items-center gap-3 py-1">
-                                            <div className="flex-1 h-px bg-white/[0.06]" />
-                                            <span className="text-white/20 text-xs">اختياري</span>
-                                            <div className="flex-1 h-px bg-white/[0.06]" />
+                                            <div className="flex-1 h-px bg-theme-soft" />
+                                            <span className="text-theme-muted text-xs">اختياري</span>
+                                            <div className="flex-1 h-px bg-theme-soft" />
                                         </div>
 
                                         {/* Clothing Preference */}
                                         <div>
-                                            <label className="block text-sm text-white/60 mb-3 font-medium">
+                                            <label className="block text-sm text-theme-soft mb-3 font-medium">
                                                 وش تحب تلبس؟
                                             </label>
                                             <div className="grid grid-cols-2 gap-3">
@@ -247,7 +248,7 @@ export default function JoinPage() {
                                                             transition={{ delay: 0.4 + i * 0.05 }}
                                                             className={`relative px-4 py-4 rounded-2xl border text-sm font-medium transition-all duration-300 flex items-center gap-3 ${isSelected
                                                                     ? "border-gold/40 bg-gold/[0.08] text-gold shadow-[0_0_20px_rgba(206,174,127,0.08)]"
-                                                                    : "border-white/[0.06] bg-white/[0.02] text-white/50 hover:border-white/[0.12] hover:bg-white/[0.04]"
+                                                                    : "border-theme-soft bg-theme-subtle text-theme-subtle hover:border-theme-strong hover:bg-theme-subtle"
                                                                 }`}
                                                         >
                                                             <span className="text-lg">{option.emoji}</span>
@@ -301,7 +302,7 @@ export default function JoinPage() {
                                 </div>
 
                                 {/* Footer note */}
-                                <p className="text-center text-white/15 text-xs mt-6">
+                                <p className="text-center text-theme-muted text-xs mt-6">
                                     بياناتك محفوظة بأمان ولن نشاركها مع أي جهة
                                 </p>
                             </motion.div>

@@ -21,14 +21,14 @@ export default async function StorePage({
     const { data: products, count, totalPages } = await getProducts(page, type);
 
     return (
-        <div className="min-h-[60vh] bg-bg pt-6 sm:pt-8 pb-12 sm:pb-16" dir="rtl">
+        <div className="min-h-[60vh] pt-6 sm:pt-8 pb-12 sm:pb-16" style={{ backgroundColor: "var(--wusha-bg)" }} dir="rtl">
             <div className="max-w-7xl mx-auto px-6">
                 {/* ─── Header ─── */}
                 <div className="text-center mb-12">
-                    <h1 className="text-4xl md:text-5xl font-bold text-fg mb-3">
+                    <h1 className="text-4xl md:text-5xl font-bold mb-3" style={{ color: "var(--wusha-text)" }}>
                         المتجر
                     </h1>
-                    <p className="text-fg/30 text-sm">
+                    <p className="text-sm text-theme-subtle">
                         {count || 0} منتج فني فريد
                     </p>
                 </div>
@@ -58,8 +58,8 @@ export default async function StorePage({
                                             key={i}
                                             href={`/store?${params.toString()}`}
                                             className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-medium transition-all ${page === i + 1
-                                                    ? "bg-gold text-bg"
-                                                    : "text-fg/30 hover:bg-white/[0.04]"
+                                                    ? "bg-[var(--wusha-gold)] text-[var(--wusha-bg)]"
+                                                    : "text-theme-subtle hover:bg-theme-subtle"
                                                 }`}
                                         >
                                             {i + 1}
@@ -71,7 +71,7 @@ export default async function StorePage({
                     </>
                 ) : (
                     <div className="text-center py-24">
-                        <p className="text-fg/20">لا توجد منتجات</p>
+                        <p className="text-theme-subtle">لا توجد منتجات</p>
                     </div>
                 )}
             </div>

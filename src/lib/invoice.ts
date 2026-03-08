@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════
-//  وشّى | WUSHA — توليد الفاتورة الإلكترونية المتقدمة
+//  وشّى | WASHA — توليد الفاتورة الإلكترونية المتقدمة
 //  محرك القوالب وإنشاء HTML للطباعة
 // ═══════════════════════════════════════════════════════════
 
@@ -61,8 +61,8 @@ export interface InvoiceConfig {
 
 export const defaultInvoiceConfig: InvoiceConfig = {
     template: "classic",
-    companyName: "وشّى | WUSHA",
-    tagline: "منصة فنية رقمية عربية — وشئ وكلمة وشى",
+    companyName: "وشّى | WASHA",
+    tagline: "فنٌ يُرتدَى",
     vatNumber: "",
     primaryColor: "#5A3E2B",
     accentColor: "#ceae7f",
@@ -156,8 +156,8 @@ export function generateInvoiceHTML(order: InvoiceOrder, config: InvoiceConfig =
             ? "https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap"
             : "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700&display=swap";
 
-    const watermarkHtml = config.showWatermark ? `<div class="watermark">WUSHA</div>` : "";
-    const logoHtml = config.showLogo ? `<img src="/logo.png" class="logo-img" alt="WUSHA Logo"/>` : `<div class="logo-text">${config.companyName}</div>`;
+    const watermarkHtml = config.showWatermark ? `<div class="watermark">WASHA</div>` : "";
+    const logoHtml = config.showLogo ? `<img src="/logo.png" class="logo-img" alt="WASHA Logo"/>` : `<div class="logo-text">${config.companyName}</div>`;
     const vatHtml = config.vatNumber ? `<p class="info-label">الرقم الضريبي:</p><p>${config.vatNumber}</p>` : "";
     const invoiceTitle = config.showTax ? "فاتورة ضريبية" : "فاتورة";
 

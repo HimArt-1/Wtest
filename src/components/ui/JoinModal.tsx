@@ -86,7 +86,8 @@ export function JoinModal({ isOpen, onClose }: JoinModalProps) {
 
                     {/* Modal */}
                     <motion.div
-                        className="relative w-full max-w-md bg-[#111] border border-gold/20 rounded-2xl overflow-hidden shadow-2xl shadow-gold/5"
+                        className="relative w-full max-w-md border border-gold/20 rounded-2xl overflow-hidden shadow-2xl shadow-gold/5"
+                        style={{ backgroundColor: "var(--wusha-surface)" }}
                         initial={{ scale: 0.9, opacity: 0, y: 30 }}
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.9, opacity: 0, y: 30 }}
@@ -99,9 +100,9 @@ export function JoinModal({ isOpen, onClose }: JoinModalProps) {
                         {/* Close button */}
                         <button
                             onClick={handleClose}
-                            className="absolute top-4 left-4 p-1.5 rounded-full hover:bg-white/10 transition-colors z-10"
+                            className="absolute top-4 left-4 p-1.5 rounded-full hover:bg-theme-subtle transition-colors z-10"
                         >
-                            <X className="w-5 h-5 text-white/50" />
+                            <X className="w-5 h-5 text-theme-subtle" />
                         </button>
 
                         <div className="p-6 sm:p-8">
@@ -120,10 +121,10 @@ export function JoinModal({ isOpen, onClose }: JoinModalProps) {
                                     >
                                         <CheckCircle className="w-16 h-16 text-gold mx-auto mb-4" />
                                     </motion.div>
-                                    <h3 className="text-xl font-bold text-white mb-2">
+                                    <h3 className="text-xl font-bold mb-2" style={{ color: "var(--wusha-text)" }}>
                                         تم التسجيل بنجاح!
                                     </h3>
-                                    <p className="text-white/60 text-sm">
+                                    <p className="text-theme-soft text-sm">
                                         شكراً لانضمامك، سنتواصل معك قريباً
                                     </p>
                                     <button
@@ -136,17 +137,17 @@ export function JoinModal({ isOpen, onClose }: JoinModalProps) {
                             ) : (
                                 /* ─── Form State ─── */
                                 <>
-                                    <h2 className="text-xl sm:text-2xl font-bold text-white mb-1">
+                                    <h2 className="text-xl sm:text-2xl font-bold mb-1" style={{ color: "var(--wusha-text)" }}>
                                         انضم إلى وشّى
                                     </h2>
-                                    <p className="text-white/50 text-sm mb-6">
+                                    <p className="text-theme-subtle text-sm mb-6">
                                         سجّل اهتمامك وكن من أوائل المنضمين
                                     </p>
 
                                     <form onSubmit={handleSubmit} className="space-y-4">
                                         {/* Name */}
                                         <div>
-                                            <label className="block text-sm text-white/70 mb-1.5">
+                                            <label className="block text-sm text-theme-soft mb-1.5">
                                                 الاسم <span className="text-gold">*</span>
                                             </label>
                                             <input
@@ -155,13 +156,13 @@ export function JoinModal({ isOpen, onClose }: JoinModalProps) {
                                                 onChange={(e) => setName(e.target.value)}
                                                 required
                                                 placeholder="اسمك الكامل"
-                                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:border-gold/40 focus:outline-none focus:ring-1 focus:ring-gold/20 transition-colors"
+                                                className="input-dark w-full px-4 py-3 rounded-xl transition-colors"
                                             />
                                         </div>
 
                                         {/* Email */}
                                         <div>
-                                            <label className="block text-sm text-white/70 mb-1.5">
+                                            <label className="block text-sm text-theme-soft mb-1.5">
                                                 البريد الإلكتروني <span className="text-gold">*</span>
                                             </label>
                                             <input
@@ -171,13 +172,13 @@ export function JoinModal({ isOpen, onClose }: JoinModalProps) {
                                                 required
                                                 placeholder="example@email.com"
                                                 dir="ltr"
-                                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:border-gold/40 focus:outline-none focus:ring-1 focus:ring-gold/20 transition-colors text-left"
+                                                className="input-dark w-full px-4 py-3 rounded-xl text-left"
                                             />
                                         </div>
 
                                         {/* Phone */}
                                         <div>
-                                            <label className="block text-sm text-white/70 mb-1.5">
+                                            <label className="block text-sm text-theme-soft mb-1.5">
                                                 رقم الجوال
                                             </label>
                                             <input
@@ -186,15 +187,15 @@ export function JoinModal({ isOpen, onClose }: JoinModalProps) {
                                                 onChange={(e) => setPhone(e.target.value)}
                                                 placeholder="05XXXXXXXX"
                                                 dir="ltr"
-                                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:border-gold/40 focus:outline-none focus:ring-1 focus:ring-gold/20 transition-colors text-left"
+                                                className="input-dark w-full px-4 py-3 rounded-xl text-left"
                                             />
                                         </div>
 
                                         {/* Clothing Preference */}
                                         <div>
-                                            <label className="block text-sm text-white/70 mb-2.5">
+                                            <label className="block text-sm text-theme-soft mb-2.5">
                                                 وش تحب تلبس؟{" "}
-                                                <span className="text-white/30">(اختياري)</span>
+                                                <span className="text-theme-muted">(اختياري)</span>
                                             </label>
                                             <div className="grid grid-cols-2 gap-2">
                                                 {clothingOptions.map((option) => {
@@ -206,7 +207,7 @@ export function JoinModal({ isOpen, onClose }: JoinModalProps) {
                                                             onClick={() => toggleClothing(option.id)}
                                                             className={`px-3 py-2.5 rounded-xl border text-sm font-medium transition-all duration-200 ${isSelected
                                                                     ? "border-gold/50 bg-gold/10 text-gold shadow-[0_0_12px_rgba(206,174,127,0.1)]"
-                                                                    : "border-white/10 bg-white/5 text-white/60 hover:border-white/20 hover:bg-white/8"
+                                                                    : "border-theme-soft bg-theme-subtle text-theme-subtle hover:border-theme-strong hover:bg-theme-subtle-hover"
                                                                 }`}
                                                         >
                                                             {option.label}

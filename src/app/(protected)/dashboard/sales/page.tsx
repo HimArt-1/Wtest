@@ -3,7 +3,7 @@ import { getWarehouses, getSKUs } from "@/app/actions/erp/inventory";
 import SalesClient from "@/components/admin/erp/SalesClient";
 
 export const metadata = {
-    title: "المبيعات ونقاط البيع - وشّى | WUSHA",
+    title: "المبيعات ونقاط البيع - وشّى | WASHA",
 };
 
 export default async function SalesPage() {

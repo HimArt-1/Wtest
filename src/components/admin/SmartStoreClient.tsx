@@ -811,7 +811,7 @@ function ColorPackagesTab({ items, onRefresh }: { items: CustomDesignColorPackag
 }
 
 // ═══════════════════════════════════════════════════════════
-//  WUSHA Studio Tab
+//  WASHA Studio Tab
 // ═══════════════════════════════════════════════════════════
 
 function StudioItemsTab({ items, onRefresh }: { items: CustomDesignStudioItem[]; onRefresh: () => void }) {

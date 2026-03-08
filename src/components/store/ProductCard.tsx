@@ -94,7 +94,7 @@ export function ProductCard({ product }: ProductCardProps) {
         return (
             <Link
                 href={`/products/${product.id}`}
-                className="group rounded-2xl border border-white/[0.06] overflow-hidden hover:border-gold/30 transition-all duration-500 block"
+                className="group rounded-2xl border border-theme-soft overflow-hidden hover:border-gold/30 transition-all duration-500 block"
             >
                 <div className="aspect-square relative overflow-hidden">
                     <Image
@@ -109,11 +109,11 @@ export function ProductCard({ product }: ProductCardProps) {
                     </span>
                 </div>
                 <div className="p-3">
-                    <h3 className="text-sm font-bold text-fg truncate group-hover:text-gold transition-colors">
+                    <h3 className="text-sm font-bold truncate group-hover:text-gold transition-colors" style={{ color: "var(--wusha-text)" }}>
                         {product.title}
                     </h3>
                     <div className="flex items-center justify-between mt-1.5">
-                        <span className="text-[10px] text-fg/30">{product.store_name || product.artist?.display_name}</span>
+                        <span className="text-[10px] text-theme-subtle">{product.store_name || product.artist?.display_name}</span>
                         <span className="text-xs font-bold text-gold">{Number(product.price).toLocaleString()} ر.س</span>
                     </div>
                 </div>
@@ -124,7 +124,7 @@ export function ProductCard({ product }: ProductCardProps) {
     return (
         <Link
             href={`/products/${product.id}`}
-            className="group rounded-2xl border border-white/[0.06] overflow-hidden hover:border-gold/30 transition-all duration-500 block relative"
+            className="group rounded-2xl border border-theme-soft overflow-hidden hover:border-gold/30 transition-all duration-500 block relative"
         >
             <div className="aspect-square relative overflow-hidden">
                 <Image

@@ -14,8 +14,8 @@ export default async function PublicLayout({
         <>
             <Header />
             <CartSheet />
-            <div className="relative">
-                <div className="absolute inset-0 pointer-events-none cyber-grid opacity-25" aria-hidden />
+            <div className="relative bg-theme min-h-screen">
+                <div className="absolute inset-0 pointer-events-none cyber-grid opacity-[0.15]" aria-hidden />
                 <div className="relative z-10">
                     {children}
                 </div>

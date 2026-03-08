@@ -85,7 +85,7 @@ export function JoinSection() {
               كن جزءاً من
               <span className="text-gradient block">وشّى</span>
             </h2>
-            <p className="text-white/40 text-lg mb-8">
+            <p className="text-theme-subtle text-lg mb-8">
               نبحث عن فنانين موهوبين يشاركوننا رؤيتنا في تشكيل مستقبل الفن العربي الرقمي
             </p>
 
@@ -104,8 +104,8 @@ export function JoinSection() {
                     <benefit.icon className="w-6 h-6 text-gold" />
                   </div>
                   <div>
-                    <h4 className="font-bold mb-1 text-white/90">{benefit.title}</h4>
-                    <p className="text-sm text-white/40">
+                    <h4 className="font-bold mb-1 text-theme-strong">{benefit.title}</h4>
+                    <p className="text-sm text-theme-subtle">
                       {benefit.description}
                     </p>
                   </div>
@@ -115,16 +115,16 @@ export function JoinSection() {
 
             {/* Process Steps */}
             <div className="glass-card rounded-xl p-4 sm:p-6">
-              <h4 className="font-bold mb-4 text-white/90">كيف يعمل نظام القبول؟</h4>
+              <h4 className="font-bold mb-4 text-theme-strong">كيف يعمل نظام القبول؟</h4>
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
                 {steps.map((step, index) => (
                   <div key={step} className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-full bg-gradient-to-r from-gold to-[#b8964f] text-[#0a0a0a] flex items-center justify-center text-sm font-bold">
                       {index + 1}
                     </div>
-                    <span className="text-sm text-white/70">{step}</span>
+                    <span className="text-sm text-theme-soft">{step}</span>
                     {index < steps.length - 1 && (
-                      <ArrowLeft className="w-4 h-4 text-white/20 mx-2 hidden sm:block" />
+                      <ArrowLeft className="w-4 h-4 text-theme-subtle mx-2 hidden sm:block" />
                     )}
                   </div>
                 ))}
@@ -157,8 +157,8 @@ export function JoinSection() {
                   >
                     <CheckCircle className="w-10 h-10 text-forest" />
                   </motion.div>
-                  <h3 className="text-2xl font-bold mb-3 text-white/90">تم إرسال طلبك بنجاح!</h3>
-                  <p className="text-white/40">
+                  <h3 className="text-2xl font-bold mb-3 text-theme-strong">تم إرسال طلبك بنجاح!</h3>
+                  <p className="text-theme-subtle">
                     {response.message}
                   </p>
                 </motion.div>
@@ -169,7 +169,7 @@ export function JoinSection() {
                   className="space-y-5"
                   exit={{ opacity: 0, scale: 0.95 }}
                 >
-                  <h3 className="text-2xl font-bold mb-6 text-white/90">تقديم طلب الانضمام</h3>
+                  <h3 className="text-2xl font-bold mb-6 text-theme-strong">تقديم طلب الانضمام</h3>
 
                   {response && !response.success && (
                     <div className="bg-red-500/10 text-red-400 p-4 rounded-lg flex items-start gap-2 text-sm border border-red-500/20">
@@ -189,28 +189,28 @@ export function JoinSection() {
 
                   {/* Name */}
                   <div>
-                    <label className="block text-sm font-medium mb-2 text-white/60">
+                    <label className="block text-sm font-medium mb-2 text-theme-soft">
                       الاسم الكامل
                     </label>
                     <input
                       name="full_name"
                       type="text"
                       required
-                      className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 focus:border-gold focus:ring-1 focus:ring-gold/30 outline-none transition-all text-white/90 placeholder:text-white/20"
+                      className="input-dark w-full px-4 py-3 rounded-lg"
                       placeholder="اسمك الكامل"
                     />
                   </div>
 
                   {/* Email */}
                   <div>
-                    <label className="block text-sm font-medium mb-2 text-white/60">
+                    <label className="block text-sm font-medium mb-2 text-theme-soft">
                       البريد الإلكتروني
                     </label>
                     <input
                       name="email"
                       type="email"
                       required
-                      className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 focus:border-gold focus:ring-1 focus:ring-gold/30 outline-none transition-all text-white/90 placeholder:text-white/20"
+                      className="input-dark w-full px-4 py-3 rounded-lg"
                       placeholder="email@example.com"
                       dir="ltr"
                     />
@@ -218,13 +218,13 @@ export function JoinSection() {
 
                   {/* Phone */}
                   <div>
-                    <label className="block text-sm font-medium mb-2 text-white/60">
+                    <label className="block text-sm font-medium mb-2 text-theme-soft">
                       رقم الهاتف
                     </label>
                     <input
                       name="phone"
                       type="tel"
-                      className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 focus:border-gold focus:ring-1 focus:ring-gold/30 outline-none transition-all text-white/90 placeholder:text-white/20"
+                      className="input-dark w-full px-4 py-3 rounded-lg"
                       placeholder="+966..."
                       dir="ltr"
                     />
@@ -232,47 +232,47 @@ export function JoinSection() {
 
                   {/* Specialty */}
                   <div>
-                    <label className="block text-sm font-medium mb-2 text-white/60">
+                    <label className="block text-sm font-medium mb-2 text-theme-soft">
                       التخصص الفني
                     </label>
                     <select
                       name="art_style"
                       required
-                      className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 focus:border-gold focus:ring-1 focus:ring-gold/30 outline-none transition-all text-white/90"
+                      className="input-dark w-full px-4 py-3 rounded-lg"
                     >
-                      <option value="" className="bg-[#111]">اختر تخصصك</option>
-                      <option value="digital" className="bg-[#111]">فن رقمي</option>
-                      <option value="photography" className="bg-[#111]">تصوير فوتوغرافي</option>
-                      <option value="calligraphy" className="bg-[#111]">خط عربي</option>
-                      <option value="traditional" className="bg-[#111]">فن تقليدي</option>
-                      <option value="conceptual" className="bg-[#111]">فن مفاهيمي</option>
-                      <option value="mixed" className="bg-[#111]">وسائط متعددة</option>
+                      <option value="">اختر تخصصك</option>
+                      <option value="digital">فن رقمي</option>
+                      <option value="photography">تصوير فوتوغرافي</option>
+                      <option value="calligraphy">خط عربي</option>
+                      <option value="traditional">فن تقليدي</option>
+                      <option value="conceptual">فن مفاهيمي</option>
+                      <option value="mixed">وسائط متعددة</option>
                     </select>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {/* Portfolio URL */}
                     <div>
-                      <label className="block text-sm font-medium mb-2 text-white/60">
+                      <label className="block text-sm font-medium mb-2 text-theme-soft">
                         رابط البورتفوليو
                       </label>
                       <input
                         name="portfolio_url"
                         type="url"
-                        className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 focus:border-gold focus:ring-1 focus:ring-gold/30 outline-none transition-all text-white/90 placeholder:text-white/20"
+                        className="input-dark w-full px-4 py-3 rounded-lg"
                         placeholder="https://..."
                         dir="ltr"
                       />
                     </div>
                     {/* Instagram */}
                     <div>
-                      <label className="block text-sm font-medium mb-2 text-white/60">
+                      <label className="block text-sm font-medium mb-2 text-theme-soft">
                         انستقرام
                       </label>
                       <input
                         name="instagram_url"
                         type="text"
-                        className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 focus:border-gold focus:ring-1 focus:ring-gold/30 outline-none transition-all text-white/90 placeholder:text-white/20"
+                        className="input-dark w-full px-4 py-3 rounded-lg"
                         placeholder="@username"
                         dir="ltr"
                       />
@@ -281,28 +281,28 @@ export function JoinSection() {
 
                   {/* Experience */}
                   <div>
-                    <label className="block text-sm font-medium mb-2 text-white/60">
+                    <label className="block text-sm font-medium mb-2 text-theme-soft">
                       سنوات الخبرة
                     </label>
                     <input
                       name="experience_years"
                       type="number"
                       min="0"
-                      className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 focus:border-gold focus:ring-1 focus:ring-gold/30 outline-none transition-all text-white/90 placeholder:text-white/20"
+                      className="input-dark w-full px-4 py-3 rounded-lg"
                       placeholder="0"
                     />
                   </div>
 
                   {/* Message */}
                   <div>
-                    <label className="block text-sm font-medium mb-2 text-white/60">
+                    <label className="block text-sm font-medium mb-2 text-theme-soft">
                       لماذا تريد الانضمام؟
                     </label>
                     <textarea
                       name="motivation"
                       required
                       rows={4}
-                      className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 focus:border-gold focus:ring-1 focus:ring-gold/30 outline-none transition-all resize-none text-white/90 placeholder:text-white/20"
+                      className="input-dark w-full px-4 py-3 rounded-lg resize-none"
                       placeholder="أخبرنا عن نفسك وفنك..."
                     />
                   </div>

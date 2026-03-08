@@ -2,7 +2,7 @@ import { getSKUs } from "@/app/actions/erp/inventory";
 import BarcodesClient from "@/components/admin/erp/BarcodesClient";
 
 export const metadata = {
-    title: "الباركود - وشّى | WUSHA",
+    title: "الباركود - وشّى | WASHA",
 };
 
 export default async function BarcodesPage() {

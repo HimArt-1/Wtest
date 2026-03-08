@@ -53,20 +53,21 @@ export function CartSheet() {
                         animate={{ x: 0 }}
                         exit={{ x: "100%" }}
                         transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                        className="fixed right-0 top-0 h-full w-full max-w-md bg-surface border-l border-white/[0.06] shadow-2xl z-[101] flex flex-col"
+                        className="fixed right-0 top-0 h-full w-full max-w-md border-l border-theme-soft shadow-2xl z-[101] flex flex-col"
+                        style={{ backgroundColor: "var(--wusha-surface)" }}
                     >
                         {/* Header */}
-                        <div className="p-5 border-b border-white/[0.06] flex items-center justify-between">
+                        <div className="p-5 border-b border-theme-soft flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <ShoppingBag className="w-5 h-5 text-gold" />
-                                <h2 className="text-lg font-bold text-fg">سلة المشتريات</h2>
-                                <span className="bg-white/5 text-fg/40 text-xs px-2 py-0.5 rounded-full font-mono">
+                                <h2 className="text-lg font-bold" style={{ color: "var(--wusha-text)" }}>سلة المشتريات</h2>
+                                <span className="bg-theme-subtle text-theme-subtle text-xs px-2 py-0.5 rounded-full font-mono">
                                     {items.length}
                                 </span>
                             </div>
                             <button
                                 onClick={() => toggleCart(false)}
-                                className="p-2 hover:bg-white/5 rounded-lg text-fg/40 hover:text-fg transition-colors"
+                                className="p-2 hover:bg-theme-subtle rounded-lg text-theme-subtle hover:text-theme-strong transition-colors"
                             >
                                 <X className="w-5 h-5" />
                             </button>
@@ -76,12 +77,12 @@ export function CartSheet() {
                         <div className="flex-1 overflow-y-auto p-5 space-y-4">
                             {items.length === 0 ? (
                                 <div className="h-full min-h-[200px] flex flex-col items-center justify-center text-center space-y-5 py-12">
-                                    <div className="w-20 h-20 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center">
-                                        <ShoppingBag className="w-10 h-10 text-fg/20" />
+                                    <div className="w-20 h-20 rounded-2xl bg-theme-subtle border border-theme-soft flex items-center justify-center">
+                                        <ShoppingBag className="w-10 h-10 text-theme-muted" />
                                     </div>
                                     <div>
-                                        <p className="text-fg/40 font-medium">السلة فارغة</p>
-                                        <p className="text-fg/20 text-sm mt-1">أضف منتجات من المتجر لتبدأ</p>
+                                        <p className="text-theme-subtle font-medium">السلة فارغة</p>
+                                        <p className="text-theme-muted text-sm mt-1">أضف منتجات من المتجر لتبدأ</p>
                                     </div>
                                     <Link
                                         href="/store"
@@ -99,10 +100,10 @@ export function CartSheet() {
                                         initial={{ opacity: 0, x: 20 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         transition={{ delay: i * 0.05 }}
-                                        className="flex gap-4 p-3 bg-white/[0.02] border border-white/[0.04] rounded-xl group hover:border-white/[0.08] transition-colors"
+                                        className="flex gap-4 p-3 bg-theme-subtle border border-theme-soft rounded-xl group hover:border-theme-strong transition-colors"
                                     >
                                         {/* Image */}
-                                        <div className="relative w-20 h-20 bg-white/5 rounded-lg overflow-hidden shrink-0">
+                                        <div className="relative w-20 h-20 bg-theme-subtle rounded-lg overflow-hidden shrink-0">
                                             <Image
                                                 src={item.image_url}
                                                 alt={item.title}
@@ -115,17 +116,17 @@ export function CartSheet() {
                                         <div className="flex-1 min-w-0 flex flex-col justify-between">
                                             <div>
                                                 <div className="flex justify-between items-start gap-2">
-                                                    <h3 className="font-bold text-fg text-sm truncate">{item.title}</h3>
+                                                    <h3 className="font-bold text-sm truncate" style={{ color: "var(--wusha-text)" }}>{item.title}</h3>
                                                     <button
                                                         onClick={() => removeItem(item.id, item.size)}
-                                                        className="text-fg/20 hover:text-red-400 transition-colors"
+                                                        className="text-theme-muted hover:text-red-400 transition-colors"
                                                     >
                                                         <Trash2 className="w-4 h-4" />
                                                     </button>
                                                 </div>
-                                                <p className="text-fg/40 text-xs truncate">{item.artist_name}</p>
+                                                <p className="text-theme-subtle text-xs truncate">{item.artist_name}</p>
                                                 {item.size && (
-                                                    <span className="inline-block mt-1 px-1.5 py-0.5 bg-white/5 rounded text-[10px] text-fg/60">
+                                                    <span className="inline-block mt-1 px-1.5 py-0.5 bg-theme-subtle rounded text-[10px] text-theme-soft">
                                                         {item.size}
                                                     </span>
                                                 )}
@@ -137,10 +138,10 @@ export function CartSheet() {
                                                 </span>
 
                                                 {/* Qty Controls */}
-                                                <div className="flex items-center gap-3 bg-white/5 rounded-lg px-2 py-1">
+                                                <div className="flex items-center gap-3 bg-theme-subtle rounded-lg px-2 py-1">
                                                     <button
                                                         onClick={() => updateQuantity(item.id, item.quantity - 1, item.size)}
-                                                        className="text-fg/40 hover:text-fg disabled:opacity-30"
+                                                        className="text-theme-subtle hover:text-theme-strong disabled:opacity-30"
                                                         disabled={item.quantity <= 1}
                                                     >
                                                         <Minus className="w-3 h-3" />
@@ -148,7 +149,7 @@ export function CartSheet() {
                                                     <span className="text-xs font-mono w-4 text-center">{item.quantity}</span>
                                                     <button
                                                         onClick={() => updateQuantity(item.id, item.quantity + 1, item.size)}
-                                                        className="text-fg/40 hover:text-fg disabled:opacity-30"
+                                                        className="text-theme-subtle hover:text-theme-strong disabled:opacity-30"
                                                         disabled={item.maxQuantity ? item.quantity >= item.maxQuantity : false}
                                                     >
                                                         <Plus className="w-3 h-3" />
@@ -163,7 +164,7 @@ export function CartSheet() {
 
                         {/* Footer */}
                         {items.length > 0 && (
-                            <div className="p-5 border-t border-white/[0.06] bg-surface/80 backdrop-blur-sm space-y-4">
+                            <div className="p-5 border-t border-theme-soft backdrop-blur-sm space-y-4" style={{ backgroundColor: "color-mix(in srgb, var(--wusha-surface) 95%, transparent)" }}>
 
                                 {/* Promo Code Section */}
                                 <div className="space-y-2">
@@ -175,12 +176,12 @@ export function CartSheet() {
                                                     placeholder="كود الخصم"
                                                     value={promoCode}
                                                     onChange={(e) => setPromoCode(e.target.value)}
-                                                    className="flex-1 bg-white/[0.03] border border-white/[0.06] rounded-xl px-4 text-sm focus:outline-none focus:border-gold/50 transition-colors uppercase"
+                                                    className="flex-1 input-dark rounded-xl px-4 text-sm focus:outline-none focus:border-gold/50 transition-colors uppercase"
                                                 />
                                                 <button
                                                     onClick={handleApplyPromo}
                                                     disabled={isValidating || !promoCode.trim()}
-                                                    className="px-4 py-2 bg-white/5 hover:bg-white/10 text-gold text-sm font-medium rounded-xl transition-colors disabled:opacity-50 min-w-[#80px]"
+                                                    className="px-4 py-2 bg-theme-subtle hover:bg-theme-soft text-gold text-sm font-medium rounded-xl transition-colors disabled:opacity-50 min-w-[80px]"
                                                 >
                                                     {isValidating ? "جاري التحقق..." : "تطبيق"}
                                                 </button>
@@ -210,8 +211,8 @@ export function CartSheet() {
                                     )}
                                 </div>
 
-                                <div className="space-y-2 pt-2 border-t border-white/[0.03]">
-                                    <div className="flex items-center justify-between text-sm text-fg/60">
+                                <div className="space-y-2 pt-2 border-t border-theme-subtle">
+                                    <div className="flex items-center justify-between text-sm text-theme-soft">
                                         <span>المجموع الفرعي</span>
                                         <span>{getSubtotal().toLocaleString()} ر.س</span>
                                     </div>
@@ -224,7 +225,7 @@ export function CartSheet() {
                                     )}
 
                                     <div className="flex items-center justify-between pt-2">
-                                        <span className="text-fg font-bold">المجموع الإجمالي</span>
+                                        <span className="font-bold" style={{ color: "var(--wusha-text)" }}>المجموع الإجمالي</span>
                                         <span className="text-xl font-bold text-gold">{getCartTotal().toLocaleString()} ر.س</span>
                                     </div>
                                 </div>
@@ -232,7 +233,7 @@ export function CartSheet() {
                                 <Link
                                     href="/checkout"
                                     onClick={() => toggleCart(false)}
-                                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-gold to-gold/90 text-bg font-bold py-3.5 rounded-xl hover:shadow-lg hover:shadow-gold/20 transition-all duration-300 mt-2"
+                                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-gold to-gold/90 text-[#0a0a0a] font-bold py-3.5 rounded-xl hover:shadow-lg hover:shadow-gold/20 transition-all duration-300 mt-2"
                                 >
                                     إتمام الشراء
                                     <ArrowRight className="w-4 h-4" />

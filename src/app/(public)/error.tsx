@@ -10,7 +10,7 @@ export default function PublicError({
     reset: () => void;
 }) {
     useEffect(() => {
-        console.error("[WUSHA Error]", error);
+        console.error("[WASHA Error]", error);
     }, [error]);
 
     return (

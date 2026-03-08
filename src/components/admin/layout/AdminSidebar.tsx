@@ -106,7 +106,7 @@ export function AdminSidebar({ pendingApps = 0 }: { pendingApps?: number }) {
                             </div>
                             <div>
                                 <h2 className="text-sm font-bold text-fg">لوحة الإدارة</h2>
-                                <p className="text-[10px] text-fg/30 font-medium">WUSHA Admin</p>
+                                <p className="text-[10px] text-fg/30 font-medium">WASHA Admin</p>
                             </div>
                         </motion.div>
                     )}

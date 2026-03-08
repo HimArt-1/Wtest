@@ -33,7 +33,7 @@ export function Gallery() {
   }, [activeCategory]);
 
   return (
-    <section id="gallery" className="py-20 bg-[#080808] relative overflow-hidden">
+    <section id="gallery" className="py-20 relative overflow-hidden" style={{ backgroundColor: "var(--wusha-bg)" }}>
       {/* Background Elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
         <div className="absolute top-[20%] left-[10%] w-[500px] h-[500px] bg-gold/5 rounded-full blur-3xl opacity-20 animate-pulse-slow" />
@@ -52,7 +52,7 @@ export function Gallery() {
               معرض <span className="text-gold">الأعمال المميزة</span>
             </motion.h2>
             <motion.p
-              className="text-white/60 max-w-xl text-lg"
+              className="text-theme-soft max-w-xl text-lg"
               initial={{ opacity: 0, x: 20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
@@ -74,8 +74,8 @@ export function Gallery() {
                 key={cat.id}
                 onClick={() => setActiveCategory(cat.id)}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${activeCategory === cat.id
-                  ? "bg-gold text-black"
-                  : "bg-white/5 text-white/60 hover:bg-white/10 hover:text-white"
+                  ? "bg-[var(--wusha-gold)] text-[var(--wusha-bg)]"
+                  : "bg-theme-subtle text-theme-soft hover:bg-[color-mix(in_srgb,var(--wusha-text)_10%,transparent)] hover:text-[var(--wusha-text)]"
                   }`}
               >
                 {cat.label}
@@ -87,7 +87,7 @@ export function Gallery() {
         {loading ? (
           <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="aspect-[4/5] bg-white/5 rounded-2xl animate-pulse" />
+              <div key={i} className="aspect-[4/5] bg-theme-subtle rounded-2xl animate-pulse" />
             ))}
           </div>
         ) : (
@@ -101,7 +101,7 @@ export function Gallery() {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
                   transition={{ duration: 0.3 }}
-                  className="group relative aspect-[4/5] rounded-2xl overflow-hidden bg-white/5 border border-white/10"
+                  className="group relative aspect-[4/5] rounded-2xl overflow-hidden bg-theme-subtle border border-theme-soft"
                 >
                   <Image
                     src={artwork.image_url}
@@ -118,7 +118,7 @@ export function Gallery() {
                           <h3 className="text-xl font-bold text-white mb-1">{artwork.title}</h3>
                           <p className="text-gold text-sm">{artwork.artist?.display_name || "فنان مجهول"}</p>
                           {artwork.price && (
-                            <p className="text-white/80 font-bold mt-2">{artwork.price} ر.س</p>
+                            <p className="text-white/90 font-bold mt-2">{artwork.price} ر.س</p>
                           )}
                         </div>
 
@@ -139,7 +139,7 @@ export function Gallery() {
                               <ShoppingBag className="w-5 h-5" />
                             </button>
                           )}
-                          <button className="p-3 bg-white/10 text-white rounded-full hover:bg-white/20 transition-colors backdrop-blur-sm">
+                            <button className="p-3 bg-white/10 text-white rounded-full hover:bg-white/20 transition-colors backdrop-blur-sm">
                             <Heart className="w-5 h-5" />
                           </button>
                         </div>
@@ -154,7 +154,7 @@ export function Gallery() {
 
         {!loading && artworks.length === 0 && (
           <div className="text-center py-20">
-            <p className="text-white/30 text-lg">لا توجد أعمال في هذا التصنيف حالياً</p>
+            <p className="text-theme-subtle text-lg">لا توجد أعمال في هذا التصنيف حالياً</p>
           </div>
         )}
 

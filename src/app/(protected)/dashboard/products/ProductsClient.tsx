@@ -671,7 +671,7 @@ function BarcodeModal({ product, sku, onClose, onCreated }: {
                         {/* Visual Preview */}
                         <div className="bg-white text-black p-4 rounded-xl flex flex-col items-center w-[50mm] min-h-[30mm] transform scale-[1.2] origin-top mx-auto pointer-events-none my-2 shadow-inner">
                             <div className="text-[8px] font-bold mb-[2px] text-center w-full truncate relative z-10">
-                                {product?.title || 'WUSHA Product'}
+                                {product?.title || 'WASHA Product'}
                             </div>
                             {(sku.size || sku.color_code) && (
                                 <div className="text-[7px] mb-[2px] text-center w-full relative z-10">
@@ -695,7 +695,7 @@ function BarcodeModal({ product, sku, onClose, onCreated }: {
                         <div className="hidden">
                             <div ref={printRef} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '50mm', height: '30mm', overflow: 'hidden', backgroundColor: 'white' }}>
                                 <div style={{ fontSize: '8px', fontWeight: 'bold', marginBottom: '2px', textAlign: 'center', whiteSpace: 'nowrap', width: '100%', textOverflow: 'ellipsis', overflow: 'hidden', color: 'black' }}>
-                                    {product?.title || 'WUSHA Product'}
+                                    {product?.title || 'WASHA Product'}
                                 </div>
                                 {(sku.size || sku.color_code) && (
                                     <div style={{ fontSize: '7px', marginBottom: '2px', color: 'black' }}>

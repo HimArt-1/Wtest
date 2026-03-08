@@ -123,7 +123,7 @@ export function CouponsClient({ initialCoupons }: { initialCoupons: Coupon[] }) 
 
                             <form onSubmit={handleCreate} className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-white/70 mb-1">كود الخصم (مثال: WUSHA20)</label>
+                                    <label className="block text-sm font-medium text-white/70 mb-1">كود الخصم (مثال: WASHA20)</label>
                                     <input
                                         type="text"
                                         required

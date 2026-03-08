@@ -2,7 +2,7 @@ import { getInventoryLevels, getWarehouses, getSKUs } from "@/app/actions/erp/in
 import InventoryClient from "@/components/admin/erp/InventoryClient";
 
 export const metadata = {
-    title: "المخزون - وشّى | WUSHA",
+    title: "المخزون - وشّى | WASHA",
 };
 
 export default async function InventoryPage() {

@@ -75,7 +75,8 @@ export function Hero({ showAuthButtons = true }: HeroProps) {
       <AnimatePresence>
         {!curtainLifted && (
           <motion.div
-            className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#080808]"
+            className="fixed inset-0 z-[100] flex flex-col items-center justify-center"
+            style={{ backgroundColor: "var(--wusha-bg)" }}
             exit={{ opacity: 0 }}
             transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
           >
@@ -238,7 +239,7 @@ export function Hero({ showAuthButtons = true }: HeroProps) {
 
         {/* Subtitle */}
         <motion.p
-          className="text-lg sm:text-xl md:text-2xl text-white/70 max-w-2xl mx-auto mb-10 sm:mb-14 font-light"
+          className="text-lg sm:text-xl md:text-2xl max-w-2xl mx-auto mb-10 sm:mb-14 font-light text-theme-soft"
           initial={{ opacity: 0, y: 30 }}
           animate={curtainLifted ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8, delay: 0.5 }}
@@ -327,7 +328,7 @@ export function Hero({ showAuthButtons = true }: HeroProps) {
         transition={{ delay: 1.5 }}
       >
         <motion.div
-          className="flex flex-col items-center gap-2 text-white/30"
+          className="flex flex-col items-center gap-2 text-theme-subtle"
           animate={{ y: [0, 10, 0] }}
           transition={{ duration: 2, repeat: Infinity }}
         >

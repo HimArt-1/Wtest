@@ -111,8 +111,8 @@ export function AISection() {
       {/* Section Divider */}
       <div className="section-divider mb-24" />
 
-      {/* Subtle Background Gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#080808] via-[#0d0a06] to-[#080808]" />
+      {/* Subtle Background Gradient — theme-aware */}
+      <div className="absolute inset-0 bg-theme-gradient" />
 
       {/* Gold Particles */}
       <div className="absolute inset-0">
@@ -155,7 +155,7 @@ export function AISection() {
           <h2 className="text-4xl md:text-6xl font-bold mb-6">
             <span className="text-gradient">اكتشف بذكاء</span>
           </h2>
-          <p className="text-white/40 max-w-xl mx-auto">
+          <p className="text-theme-subtle max-w-xl mx-auto">
             خوارزميات متقدمة تفهم ذوقك وتقترح أعمالاً تناسبك
           </p>
         </motion.div>
@@ -178,7 +178,7 @@ export function AISection() {
                     type="text"
                     value={displayText}
                     readOnly
-                    className="w-full bg-transparent pr-12 pl-4 py-3 sm:py-4 text-base sm:text-lg focus:outline-none placeholder:text-white/20 text-white/80"
+                    className="w-full bg-transparent pr-12 pl-4 py-3 sm:py-4 text-base sm:text-lg focus:outline-none text-theme-strong placeholder:text-theme-subtle"
                     placeholder="اسأل الذكاء الاصطناعي..."
                   />
                   <motion.span
@@ -213,7 +213,7 @@ export function AISection() {
               {["تراثي", "معاصر", "تجريدي", "طبيعة", "بورتريه"].map((tag) => (
                 <button
                   key={tag}
-                  className="px-4 py-2 bg-white/5 rounded-full text-sm text-white/40 hover:bg-gold/10 hover:text-gold/80 transition-all duration-300 border border-white/5"
+                  className="px-4 py-2 bg-theme-subtle rounded-full text-sm text-theme-subtle hover:bg-[color-mix(in_srgb,var(--wusha-gold)_10%,transparent)] hover:text-[color-mix(in_srgb,var(--wusha-gold)_80%,transparent)] transition-all duration-300 border border-theme-soft"
                 >
                   {tag}
                 </button>
@@ -231,7 +231,7 @@ export function AISection() {
                 transition={{ duration: 0.5 }}
               >
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-bold text-white/90">
+                  <h3 className="text-xl font-bold text-theme-strong">
                     {aiSuggestions[0].title}
                   </h3>
                   <button
@@ -262,13 +262,13 @@ export function AISection() {
                         <div className="absolute top-3 right-3 px-3 py-1 bg-gradient-to-r from-gold to-[#b8964f] text-[#0a0a0a] text-xs font-bold rounded-full">
                           تطابق {item.match}
                         </div>
-                        <button className="absolute top-3 left-3 w-8 h-8 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center hover:bg-gold hover:text-[#0a0a0a] transition-all">
+                        <button className="absolute top-3 left-3 w-8 h-8 rounded-full bg-theme-subtle backdrop-blur-sm flex items-center justify-center hover:bg-[var(--wusha-gold)] hover:text-[var(--wusha-bg)] transition-all">
                           <Heart className="w-4 h-4" />
                         </button>
                       </div>
                       <div className="p-4">
-                        <h4 className="font-bold mb-1 text-white/90">{item.title}</h4>
-                        <p className="text-sm text-white/40">
+                        <h4 className="font-bold mb-1 text-theme-strong">{item.title}</h4>
+                        <p className="text-sm text-theme-subtle">
                           {item.artist}
                         </p>
                       </div>
@@ -314,8 +314,8 @@ export function AISection() {
                   transition={{ delay: 0.1 * index }}
                 >
                   <div className="text-4xl mb-4">{feature.icon}</div>
-                  <h4 className="font-bold mb-2 text-white/90">{feature.title}</h4>
-                  <p className="text-sm text-white/40">{feature.desc}</p>
+                  <h4 className="font-bold mb-2 text-theme-strong">{feature.title}</h4>
+                  <p className="text-sm text-theme-subtle">{feature.desc}</p>
                 </motion.div>
               ))}
             </motion.div>

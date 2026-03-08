@@ -1,7 +1,7 @@
 "use server";
 
 // ═══════════════════════════════════════════════════════════
-//  وشّى | WUSHA — المتجر الذكي Server Actions
+//  وشّى | WASHA — المتجر الذكي Server Actions
 //  CRUD operations for custom design garments, colors, etc.
 // ═══════════════════════════════════════════════════════════
 
@@ -383,7 +383,7 @@ export async function getDesignPromptTemplate(): Promise<string> {
     if (template && template.trim().length > 0) return template;
 
     // Default fallback template
-    return `Create a professional design for a {{garment_name}} garment by WUSHA (وشّى).
+    return `Create a professional design for a {{garment_name}} garment by WASHA (وشّى).
 
 Garment: {{garment_name}}
 Base Color: {{color_name}} ({{color_hex}})
@@ -395,7 +395,7 @@ Customer Description:
 {{user_prompt}}
 
 Requirements:
-- Maintain WUSHA brand identity (luxury Arabic streetwear)
+- Maintain WASHA brand identity (luxury Arabic streetwear)
 - High resolution, print-ready quality
 - Clean design suitable for garment printing
 - Incorporate the specified art style and color palette

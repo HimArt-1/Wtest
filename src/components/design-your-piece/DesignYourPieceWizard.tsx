@@ -1,7 +1,7 @@
 "use client";
 
 // ═══════════════════════════════════════════════════════════
-//  وشّى | WUSHA — صمم قطعتك بنفسك
+//  وشّى | WASHA — صمم قطعتك بنفسك
 //  includes auto-order creation via submitDesignOrder
 //  Design Your Piece — Interactive Multi-Step Wizard
 // ═══════════════════════════════════════════════════════════
@@ -758,7 +758,7 @@ function StepMethod({
                 )}
             </AnimatePresence>
 
-            {/* WUSHA Studio Selection */}
+            {/* WASHA Studio Selection */}
             <AnimatePresence>
                 {selected === "studio" && (
                     <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}>

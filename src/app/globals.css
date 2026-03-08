@@ -86,6 +86,25 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
+   Theme-aware Utilities
+═══════════════════════════════════════════════════════════ */
+
+.text-theme-muted { color: var(--wusha-text-muted); }
+.text-theme-subtle { color: color-mix(in srgb, var(--wusha-text) 40%, transparent); }
+.text-theme-soft { color: color-mix(in srgb, var(--wusha-text) 60%, transparent); }
+.text-theme-strong { color: color-mix(in srgb, var(--wusha-text) 90%, transparent); }
+.bg-theme-subtle { background-color: color-mix(in srgb, var(--wusha-text) 5%, transparent); }
+.bg-theme-subtle-hover:hover { background-color: color-mix(in srgb, var(--wusha-text) 10%, transparent); }
+.bg-theme-soft { background-color: color-mix(in srgb, var(--wusha-text) 10%, transparent); }
+.border-theme-subtle { border-color: color-mix(in srgb, var(--wusha-text) 5%, transparent); }
+.border-theme-soft { border-color: color-mix(in srgb, var(--wusha-text) 10%, transparent); }
+.border-theme-strong { border-color: color-mix(in srgb, var(--wusha-text) 20%, transparent); }
+.bg-theme { background-color: var(--wusha-bg); }
+.bg-theme-gradient {
+  background: linear-gradient(to bottom, var(--wusha-bg), color-mix(in srgb, var(--wusha-bg) 92%, var(--wusha-gold)), var(--wusha-bg));
+}
+
+/* ═══════════════════════════════════════════════════════════
    Base Styles
 ═══════════════════════════════════════════════════════════ */
 

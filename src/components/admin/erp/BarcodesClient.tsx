@@ -331,7 +331,7 @@ export default function BarcodesClient({ initialSKUs }: { initialSKUs: any[] }) 
                             <div className="hidden">
                                 <div ref={printRef} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '50mm', height: '30mm', overflow: 'hidden' }}>
                                     <div style={{ fontSize: '8px', fontWeight: 'bold', marginBottom: '2px', textAlign: 'center', whiteSpace: 'nowrap' }}>
-                                        {printSku.product?.title || 'WUSHA Product'}
+                                        {printSku.product?.title || 'WASHA Product'}
                                     </div>
                                     {(printSku.size || printSku.color_code) && (
                                         <div style={{ fontSize: '7px', marginBottom: '2px' }}>
@@ -346,7 +346,7 @@ export default function BarcodesClient({ initialSKUs }: { initialSKUs: any[] }) 
                             {/* Visible Preview of the tag */}
                             <div className="bg-white text-black p-4 rounded-lg shadow-inner flex flex-col items-center w-[50mm] min-h-[30mm] transform scale-[1.5] origin-top my-4 pointer-events-none">
                                 <div className="text-[8px] font-bold mb-[2px] text-center w-full truncate">
-                                    {printSku.product?.title || 'WUSHA Product'}
+                                    {printSku.product?.title || 'WASHA Product'}
                                 </div>
                                 {(printSku.size || printSku.color_code) && (
                                     <div className="text-[7px] mb-[2px] text-center w-full">
