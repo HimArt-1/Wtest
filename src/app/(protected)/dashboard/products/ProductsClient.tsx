@@ -39,6 +39,8 @@ interface ProductsClientProps {
     artists?: { id: string; display_name: string; username: string }[];
     categories?: { id: string; name_ar: string; name_en: string; slug: string }[];
     skus?: any[];
+    /** Base path for links (e.g. /dashboard/products-inventory for unified view) */
+    basePath?: string;
 }
 
 // ─── Main Component ─────────────────────────────────────────
@@ -52,6 +54,7 @@ export function ProductsClient({
     artists = [],
     categories = [],
     skus = [],
+    basePath = "/dashboard/products",
 }: ProductsClientProps) {
     const router = useRouter();
     const [loadingId, setLoadingId] = useState<string | null>(null);
@@ -211,7 +214,8 @@ export function ProductsClient({
     const setFilter = (type: string) => {
         const params = new URLSearchParams();
         if (type !== "all") params.set("type", type);
-        router.push(`/dashboard/products?${params.toString()}`);
+        if (basePath.includes("products-inventory")) params.set("tab", "products");
+        router.push(`${basePath}?${params.toString()}`);
     };
 
     // ─── Get SKU for product
@@ -364,6 +368,9 @@ export function ProductsClient({
                                                 </div>
                                                 <div className="min-w-0">
                                                     <span className="font-medium text-fg/80 truncate block max-w-[180px]">{product.title}</span>
+                                                    {product.product_code && (
+                                                        <span className="text-[9px] font-mono text-gold/70" dir="ltr">{product.product_code}</span>
+                                                    )}
                                                     {product.sizes?.length > 0 && (
                                                         <span className="text-[10px] text-fg/25">{product.sizes.join(" · ")}</span>
                                                     )}
@@ -472,7 +479,7 @@ export function ProductsClient({
                 <div className="flex items-center justify-center gap-2">
                     {[...Array(totalPages)].map((_, i) => (
                         <Link key={i}
-                            href={`/dashboard/products?page=${i + 1}${currentType !== "all" ? `&type=${currentType}` : ""}`}
+                            href={`${basePath}?page=${i + 1}${currentType !== "all" ? `&type=${currentType}` : ""}${basePath.includes("products-inventory") ? "&tab=products" : ""}`}
                             className={`w-9 h-9 rounded-lg flex items-center justify-center text-xs font-medium transition-all ${currentPage === i + 1 ? "bg-gold text-bg" : "text-fg/30 hover:bg-white/5"}`}>
                             {i + 1}
                         </Link>
@@ -488,6 +495,7 @@ export function ProductsClient({
                         sku={getProductSku(barcodeProductId)}
                         onClose={() => setBarcodeProductId(null)}
                         onCreated={() => { showToast("تم إنشاء SKU ✓"); router.refresh(); }}
+                        onError={(msg) => setError(msg)}
                     />
                 )}
             </AnimatePresence>
@@ -515,8 +523,8 @@ export function ProductsClient({
 //  Barcode Modal — عرض وإنشاء وطباعة الباركود
 // ═══════════════════════════════════════════════════════════
 
-function BarcodeModal({ product, sku, onClose, onCreated }: {
-    product: any; sku: any; onClose: () => void; onCreated: () => void;
+function BarcodeModal({ product, sku, onClose, onCreated, onError }: {
+    product: any; sku: any; onClose: () => void; onCreated: () => void; onError?: (msg: string) => void;
 }) {
     const [loading, setLoading] = useState(false);
     const [codeType, setCodeType] = useState<"barcode" | "qr">("barcode");
@@ -527,25 +535,19 @@ function BarcodeModal({ product, sku, onClose, onCreated }: {
     const [colorCode, setColorCode] = useState("");
     const [customSku, setCustomSku] = useState("");
 
-    const generateSkuString = () => {
-        if (!product) return "";
-        const typeStr = product.type === 'apparel' ? 't' : product.type === 'print' ? 'p' : 'o';
-        const seq = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-        const sizeStr = size ? size.toUpperCase() : 'NA';
-        const colorStr = colorCode ? colorCode.toLowerCase() : 'na';
-        return `wsh-${typeStr}-${seq}-${sizeStr}-${colorStr}`;
-    };
-
     const handleCreate = async () => {
         setLoading(true);
-        const finalSku = customSku || generateSkuString();
-        await createSKU({
+        const result = await createSKU({
             product_id: product.id,
-            sku: finalSku,
+            sku: customSku.trim() || undefined,
             size: size || null,
             color_code: colorCode || null
         });
         setLoading(false);
+        if (result.error) {
+            onError?.(result.error);
+            return;
+        }
         onCreated();
         onClose();
     };
@@ -632,12 +634,12 @@ function BarcodeModal({ product, sku, onClose, onCreated }: {
                         </div>
                         <div>
                             <label className="block text-xs font-medium text-gold mb-1.5">الرقم التسلسلي (SKU)</label>
-                            <input type="text" value={customSku || generateSkuString()}
+                            <input type="text" value={customSku}
                                 onChange={(e) => setCustomSku(e.target.value)} dir="ltr"
-                                placeholder="سجل الكود المخصص هنا أو اترك المولد الآلي"
+                                placeholder="اتركه فارغاً للتوليد التلقائي (WSH-P-00001-NA-NA)"
                                 className="w-full px-4 py-2.5 bg-gold/5 border border-gold/20 text-gold rounded-xl text-sm font-mono tracking-wider focus:outline-none placeholder:text-gold/30" />
                             <p className="text-[10px] text-fg/40 mt-1.5 leading-relaxed">
-                                هذه الأداة تولّد سيريال المنتج وستربطه تلقائياً بالباركود لطباعته وإدارة المستودع.
+                                اترك الحقل فارغاً لاستخدام القالب التلقائي، أو أدخل رمزاً مخصصاً. القالب: WSH-{'{'}النوع{'}'}-{'{'}تسلسل{'}'}-{'{'}المقاس{'}'}-{'{'}اللون{'}'}
                             </p>
                         </div>
                     </div>

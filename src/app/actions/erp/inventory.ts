@@ -3,6 +3,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { currentUser } from "@clerk/nextjs/server";
 import { Database } from "@/types/database";
+import { generateNextSKU } from "@/lib/product-identifiers";
 
 // Create Admin Supabase Client
 function getAdminSb() {
@@ -44,13 +45,31 @@ export async function getSKUs() {
     return { skus: data };
 }
 
-export async function createSKU(input: any) {
+export async function createSKU(input: {
+    product_id: string;
+    sku?: string;
+    size?: string | null;
+    color_code?: string | null;
+}) {
     const { isAdmin } = await verifyAdmin();
     if (!isAdmin) return { error: "غير مصرح" };
 
+    let skuValue = input.sku?.trim();
+    if (!skuValue) {
+        const product = await getAdminSb()
+            .from("products")
+            .select("type")
+            .eq("id", input.product_id)
+            .single();
+        const productType = (product.data as any)?.type || "original";
+        const gen = await generateNextSKU(productType, input.size, input.color_code);
+        if ("error" in gen) return { error: gen.error };
+        skuValue = gen.sku;
+    }
+
     const supabase = getAdminSb();
     const { data, error } = await (supabase.from("product_skus") as any)
-        .insert([input])
+        .insert([{ ...input, sku: skuValue }])
         .select()
         .single();
 

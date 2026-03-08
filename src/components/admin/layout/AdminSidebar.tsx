@@ -41,9 +41,8 @@ export function AdminSidebar({ pendingApps = 0 }: { pendingApps?: number }) {
         {
             title: "المنتجات والمخزون",
             items: [
-                { icon: Package, label: "إدارة المنتجات", href: "/dashboard/products" },
+                { icon: Package, label: "إدارة المنتجات والمخزون", href: "/dashboard/products-inventory" },
                 { icon: Tag, label: "الفئات", href: "/dashboard/categories" },
-                { icon: Warehouse, label: "إدارة المخزون", href: "/dashboard/inventory" },
                 { icon: TrendingUp, label: "المبيعات", href: "/dashboard/sales" },
                 { icon: Ticket, label: "كوبونات الخصم", href: "/dashboard/coupons" },
             ],

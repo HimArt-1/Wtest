@@ -3,6 +3,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
+import { generateNextSKU } from "@/lib/product-identifiers";
 
 // ─── Admin Supabase Client ──────────────────────────────────
 
@@ -48,6 +49,7 @@ export async function getSiteSettings() {
             site_info: { name: "وشّى", description: "منصة الفن العربي الأصيل", email: "", phone: "", instagram: "", twitter: "", tiktok: "" },
             shipping: { flat_rate: 30, free_above: 500, tax_rate: 15 },
             creation_prices: { tshirt: 89, hoodie: 149, pullover: 129 },
+            product_identifiers: { prefix: "WSH", product_code_template: "{PREFIX}-{SEQ:5}", sku_template: "{PREFIX}-{TYPE}-{SEQ:5}-{SIZE}-{COLOR}", type_map: {} },
         };
     }
 
@@ -58,6 +60,7 @@ export async function getSiteSettings() {
 
     const v = settings.visibility || {};
     const cp = settings.creation_prices || {};
+    const pi = settings.product_identifiers || {};
     return {
         visibility: {
             gallery: v.gallery ?? false,
@@ -74,6 +77,12 @@ export async function getSiteSettings() {
             tshirt: cp.tshirt ?? 89,
             hoodie: cp.hoodie ?? 149,
             pullover: cp.pullover ?? 129,
+        },
+        product_identifiers: {
+            prefix: pi.prefix ?? "WSH",
+            product_code_template: pi.product_code_template ?? "{PREFIX}-{SEQ:5}",
+            sku_template: pi.sku_template ?? "{PREFIX}-{TYPE}-{SEQ:5}-{SIZE}-{COLOR}",
+            type_map: pi.type_map ?? { print: "P", apparel: "T", digital: "D", nft: "N", original: "O" },
         },
     };
 }
@@ -270,7 +279,7 @@ export async function updateProduct(id: string, updates: Partial<{
 
     if (error) return { success: false, error: error.message };
 
-    revalidatePath("/dashboard/products");
+    revalidatePath("/dashboard/products-inventory");
     revalidatePath("/store");
     return { success: true };
 }
@@ -286,7 +295,7 @@ export async function deleteProduct(id: string) {
 
     if (error) return { success: false, error: error.message };
 
-    revalidatePath("/dashboard/products");
+    revalidatePath("/dashboard/products-inventory");
     revalidatePath("/store");
     return { success: true };
 }
@@ -344,10 +353,12 @@ export async function createProductAdmin(data: {
         if (wh) warehouseId = wh.id;
 
         for (const size of sizesToCreate) {
-            const typeStr = data.type === 'apparel' ? 't' : data.type === 'print' ? 'p' : 'o';
-            const seq = Math.floor(1000 + Math.random() * 9000);
-            const sizeStr = size ? size.toUpperCase().replace(/\s+/g, '') : 'BASE';
-            const finalSku = `wsh-${typeStr}-${seq}-${sizeStr}`;
+            const skuResult = await generateNextSKU(data.type, size || undefined, undefined);
+            if ("error" in skuResult) {
+                console.error("[createProductAdmin] SKU generation failed:", skuResult.error);
+                continue;
+            }
+            const finalSku = skuResult.sku;
 
             const { data: newSku } = await supabase.from("product_skus").insert({
                 product_id: productId,
@@ -364,16 +375,17 @@ export async function createProductAdmin(data: {
                 await supabase.from("inventory_transactions").insert({
                     sku_id: newSku.id,
                     warehouse_id: warehouseId,
-                    type: 'adjustment',
+                    transaction_type: 'addition',
                     quantity_change: qtyPerSku,
-                    reference_id: `init-${productId}`,
+                    previous_quantity: 0,
+                    new_quantity: qtyPerSku,
                     notes: 'Initial stock creation from Admin Product Form'
                 });
             }
         }
     }
 
-    revalidatePath("/dashboard/products");
+    revalidatePath("/dashboard/products-inventory");
     revalidatePath("/store");
     revalidatePath("/dashboard/erp/inventory");
     return { success: true, productId };

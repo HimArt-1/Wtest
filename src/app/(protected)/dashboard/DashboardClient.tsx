@@ -117,10 +117,10 @@ export function DashboardClient({ stats, recentOrders, pendingApplications, topP
                     { title: "المستخدمون", value: stats.totalUsers, icon: Users, href: "/dashboard/users" },
                     { title: "أعضاء المنصة", value: stats.totalBuyers, icon: Users, href: "/dashboard/users" },
                     { title: "الأعمال الفنية", value: stats.totalArtworks, icon: Palette, href: "/dashboard/artworks" },
-                    { title: "المنتجات", value: stats.totalProducts, icon: Package, href: "/dashboard/products" },
+                    { title: "المنتجات", value: stats.totalProducts, icon: Package, href: "/dashboard/products-inventory?tab=products" },
                     { title: "مشتركو النشرة", value: stats.totalSubscribers, icon: Mail, href: "/dashboard/newsletter" },
                     {
-                        title: "مخزون منخفض", value: lowStockCount, icon: AlertTriangle, href: "/dashboard/inventory",
+                        title: "مخزون منخفض", value: lowStockCount, icon: AlertTriangle, href: "/dashboard/products-inventory?tab=inventory",
                         color: lowStockCount > 0 ? "text-amber-400" : undefined
                     },
                 ].map((s, i) => (
@@ -218,7 +218,7 @@ export function DashboardClient({ stats, recentOrders, pendingApplications, topP
                                 <AlertTriangle className={`w-4 h-4 ${lowStockCount > 0 ? "text-amber-400" : "text-fg/30"}`} />
                                 تنبيه المخزون
                             </h3>
-                            <Link href="/dashboard/inventory" className="text-xs text-gold hover:text-gold-light transition-colors font-medium">
+                            <Link href="/dashboard/products-inventory?tab=inventory" className="text-xs text-gold hover:text-gold-light transition-colors font-medium">
                                 إدارة ←
                             </Link>
                         </div>

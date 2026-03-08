@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import {
-    Eye, EyeOff, Globe, Truck, Save, Loader2, Tag,
+    Eye, EyeOff, Globe, Truck, Save, Loader2, Tag, QrCode,
     Instagram, Twitter, Mail, Phone, type LucideIcon,
 } from "lucide-react";
 import { updateSiteSetting } from "@/app/actions/settings";
@@ -22,6 +22,7 @@ interface SettingsProps {
         site_info: Record<string, string>;
         shipping: Record<string, number>;
         creation_prices?: { tshirt?: number; hoodie?: number; pullover?: number };
+        product_identifiers?: { prefix?: string; product_code_template?: string; sku_template?: string; type_map?: Record<string, string> };
     };
 }
 
@@ -112,6 +113,11 @@ export function SettingsClient({ settings }: SettingsProps) {
         tshirt: settings.creation_prices?.tshirt ?? 89,
         hoodie: settings.creation_prices?.hoodie ?? 149,
         pullover: settings.creation_prices?.pullover ?? 129,
+    });
+    const [productIdentifiers, setProductIdentifiers] = useState({
+        prefix: settings.product_identifiers?.prefix ?? "WSH",
+        product_code_template: settings.product_identifiers?.product_code_template ?? "{PREFIX}-{SEQ:5}",
+        sku_template: settings.product_identifiers?.sku_template ?? "{PREFIX}-{TYPE}-{SEQ:5}-{SIZE}-{COLOR}",
     });
 
     const [saving, setSaving] = useState<string | null>(null);
@@ -306,7 +312,35 @@ export function SettingsClient({ settings }: SettingsProps) {
                 </button>
             </SettingsCard>
 
-            {/* ─── 4. أسعار القطع (صمّم قطعتك) ─── */}
+            {/* ─── 4. معرفات المنتجات والـ SKU ─── */}
+            <SettingsCard title="معرفات المنتجات والـ SKU" icon={QrCode}>
+                <p className="text-fg/50 text-sm mb-4">كل منتج يصدر بمعرف فريد تلقائياً. القالب: {productIdentifiers.prefix}-P-00001-NA-NA (النوع-تسلسل-المقاس-اللون)</p>
+                <div className="space-y-4">
+                    <Field
+                        label="البادئة (مثال: WSH, WUSHA)"
+                        value={productIdentifiers.prefix}
+                        onChange={(v) => setProductIdentifiers({ ...productIdentifiers, prefix: v.toUpperCase().replace(/\s/g, "") })}
+                        placeholder="WSH"
+                        dir="ltr"
+                    />
+                    <p className="text-[10px] text-fg/30">التسلسل ذري ولا يتكرر. التعديل يؤثر على المنتجات الجديدة فقط.</p>
+                </div>
+                <button
+                    onClick={() => handleSave("product_identifiers", {
+                        prefix: productIdentifiers.prefix,
+                        product_code_template: productIdentifiers.product_code_template,
+                        sku_template: productIdentifiers.sku_template,
+                        type_map: settings.product_identifiers?.type_map ?? { print: "P", apparel: "T", digital: "D", nft: "N", original: "O" },
+                    })}
+                    disabled={saving === "product_identifiers"}
+                    className="mt-5 btn-gold w-full py-3 text-sm font-bold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                    {saving === "product_identifiers" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                    حفظ إعدادات المعرفات
+                </button>
+            </SettingsCard>
+
+            {/* ─── 5. أسعار القطع (صمّم قطعتك) ─── */}
             <SettingsCard title="أسعار القطع — صمّم قطعتك" icon={Tag}>
                 <p className="text-fg/50 text-sm mb-4">أسعار التيشيرت والهودي والبلوفر في مسار التصميم المخصص</p>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

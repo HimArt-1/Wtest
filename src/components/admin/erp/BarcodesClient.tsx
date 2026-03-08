@@ -41,29 +41,13 @@ export default function BarcodesClient({ initialSKUs }: { initialSKUs: any[] }) 
         fetchProducts();
     };
 
-    const generateSkuString = () => {
-        if (!selectedProductId) return "";
-        const product = products.find(p => p.id === selectedProductId);
-        if (!product) return "";
-
-        // wsh-[type]-[seq]-[size]-[color]
-        const typeStr = product.type === 'apparel' ? 't' : product.type === 'print' ? 'p' : 'o';
-        const seq = Math.floor(Math.random() * 1000).toString().padStart(3, '0'); // Basic random for demo, normally auto-increment
-        const sizeStr = size ? size.toUpperCase() : 'NA';
-        const colorStr = colorCode ? colorCode.toLowerCase() : 'na';
-
-        return `wsh-${typeStr}-${seq}-${sizeStr}-${colorStr}`;
-    };
-
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSaving(true);
 
-        const finalSku = customSku || generateSkuString();
-
         const { sku, error } = await createSKU({
             product_id: selectedProductId,
-            sku: finalSku,
+            sku: customSku.trim() || undefined,
             size: size || null,
             color_code: colorCode || null
         });
@@ -71,7 +55,6 @@ export default function BarcodesClient({ initialSKUs }: { initialSKUs: any[] }) 
         if (error) {
             alert(error);
         } else if (sku) {
-            // Need to fetch again to get joined product data, or just reload
             window.location.reload();
         }
 
@@ -278,9 +261,9 @@ export default function BarcodesClient({ initialSKUs }: { initialSKUs: any[] }) 
                                         <input
                                             type="text"
                                             className="w-full p-3 font-mono bg-gold/5 border border-gold/20 rounded-xl text-gold focus:outline-none placeholder:text-gold/30"
-                                            value={customSku || generateSkuString()}
+                                            value={customSku}
+                                            placeholder="اتركه فارغاً للتوليد التلقائي (WSH-P-00001-NA-NA)"
                                             onChange={e => setCustomSku(e.target.value)}
-                                            placeholder="سجل الكود المخصص هنا أو اترك المولد الآلي"
                                         />
                                     </div>
                                     <p className="text-xs text-fg/40 leading-relaxed">

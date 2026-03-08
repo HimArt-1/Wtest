@@ -383,8 +383,7 @@ export async function updateProductStock(productId: string, stockQuantity: numbe
     else if (stockQuantity !== null) updates.in_stock = stockQuantity > 0;
     const { error } = await supabase.from("products").update(updates).eq("id", productId);
     if (error) return { success: false, error: error.message };
-    revalidatePath("/dashboard/inventory");
-    revalidatePath("/dashboard/products");
+    revalidatePath("/dashboard/products-inventory");
     revalidatePath("/store");
     return { success: true };
 }
@@ -1017,7 +1016,7 @@ export async function updateOrderStatus(orderId: string, newStatus: string) {
     }
 
     revalidatePath("/dashboard/orders");
-    revalidatePath("/dashboard/inventory");
+    revalidatePath("/dashboard/products-inventory");
     return { success: true };
 }
 
