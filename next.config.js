@@ -43,6 +43,8 @@ const withPWA = require("next-pwa")({
     /.*\.js\.map$/,
     /_buildManifest\.js$/,
     /_ssgManifest\.js$/,
+    /server\/.*$/,
+    /edge\/.*$/,
   ],
 });
 
