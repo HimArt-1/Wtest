@@ -38,7 +38,9 @@ const withPWA = require("next-pwa")({
   buildExcludes: [
     /app-build-manifest\.json$/,
     /middleware-manifest\.json$/,
+    /middleware-build-manifest\.js$/,
     /page_client-reference-manifest\.js$/,
+    /.*\.js\.map$/,
     /_buildManifest\.js$/,
     /_ssgManifest\.js$/,
   ],
