@@ -64,7 +64,7 @@ export default function JoinPage() {
                 <div
                     className="absolute inset-0 opacity-[0.015]"
                     style={{
-                        backgroundImage: `linear-gradient(rgba(206,174,127,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(206,174,127,0.3) 1px, transparent 1px)`,
+                        backgroundImage: `linear-gradient(color-mix(in srgb, var(--wusha-gold) 30%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--wusha-gold) 30%, transparent) 1px, transparent 1px)`,
                         backgroundSize: "60px 60px",
                     }}
                 />
@@ -247,9 +247,10 @@ export default function JoinPage() {
                                                             animate={{ opacity: 1, y: 0 }}
                                                             transition={{ delay: 0.4 + i * 0.05 }}
                                                             className={`relative px-4 py-4 rounded-2xl border text-sm font-medium transition-all duration-300 flex items-center gap-3 ${isSelected
-                                                                    ? "border-gold/40 bg-gold/[0.08] text-gold shadow-[0_0_20px_rgba(206,174,127,0.08)]"
+                                                                    ? "border-gold/40 bg-gold/[0.08] text-gold"
                                                                     : "border-theme-soft bg-theme-subtle text-theme-subtle hover:border-theme-strong hover:bg-theme-subtle"
                                                                 }`}
+                                                            style={isSelected ? { boxShadow: "0 0 20px color-mix(in srgb, var(--wusha-gold) 8%, transparent)" } : undefined}
                                                         >
                                                             <span className="text-lg">{option.emoji}</span>
                                                             {option.label}
@@ -282,7 +283,19 @@ export default function JoinPage() {
                                         <motion.button
                                             type="submit"
                                             disabled={status === "loading" || !name.trim() || !email.trim()}
-                                            className="w-full py-4 bg-gradient-to-r from-[#ceae7f] to-[#b8964f] text-[#0a0a0a] font-bold rounded-2xl hover:shadow-[0_0_40px_rgba(206,174,127,0.2)] transition-all duration-500 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2.5 text-base"
+                                            className="w-full py-4 font-bold rounded-2xl transition-all duration-500 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2.5 text-base"
+                                            style={{
+                                              background: "linear-gradient(to right, var(--wusha-gold), var(--wusha-gold-light))",
+                                              color: "var(--wusha-bg)",
+                                            }}
+                                            onMouseEnter={(e) => {
+                                              if (!e.currentTarget.disabled) {
+                                                e.currentTarget.style.boxShadow = "0 0 40px color-mix(in srgb, var(--wusha-gold) 20%, transparent)";
+                                              }
+                                            }}
+                                            onMouseLeave={(e) => {
+                                              e.currentTarget.style.boxShadow = "none";
+                                            }}
                                             whileHover={{ scale: 1.01 }}
                                             whileTap={{ scale: 0.98 }}
                                         >

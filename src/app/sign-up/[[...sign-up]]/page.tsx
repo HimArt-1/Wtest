@@ -15,7 +15,7 @@ export default function SignUpPage() {
                     <div className="relative">
                         <div className="absolute inset-0 blur-xl bg-gold/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl scale-150" />
                         <div className="relative animate-neon-pulse">
-                            <Logo size="lg" />
+                            <Logo size="lg" asLink={false} />
                         </div>
                     </div>
                 </Link>

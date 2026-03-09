@@ -197,7 +197,12 @@ export function Footer() {
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="bg-green-500/10 text-green-400 p-4 rounded-lg flex items-center justify-center gap-2 border border-green-500/20"
+                className="p-4 rounded-lg flex items-center justify-center gap-2 border"
+                style={{
+                  backgroundColor: "color-mix(in srgb, var(--wusha-forest) 10%, transparent)",
+                  color: "var(--wusha-forest)",
+                  borderColor: "color-mix(in srgb, var(--wusha-forest) 20%, transparent)",
+                }}
               >
                 <Check className="w-5 h-5" />
                 شكراً لاشتراكك!

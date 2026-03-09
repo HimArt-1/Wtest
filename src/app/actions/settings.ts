@@ -37,17 +37,29 @@ async function requireAdmin() {
 // ═══════════════════════════════════════════════════════════
 
 export async function getSiteSettings() {
-    const supabase = getAdminSupabase();
-    const { data, error } = await supabase
-        .from("site_settings")
-        .select("key, value");
-
-    if (error || !data) {
-        // Return defaults if table doesn't exist yet
+    // Check if Supabase is configured before attempting to use it
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
         return {
             visibility: { gallery: false, store: false, signup: false, join: true, join_artist: true, ai_section: true, hero_auth_buttons: true },
             site_info: { name: "وشّى", description: "منصة الفن العربي الأصيل", email: "", phone: "", instagram: "", twitter: "", tiktok: "" },
             shipping: { flat_rate: 30, free_above: 500, tax_rate: 15 },
+            creation_prices: { tshirt: 89, hoodie: 149, pullover: 129 },
+            product_identifiers: { prefix: "WSH", product_code_template: "{PREFIX}-{SEQ:5}", sku_template: "{PREFIX}-{TYPE}-{SEQ:5}-{SIZE}-{COLOR}", type_map: {} },
+        };
+    }
+    
+    try {
+        const supabase = getAdminSupabase();
+        const { data, error } = await supabase
+            .from("site_settings")
+            .select("key, value");
+
+        if (error || !data) {
+            // Return defaults if table doesn't exist yet
+            return {
+                visibility: { gallery: false, store: false, signup: false, join: true, join_artist: true, ai_section: true, hero_auth_buttons: true },
+                site_info: { name: "وشّى", description: "منصة الفن العربي الأصيل", email: "", phone: "", instagram: "", twitter: "", tiktok: "" },
+                shipping: { flat_rate: 30, free_above: 500, tax_rate: 15 },
             creation_prices: { tshirt: 89, hoodie: 149, pullover: 129 },
             product_identifiers: { prefix: "WSH", product_code_template: "{PREFIX}-{SEQ:5}", sku_template: "{PREFIX}-{TYPE}-{SEQ:5}-{SIZE}-{COLOR}", type_map: {} },
         };
@@ -85,46 +97,101 @@ export async function getSiteSettings() {
             type_map: pi.type_map ?? { print: "P", apparel: "T", digital: "D", nft: "N", original: "O" },
         },
     };
+    } catch (error) {
+        // Return defaults if Supabase is not configured (development mode)
+        console.warn("getSiteSettings: Supabase not configured, returning defaults");
+        return {
+            visibility: { gallery: false, store: false, signup: false, join: true, join_artist: true, ai_section: true, hero_auth_buttons: true },
+            site_info: { name: "وشّى", description: "منصة الفن العربي الأصيل", email: "", phone: "", instagram: "", twitter: "", tiktok: "" },
+            shipping: { flat_rate: 30, free_above: 500, tax_rate: 15 },
+            creation_prices: { tshirt: 89, hoodie: 149, pullover: 129 },
+            product_identifiers: { prefix: "WSH", product_code_template: "{PREFIX}-{SEQ:5}", sku_template: "{PREFIX}-{TYPE}-{SEQ:5}-{SIZE}-{COLOR}", type_map: {} },
+        };
+    }
 }
 
 // ─── أسعار القطع (للتصميم — بدون صلاحية أدمن) ───
 
 export async function getCreationPrices() {
-    const supabase = getAdminSupabase();
-    const { data } = await supabase
-        .from("site_settings")
-        .select("value")
-        .eq("key", "creation_prices")
-        .maybeSingle();
+    // Check if Supabase is configured before attempting to use it
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        return {
+            tshirt: 89,
+            hoodie: 149,
+            pullover: 129,
+        };
+    }
+    
+    try {
+        const supabase = getAdminSupabase();
+        const { data } = await supabase
+            .from("site_settings")
+            .select("value")
+            .eq("key", "creation_prices")
+            .maybeSingle();
 
-    const p = (data as { value?: Record<string, number> } | null)?.value;
-    return {
-        tshirt: p?.tshirt ?? 89,
-        hoodie: p?.hoodie ?? 149,
-        pullover: p?.pullover ?? 129,
-    };
+        const p = (data as { value?: Record<string, number> } | null)?.value;
+        return {
+            tshirt: p?.tshirt ?? 89,
+            hoodie: p?.hoodie ?? 149,
+            pullover: p?.pullover ?? 129,
+        };
+    } catch (error) {
+        // Return defaults if Supabase is not configured
+        return {
+            tshirt: 89,
+            hoodie: 149,
+            pullover: 129,
+        };
+    }
 }
 
 // ─── Public visibility (للصفحات العامة — بدون صلاحية أدمن) ───
 
 export async function getPublicVisibility() {
-    const supabase = getAdminSupabase();
-    const { data } = await supabase
-        .from("site_settings")
-        .select("value")
-        .eq("key", "visibility")
-        .maybeSingle();
+    // Check if Supabase is configured before attempting to use it
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        return {
+            gallery: false,
+            store: false,
+            signup: false,
+            join: true,
+            join_artist: true,
+            ai_section: true,
+            hero_auth_buttons: true,
+        };
+    }
+    
+    try {
+        const supabase = getAdminSupabase();
+        const { data } = await supabase
+            .from("site_settings")
+            .select("value")
+            .eq("key", "visibility")
+            .maybeSingle();
 
-    const visibility = (data as { value?: Record<string, boolean> } | null)?.value;
-    return {
-        gallery: visibility?.gallery ?? false,
-        store: visibility?.store ?? false,
-        signup: visibility?.signup ?? false,
-        join: visibility?.join ?? true,
-        join_artist: visibility?.join_artist ?? true,
-        ai_section: visibility?.ai_section ?? true,
-        hero_auth_buttons: visibility?.hero_auth_buttons ?? true,
-    };
+        const visibility = (data as { value?: Record<string, boolean> } | null)?.value;
+        return {
+            gallery: visibility?.gallery ?? false,
+            store: visibility?.store ?? false,
+            signup: visibility?.signup ?? false,
+            join: visibility?.join ?? true,
+            join_artist: visibility?.join_artist ?? true,
+            ai_section: visibility?.ai_section ?? true,
+            hero_auth_buttons: visibility?.hero_auth_buttons ?? true,
+        };
+    } catch (error) {
+        // Return defaults if Supabase is not configured
+        return {
+            gallery: false,
+            store: false,
+            signup: false,
+            join: true,
+            join_artist: true,
+            ai_section: true,
+            hero_auth_buttons: true,
+        };
+    }
 }
 
 // ═══════════════════════════════════════════════════════════

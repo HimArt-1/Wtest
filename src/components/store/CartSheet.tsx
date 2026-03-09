@@ -233,7 +233,17 @@ export function CartSheet() {
                                 <Link
                                     href="/checkout"
                                     onClick={() => toggleCart(false)}
-                                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-gold to-gold/90 text-[#0a0a0a] font-bold py-3.5 rounded-xl hover:shadow-lg hover:shadow-gold/20 transition-all duration-300 mt-2"
+                                    className="w-full flex items-center justify-center gap-2 font-bold py-3.5 rounded-xl transition-all duration-300 mt-2"
+                                    style={{
+                                      background: "linear-gradient(to right, var(--wusha-gold), var(--wusha-gold-light))",
+                                      color: "var(--wusha-bg)",
+                                    }}
+                                    onMouseEnter={(e) => {
+                                      e.currentTarget.style.boxShadow = "0 0 20px var(--neon-gold)";
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      e.currentTarget.style.boxShadow = "none";
+                                    }}
                                 >
                                     إتمام الشراء
                                     <ArrowRight className="w-4 h-4" />

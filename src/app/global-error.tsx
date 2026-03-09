@@ -10,31 +10,46 @@ export default function GlobalError({
     reset: () => void;
 }) {
     useEffect(() => {
-        // Log the actual error to help debug
-        console.error("Global Error:", error);
+        console.error("[WASHA Global Error]", error);
     }, [error]);
 
     return (
-        <html dir="rtl" lang="ar">
-            <body style={{ background: "#080808", color: "#f0ebe3", fontFamily: "system-ui", padding: "2rem", textAlign: "center" }}>
-                <h1 style={{ fontSize: "1.5rem", marginBottom: "1rem" }}>❌ خطأ في الخادم</h1>
-                <div style={{ background: "#1a1a1a", border: "1px solid #333", borderRadius: "12px", padding: "1.5rem", maxWidth: "600px", margin: "0 auto", textAlign: "left", direction: "ltr" }}>
-                    <p style={{ color: "#ff6b6b", marginBottom: "0.5rem" }}>
-                        <strong>Error:</strong> {error.message}
-                    </p>
-                    <p style={{ color: "#666", fontSize: "0.875rem" }}>
-                        <strong>Digest:</strong> {error.digest}
-                    </p>
-                    <pre style={{ color: "#888", fontSize: "0.7rem", overflow: "auto", maxHeight: "200px", marginTop: "1rem", whiteSpace: "pre-wrap" }}>
-                        {error.stack}
-                    </pre>
-                </div>
-                <button
-                    onClick={reset}
-                    style={{ marginTop: "1.5rem", padding: "0.75rem 2rem", background: "#ceae7f", color: "#080808", border: "none", borderRadius: "8px", fontWeight: "bold", cursor: "pointer" }}
+        <html lang="ar" dir="rtl">
+            <body>
+                <div
+                    className="min-h-screen bg-bg flex items-center justify-center px-4"
+                    dir="rtl"
                 >
-                    إعادة المحاولة
-                </button>
+                    <div className="text-center max-w-md">
+                        <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                            <svg
+                                className="w-8 h-8 text-red-400"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                strokeWidth={2}
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
+                                />
+                            </svg>
+                        </div>
+                        <h1 className="text-2xl font-bold text-fg mb-3">
+                            حدث خطأ غير متوقع
+                        </h1>
+                        <p className="text-fg/40 text-sm mb-8 leading-relaxed">
+                            نعتذر عن هذا الخطأ. يمكنك المحاولة مرة أخرى.
+                        </p>
+                        <button
+                            onClick={reset}
+                            className="btn-gold py-3 px-8 cursor-pointer"
+                        >
+                            إعادة المحاولة
+                        </button>
+                    </div>
+                </div>
             </body>
         </html>
     );

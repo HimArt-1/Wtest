@@ -13,9 +13,16 @@ import { checkStockAvailability, decrementStockForOrder } from "@/lib/inventory"
 import { createAdminNotification } from "@/app/actions/notifications";
 
 function getAdminClient() {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    
+    if (!url || !key) {
+        throw new Error("Supabase configuration is missing");
+    }
+    
     return createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        url,
+        key,
         { auth: { persistSession: false, autoRefreshToken: false } }
     );
 }
@@ -207,49 +214,54 @@ export async function confirmOrderPayment(
     orderId: string,
     options?: { customerEmail?: string }
 ) {
-    const supabase = getAdminClient();
+    try {
+        const supabase = getAdminClient();
 
-    const { data: order } = await supabase
-        .from("orders")
-        .select("order_number, total, shipping_address")
-        .eq("id", orderId)
-        .single();
+        const { data: order } = await supabase
+            .from("orders")
+            .select("order_number, total, shipping_address")
+            .eq("id", orderId)
+            .single();
 
-    const { error } = await supabase
-        .from("orders")
-        .update({
-            payment_status: "paid",
-            status: "confirmed",
-            updated_at: new Date().toISOString(),
-        })
-        .eq("id", orderId);
+        const { error } = await supabase
+            .from("orders")
+            .update({
+                payment_status: "paid",
+                status: "confirmed",
+                updated_at: new Date().toISOString(),
+            })
+            .eq("id", orderId);
 
-    if (error) {
-        console.error("[confirmOrderPayment]", error);
+        if (error) {
+            console.error("[confirmOrderPayment]", error);
+            return { success: false };
+        }
+
+        await decrementStockForOrder(orderId);
+
+        const ord = order as { order_number: string; total: number; shipping_address?: { name?: string } } | null;
+        if (ord) {
+            createAdminNotification({
+                type: "payment_received",
+                title: "تم استلام الدفع",
+                message: `طلب #${ord.order_number} — ${ord.total.toLocaleString()} ر.س`,
+                link: "/dashboard/orders",
+                metadata: { order_id: orderId },
+            }).catch(() => { });
+            sendAdminOrderNotificationEmail(ord.order_number, ord.total, "payment_received").catch(console.error);
+            sendPushToAll("تم استلام الدفع", `طلب #${ord.order_number} — ${ord.total.toLocaleString()} ر.س`, "/dashboard/orders").catch(() => { });
+        }
+        const email = options?.customerEmail;
+        if (ord && email) {
+            const name = ord.shipping_address?.name || "عميل";
+            sendOrderConfirmationEmail(email, name, ord.order_number, ord.total).catch(console.error);
+        }
+
+        return { success: true };
+    } catch (error) {
+        console.error("[confirmOrderPayment] Error:", error);
         return { success: false };
     }
-
-    await decrementStockForOrder(orderId);
-
-    const ord = order as { order_number: string; total: number; shipping_address?: { name?: string } } | null;
-    if (ord) {
-        createAdminNotification({
-            type: "payment_received",
-            title: "تم استلام الدفع",
-            message: `طلب #${ord.order_number} — ${ord.total.toLocaleString()} ر.س`,
-            link: "/dashboard/orders",
-            metadata: { order_id: orderId },
-        }).catch(() => { });
-        sendAdminOrderNotificationEmail(ord.order_number, ord.total, "payment_received").catch(console.error);
-        sendPushToAll("تم استلام الدفع", `طلب #${ord.order_number} — ${ord.total.toLocaleString()} ر.س`, "/dashboard/orders").catch(() => { });
-    }
-    const email = options?.customerEmail;
-    if (ord && email) {
-        const name = ord.shipping_address?.name || "عميل";
-        sendOrderConfirmationEmail(email, name, ord.order_number, ord.total).catch(console.error);
-    }
-
-    return { success: true };
 }
 
 // ─── Get User Orders ────────────────────────────────────────

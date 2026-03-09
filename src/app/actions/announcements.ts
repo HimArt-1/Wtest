@@ -26,21 +26,32 @@ async function requireAdmin() {
 // ─── GET Announcements ──────────────────────────────────────
 
 export async function getAnnouncements(): Promise<Announcement[]> {
-    const supabase = getAdminSupabase();
-    const { data } = await supabase
-        .from("site_settings")
-        .select("value")
-        .eq("key", "announcements")
-        .maybeSingle();
+    // Check if Supabase is configured before attempting to use it
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        return [];
+    }
+    
+    try {
+        const supabase = getAdminSupabase();
+        const { data } = await supabase
+            .from("site_settings")
+            .select("value")
+            .eq("key", "announcements")
+            .maybeSingle();
 
-    const raw = (data as any)?.value;
-    if (!raw || !Array.isArray(raw)) return [];
+        const raw = (data as any)?.value;
+        if (!raw || !Array.isArray(raw)) return [];
 
-    // Migrate old announcements that don't have trigger field
-    return raw.map((a: any) => ({
-        ...a,
-        trigger: a.trigger || DEFAULT_TRIGGER,
-    })) as Announcement[];
+        // Migrate old announcements that don't have trigger field
+        return raw.map((a: any) => ({
+            ...a,
+            trigger: a.trigger || DEFAULT_TRIGGER,
+        })) as Announcement[];
+    } catch (error) {
+        // Return empty array if Supabase is not configured (development mode)
+        console.warn("getAnnouncements: Supabase not configured, returning empty array");
+        return [];
+    }
 }
 
 // ─── GET Active Public Announcements ────────────────────────

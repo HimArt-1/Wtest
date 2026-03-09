@@ -37,7 +37,7 @@ export function Gallery() {
       {/* Background Elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
         <div className="absolute top-[20%] left-[10%] w-[500px] h-[500px] bg-gold/5 rounded-full blur-3xl opacity-20 animate-pulse-slow" />
-        <div className="absolute bottom-[20%] right-[10%] w-[600px] h-[600px] bg-[#9D8BB1]/5 rounded-full blur-3xl opacity-20 animate-pulse-slow delay-1000" />
+        <div className="absolute bottom-[20%] right-[10%] w-[600px] h-[600px] rounded-full blur-3xl opacity-20 animate-pulse-slow delay-1000" style={{ backgroundColor: "color-mix(in srgb, var(--wusha-mist) 5%, transparent)" }} />
       </div>
 
       <div className="container-wusha relative z-10">
@@ -111,14 +111,14 @@ export function Gallery() {
                   />
 
                   {/* Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: "linear-gradient(to top, color-mix(in srgb, var(--wusha-bg) 90%, transparent), color-mix(in srgb, var(--wusha-bg) 20%, transparent), transparent)" }}>
                     <div className="absolute bottom-0 left-0 w-full p-6">
                       <div className="flex justify-between items-end">
                         <div>
-                          <h3 className="text-xl font-bold text-white mb-1">{artwork.title}</h3>
-                          <p className="text-gold text-sm">{artwork.artist?.display_name || "فنان مجهول"}</p>
+                          <h3 className="text-xl font-bold mb-1" style={{ color: "var(--wusha-text)" }}>{artwork.title}</h3>
+                          <p className="text-sm" style={{ color: "var(--wusha-gold)" }}>{artwork.artist?.display_name || "فنان مجهول"}</p>
                           {artwork.price && (
-                            <p className="text-white/90 font-bold mt-2">{artwork.price} ر.س</p>
+                            <p className="font-bold mt-2" style={{ color: "color-mix(in srgb, var(--wusha-text) 90%, transparent)" }}>{artwork.price} ر.س</p>
                           )}
                         </div>
 
@@ -133,13 +133,23 @@ export function Gallery() {
                                 artist_name: artwork.artist?.display_name || "Wusha Artist",
                                 type: "artwork",
                               })}
-                              className="p-3 bg-gold text-black rounded-full hover:bg-white transition-colors"
+                              className="p-3 rounded-full transition-colors backdrop-blur-sm"
+                              style={{
+                                backgroundColor: "var(--wusha-gold)",
+                                color: "var(--wusha-bg)",
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = "var(--wusha-text)";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = "var(--wusha-gold)";
+                              }}
                               title="أضف للسلة"
                             >
                               <ShoppingBag className="w-5 h-5" />
                             </button>
                           )}
-                            <button className="p-3 bg-white/10 text-white rounded-full hover:bg-white/20 transition-colors backdrop-blur-sm">
+                            <button className="p-3 rounded-full transition-colors backdrop-blur-sm" style={{ backgroundColor: "color-mix(in srgb, var(--wusha-text) 10%, transparent)", color: "var(--wusha-text)" }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "color-mix(in srgb, var(--wusha-text) 20%, transparent)"; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "color-mix(in srgb, var(--wusha-text) 10%, transparent)"; }}>
                             <Heart className="w-5 h-5" />
                           </button>
                         </div>
@@ -160,7 +170,7 @@ export function Gallery() {
 
         {/* Load More */}
         <div className="mt-16 text-center">
-          <button className="px-8 py-4 border border-gold/30 text-gold rounded-full hover:bg-gold hover:text-black transition-all duration-300 tracking-wider text-sm font-medium">
+          <button className="px-8 py-4 border rounded-full transition-all duration-300 tracking-wider text-sm font-medium" style={{ borderColor: "color-mix(in srgb, var(--wusha-gold) 30%, transparent)", color: "var(--wusha-gold)" }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--wusha-gold)"; e.currentTarget.style.color = "var(--wusha-bg)"; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "var(--wusha-gold)"; }}>
             عرض المزيد من الأعمال
           </button>
         </div>

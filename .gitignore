@@ -43,3 +43,6 @@ next-env.d.ts
 # Gemini AI
 .gemini/
 HERO1.mp4
+
+# clerk configuration (can include secrets)
+/.clerk/

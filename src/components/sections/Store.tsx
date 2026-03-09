@@ -84,7 +84,7 @@ export function Store() {
                     className="object-cover transition-transform duration-700 group-hover:scale-110"
                   />
                   {product.badge && (
-                    <div className="absolute top-4 right-4 bg-gradient-to-r from-gold to-[#b8964f] text-[#0a0a0a] text-xs font-bold px-3 py-1 rounded-full">
+                    <div className="absolute top-4 right-4 text-xs font-bold px-3 py-1 rounded-full" style={{ background: "linear-gradient(to right, var(--wusha-gold), var(--wusha-gold-light))", color: "var(--wusha-bg)" }}>
                       {product.badge}
                     </div>
                   )}
@@ -118,7 +118,20 @@ export function Store() {
                           type: "product"
                         })
                       }
-                      className="p-2.5 bg-gold/10 text-gold rounded-xl hover:bg-gold hover:text-[#0a0a0a] transition-all duration-300 border border-gold/20"
+                      className="p-2.5 rounded-xl transition-all duration-300 border"
+                      style={{
+                        backgroundColor: "color-mix(in srgb, var(--wusha-gold) 10%, transparent)",
+                        color: "var(--wusha-gold)",
+                        borderColor: "color-mix(in srgb, var(--wusha-gold) 20%, transparent)",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = "var(--wusha-gold)";
+                        e.currentTarget.style.color = "var(--wusha-bg)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = "color-mix(in srgb, var(--wusha-gold) 10%, transparent)";
+                        e.currentTarget.style.color = "var(--wusha-gold)";
+                      }}
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                     >

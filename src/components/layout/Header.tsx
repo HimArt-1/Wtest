@@ -128,14 +128,22 @@ export function Header() {
                       appearance={{
                         elements: {
                           avatarBox: "w-10 h-10 border-2 border-gold/30 hover:border-gold transition-colors duration-300",
-                          userButtonPopoverCard: "bg-[#111111] border border-[#ceae7f]/15 shadow-2xl shadow-black/40 rounded-2xl",
-                          userButtonPopoverActions: "[&>button]:text-[#f0ebe3] [&>button]:hover:bg-[#ceae7f]/10",
-                          userButtonPopoverActionButton: "text-[#f0ebe3]/80 hover:text-[#ceae7f] hover:bg-[#ceae7f]/10",
-                          userButtonPopoverActionButtonText: "text-[#f0ebe3]/80",
-                          userButtonPopoverActionButtonIconBox: "text-[#ceae7f]/60",
+                          userButtonPopoverCard: "rounded-2xl",
+                          userButtonPopoverActions: "[&>button]:hover:bg-gold/10",
+                          userButtonPopoverActionButton: "hover:text-gold hover:bg-gold/10",
+                          userButtonPopoverActionButtonText: "",
+                          userButtonPopoverActionButtonIconBox: "text-gold/60",
                           userButtonPopoverFooter: "hidden",
-                          userPreviewMainIdentifier: "text-[#f0ebe3]",
-                          userPreviewSecondaryIdentifier: "text-[#f0ebe3]/50",
+                          userPreviewMainIdentifier: "",
+                          userPreviewSecondaryIdentifier: "",
+                        },
+                        variables: {
+                          colorBackground: "var(--wusha-surface)",
+                          colorText: "var(--wusha-text)",
+                          colorTextSecondary: "color-mix(in srgb, var(--wusha-text) 50%, transparent)",
+                          colorPrimary: "var(--wusha-gold)",
+                          colorDanger: "var(--wusha-text)",
+                          borderRadius: "1rem",
                         },
                       }}
                     />
@@ -254,14 +262,22 @@ export function Header() {
                     appearance={{
                       elements: {
                         avatarBox: "w-12 h-12 border-2 border-gold/30",
-                        userButtonPopoverCard: "bg-[#111111] border border-[#ceae7f]/15 shadow-2xl shadow-black/40 rounded-2xl",
-                        userButtonPopoverActions: "[&>button]:text-[#f0ebe3] [&>button]:hover:bg-[#ceae7f]/10",
-                        userButtonPopoverActionButton: "text-[#f0ebe3]/80 hover:text-[#ceae7f] hover:bg-[#ceae7f]/10",
-                        userButtonPopoverActionButtonText: "text-[#f0ebe3]/80",
-                        userButtonPopoverActionButtonIconBox: "text-[#ceae7f]/60",
+                        userButtonPopoverCard: "rounded-2xl",
+                        userButtonPopoverActions: "[&>button]:hover:bg-gold/10",
+                        userButtonPopoverActionButton: "hover:text-gold hover:bg-gold/10",
+                        userButtonPopoverActionButtonText: "",
+                        userButtonPopoverActionButtonIconBox: "text-gold/60",
                         userButtonPopoverFooter: "hidden",
-                        userPreviewMainIdentifier: "text-[#f0ebe3]",
-                        userPreviewSecondaryIdentifier: "text-[#f0ebe3]/50",
+                        userPreviewMainIdentifier: "",
+                        userPreviewSecondaryIdentifier: "",
+                      },
+                      variables: {
+                        colorBackground: "var(--wusha-surface)",
+                        colorText: "var(--wusha-text)",
+                        colorTextSecondary: "color-mix(in srgb, var(--wusha-text) 50%, transparent)",
+                        colorPrimary: "var(--wusha-gold)",
+                        colorDanger: "var(--wusha-text)",
+                        borderRadius: "1rem",
                       },
                     }}
                   />

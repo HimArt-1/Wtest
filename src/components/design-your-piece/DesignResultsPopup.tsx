@@ -135,9 +135,9 @@ export function DesignResultsPopup({
                 transition={{ type: "spring", damping: 25, stiffness: 300 }}
                 className="relative z-10 w-full max-w-4xl rounded-3xl overflow-hidden"
                 style={{
-                    background: "linear-gradient(145deg, rgba(17,17,17,0.97) 0%, rgba(26,26,26,0.95) 100%)",
-                    border: "1px solid rgba(206,174,127,0.15)",
-                    boxShadow: "0 0 80px rgba(206,174,127,0.1), 0 40px 100px rgba(0,0,0,0.8)",
+                    background: `linear-gradient(145deg, color-mix(in srgb, var(--wusha-surface) 97%, transparent) 0%, color-mix(in srgb, var(--wusha-surface-2) 95%, transparent) 100%)`,
+                    border: "1px solid var(--glass-border)",
+                    boxShadow: `0 0 80px var(--neon-gold), 0 40px 100px color-mix(in srgb, var(--wusha-bg) 80%, transparent)`,
                 }}
             >
                 {/* Glow Effects */}

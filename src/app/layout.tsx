@@ -41,6 +41,9 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "وشّى",
   },
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
   openGraph: {
     title: "منصة وشّى | WASHA — فنٌ يرتدى",
     description: "منصة فنية رقمية تجمع المبدعين العرب. معرض، متجر، وتصميم قطعك بالذكاء الاصطناعي.",
@@ -65,22 +68,22 @@ export const metadata: Metadata = {
 
 const clerkAppearance = {
   variables: {
-    colorPrimary: "#ceae7f",
-    colorText: "#f0ebe3",
-    colorBackground: "#111111",
-    colorInputBackground: "#1a1a1a",
-    colorInputText: "#f0ebe3",
+    colorPrimary: "var(--wusha-gold)",
+    colorText: "var(--wusha-text)",
+    colorBackground: "var(--wusha-surface)",
+    colorInputBackground: "var(--wusha-surface-2)",
+    colorInputText: "var(--wusha-text)",
     fontFamily: "var(--font-arabic), 'IBM Plex Sans Arabic', sans-serif",
     borderRadius: "0.75rem",
   },
   elements: {
-    card: "shadow-2xl border border-gold/10 bg-[#111111]",
+    card: "shadow-2xl border border-gold/10",
     formButtonPrimary:
-      "bg-gradient-to-r from-[#ceae7f] to-[#b8964f] hover:shadow-[0_0_30px_rgba(206,174,127,0.3)] text-[#0a0a0a] font-bold transition-all duration-500",
-    footerActionLink: "text-[#ceae7f] hover:text-[#e0c99a]",
-    headerTitle: "font-bold text-[#f0ebe3]",
-    headerSubtitle: "text-[#f0ebe3]/60",
-    formFieldInput: "bg-[#1a1a1a] border-[#ceae7f]/10 text-[#f0ebe3]",
+      "bg-gradient-to-r from-gold to-gold-light hover:shadow-[0_0_30px_var(--neon-gold)] font-bold transition-all duration-500",
+    footerActionLink: "text-gold hover:text-gold-light",
+    headerTitle: "font-bold",
+    headerSubtitle: "",
+    formFieldInput: "border-gold/10",
   },
 };
 
@@ -90,7 +93,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider localization={arSA} appearance={clerkAppearance} dynamic>
+    <ClerkProvider 
+      localization={arSA} 
+      appearance={clerkAppearance} 
+      dynamic
+    >
       <html lang="ar" dir="rtl" suppressHydrationWarning>
         <head>
           <script

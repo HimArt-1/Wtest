@@ -189,8 +189,12 @@ export function AISection() {
                 </div>
                 <motion.button
                   onClick={handleSearch}
-                  className="bg-gradient-to-r from-gold to-[#b8964f] text-[#0a0a0a] px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold hover:shadow-[0_0_30px_rgba(206,174,127,0.3)] transition-all duration-500 shrink-0"
-                  whileHover={{ scale: 1.02 }}
+                  className="px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold transition-all duration-500 shrink-0"
+                  style={{
+                    background: "linear-gradient(to right, var(--wusha-gold), var(--wusha-gold-light))",
+                    color: "var(--wusha-bg)",
+                  }}
+                  whileHover={{ scale: 1.02, boxShadow: "0 0 30px var(--neon-gold)" }}
                   whileTap={{ scale: 0.98 }}
                   disabled={isSearching}
                 >
@@ -259,7 +263,7 @@ export function AISection() {
                           fill
                           className="object-cover group-hover:scale-105 transition-transform duration-500"
                         />
-                        <div className="absolute top-3 right-3 px-3 py-1 bg-gradient-to-r from-gold to-[#b8964f] text-[#0a0a0a] text-xs font-bold rounded-full">
+                        <div className="absolute top-3 right-3 px-3 py-1 text-xs font-bold rounded-full" style={{ background: "linear-gradient(to right, var(--wusha-gold), var(--wusha-gold-light))", color: "var(--wusha-bg)" }}>
                           تطابق {item.match}
                         </div>
                         <button className="absolute top-3 left-3 w-8 h-8 rounded-full bg-theme-subtle backdrop-blur-sm flex items-center justify-center hover:bg-[var(--wusha-gold)] hover:text-[var(--wusha-bg)] transition-all">

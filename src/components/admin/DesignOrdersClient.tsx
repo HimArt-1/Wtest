@@ -611,7 +611,7 @@ function OrderDetailModal({ order, adminList, onClose, onOrderUpdated }: { order
                         <ResultUpload label="صورة الموكاب" field="result_mockup_url" currentUrl={order.result_mockup_url} uploading={uploading === "result_mockup_url"} onUpload={(f) => handleUpload("result_mockup_url", f)} icon={ImageIcon} />
                         <ResultUpload label="ملف PDF" field="result_pdf_url" currentUrl={order.result_pdf_url} uploading={uploading === "result_pdf_url"} onUpload={(f) => handleUpload("result_pdf_url", f)} icon={FileText} accept=".pdf" />
                         {order.modification_request && (
-                            <ResultUpload label="التصميم بعد التعديل" field="modification_design_url" currentUrl={order.modification_design_url ?? undefined} uploading={uploading === "modification_design_url"} onUpload={(f) => handleUpload("modification_design_url", f)} icon={ImageIcon} />
+                            <ResultUpload label="التصميم بعد التعديل" field="modification_design_url" currentUrl={order.modification_design_url ?? null} uploading={uploading === "modification_design_url"} onUpload={(f) => handleUpload("modification_design_url", f)} icon={ImageIcon} />
                         )}
                     </div>
                 )}

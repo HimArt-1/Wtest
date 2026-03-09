@@ -63,14 +63,14 @@ export function CustomCursor() {
         default: {
             width: 32,
             height: 32,
-            backgroundColor: "rgba(212, 175, 55, 0.2)", // wusha-gold with opacity
-            border: "1px solid rgba(212, 175, 55, 0.5)",
+            backgroundColor: "color-mix(in srgb, var(--wusha-gold) 20%, transparent)",
+            border: "1px solid color-mix(in srgb, var(--wusha-gold) 50%, transparent)",
         },
         hover: {
             width: 64,
             height: 64,
-            backgroundColor: "rgba(212, 175, 55, 0.1)",
-            border: "1px solid rgba(212, 175, 55, 0.8)",
+            backgroundColor: "color-mix(in srgb, var(--wusha-gold) 10%, transparent)",
+            border: "1px solid color-mix(in srgb, var(--wusha-gold) 80%, transparent)",
             mixBlendMode: "difference" as any,
         },
     };

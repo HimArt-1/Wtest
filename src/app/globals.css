@@ -243,15 +243,15 @@ h6 {
 ═══════════════════════════════════════════════════════════ */
 
 .neon-glow {
-  box-shadow: 0 0 20px var(--neon-gold), 0 0 40px rgba(206, 174, 127, 0.15);
+  box-shadow: 0 0 20px var(--neon-gold), 0 0 40px color-mix(in srgb, var(--wusha-gold) 15%, transparent);
 }
 
 .neon-glow-strong {
-  box-shadow: 0 0 30px var(--neon-gold), 0 0 60px rgba(206, 174, 127, 0.2);
+  box-shadow: 0 0 30px var(--neon-gold), 0 0 60px color-mix(in srgb, var(--wusha-gold) 20%, transparent);
 }
 
 .neon-text-glow {
-  text-shadow: 0 0 20px var(--neon-gold), 0 0 40px rgba(206, 174, 127, 0.3);
+  text-shadow: 0 0 20px var(--neon-gold), 0 0 40px color-mix(in srgb, var(--wusha-gold) 30%, transparent);
 }
 
 @keyframes pulse-slow {
@@ -350,12 +350,12 @@ h6 {
 
   .btn-gold {
     @apply px-8 py-4 font-bold rounded-lg transition-all duration-500 hover:scale-[1.02] active:scale-[0.98];
-    background: linear-gradient(to right, #5A3E2B, #ceae7f, #5A3E2B);
-    color: #fff;
+    background: linear-gradient(to right, var(--wusha-earth), var(--wusha-gold), var(--wusha-earth));
+    color: var(--wusha-bg);
   }
 
   .btn-gold:hover {
-    box-shadow: 0 0 30px rgba(206, 174, 127, 0.3);
+    box-shadow: 0 0 30px var(--neon-gold);
   }
 
   .card-artwork {
@@ -401,7 +401,7 @@ h6 {
 ═══════════════════════════════════════════════════════════ */
 
 .text-gradient {
-  background: linear-gradient(135deg, #5A3E2B 0%, #ceae7f 30%, #e0c99a 50%, #ceae7f 70%, #5A3E2B 100%);
+  background: linear-gradient(135deg, var(--wusha-earth) 0%, var(--wusha-gold) 30%, var(--wusha-gold-light) 50%, var(--wusha-gold) 70%, var(--wusha-earth) 100%);
   background-size: 200% 200%;
   animation: gradient 8s ease infinite;
   -webkit-background-clip: text;
@@ -431,7 +431,7 @@ h6 {
   inset: 0;
   background: linear-gradient(110deg,
       transparent 25%,
-      rgba(206, 174, 127, 0.08) 37%,
+      color-mix(in srgb, var(--wusha-gold) 8%, transparent) 37%,
       transparent 63%);
   animation: shimmer 3s ease-in-out infinite;
 }
@@ -451,11 +451,11 @@ h6 {
 ═══════════════════════════════════════════════════════════ */
 
 .glow-gold {
-  box-shadow: 0 0 20px rgba(206, 174, 127, 0.15);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--wusha-gold) 15%, transparent);
 }
 
 .glow-gold:hover {
-  box-shadow: 0 0 40px rgba(206, 174, 127, 0.25);
+  box-shadow: 0 0 40px color-mix(in srgb, var(--wusha-gold) 25%, transparent);
 }
 
 /* ═══════════════════════════════════════════════════════════

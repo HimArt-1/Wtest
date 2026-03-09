@@ -260,11 +260,11 @@ export function Hero({ showAuthButtons = true }: HeroProps) {
                 type="button"
                 className="group relative px-8 py-4 font-bold rounded-2xl overflow-hidden transition-all duration-500 hover:scale-[1.03] active:scale-[0.98]"
                 style={{
-                  background: "linear-gradient(to right, #5A3E2B, #ceae7f, #5A3E2B)",
-                  color: "#fff",
-                  boxShadow: "0 4px 24px rgba(206, 174, 127, 0.25)",
+                  background: "linear-gradient(to right, var(--wusha-earth), var(--wusha-gold), var(--wusha-earth))",
+                  color: "var(--wusha-bg)",
+                  boxShadow: "0 4px 24px var(--neon-gold)",
                 }}
-                whileHover={{ boxShadow: "0 8px 40px rgba(206, 174, 127, 0.4)" }}
+                whileHover={{ boxShadow: "0 8px 40px color-mix(in srgb, var(--wusha-gold) 40%, transparent)" }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => router.push("/store")}
                 suppressHydrationWarning
@@ -287,9 +287,9 @@ export function Hero({ showAuthButtons = true }: HeroProps) {
                     href="/sign-up"
                     className="group flex items-center justify-center gap-2.5 px-8 py-4 font-bold rounded-2xl transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] w-full sm:w-auto min-w-[160px]"
                     style={{
-                      background: "linear-gradient(to right, #5A3E2B, #ceae7f, #5A3E2B)",
-                      color: "#fff",
-                      boxShadow: "0 4px 24px rgba(206, 174, 127, 0.25)",
+                      background: "linear-gradient(to right, var(--wusha-earth), var(--wusha-gold), var(--wusha-earth))",
+                      color: "var(--wusha-bg)",
+                      boxShadow: "0 4px 24px var(--neon-gold)",
                     }}
                   >
                     <UserPlus className="w-4 h-4 opacity-80" />
@@ -297,7 +297,20 @@ export function Hero({ showAuthButtons = true }: HeroProps) {
                   </Link>
                   <Link
                     href="/sign-in"
-                    className="flex items-center justify-center gap-2.5 px-8 py-4 font-medium rounded-2xl border border-white/30 bg-white/5 backdrop-blur-md text-white/90 transition-all duration-300 hover:bg-white/10 hover:border-gold/40 w-full sm:w-auto min-w-[160px]"
+                    className="flex items-center justify-center gap-2.5 px-8 py-4 font-medium rounded-2xl border backdrop-blur-md transition-all duration-300 w-full sm:w-auto min-w-[160px]"
+                    style={{
+                      borderColor: "color-mix(in srgb, var(--wusha-text) 30%, transparent)",
+                      backgroundColor: "color-mix(in srgb, var(--wusha-text) 5%, transparent)",
+                      color: "color-mix(in srgb, var(--wusha-text) 90%, transparent)",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = "color-mix(in srgb, var(--wusha-gold) 40%, transparent)";
+                      e.currentTarget.style.backgroundColor = "color-mix(in srgb, var(--wusha-text) 10%, transparent)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = "color-mix(in srgb, var(--wusha-text) 30%, transparent)";
+                      e.currentTarget.style.backgroundColor = "color-mix(in srgb, var(--wusha-text) 5%, transparent)";
+                    }}
                   >
                     <LogIn className="w-4 h-4 opacity-70" />
                     تسجيل الدخول
@@ -306,7 +319,16 @@ export function Hero({ showAuthButtons = true }: HeroProps) {
                 <button
                   type="button"
                   onClick={() => setJoinOpen(true)}
-                  className="text-white/50 hover:text-gold text-sm font-medium transition-colors underline-offset-4 hover:underline"
+                  className="text-sm font-medium transition-colors underline-offset-4 hover:underline"
+                  style={{
+                    color: "color-mix(in srgb, var(--wusha-text) 50%, transparent)",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = "var(--wusha-gold)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = "color-mix(in srgb, var(--wusha-text) 50%, transparent)";
+                  }}
                   suppressHydrationWarning
                 >
                   انضم كفنان إلى المنصة

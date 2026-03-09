@@ -232,7 +232,19 @@ export function JoinModal({ isOpen, onClose }: JoinModalProps) {
                                         <button
                                             type="submit"
                                             disabled={status === "loading" || !name.trim() || !email.trim()}
-                                            className="w-full py-3.5 bg-gradient-to-r from-[#ceae7f] to-[#b8964f] text-[#0a0a0a] font-bold rounded-xl hover:shadow-[0_0_30px_rgba(206,174,127,0.25)] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                            className="w-full py-3.5 font-bold rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                            style={{
+                                              background: "linear-gradient(to right, var(--wusha-gold), var(--wusha-gold-light))",
+                                              color: "var(--wusha-bg)",
+                                            }}
+                                            onMouseEnter={(e) => {
+                                              if (!e.currentTarget.disabled) {
+                                                e.currentTarget.style.boxShadow = "0 0 30px var(--neon-gold)";
+                                              }
+                                            }}
+                                            onMouseLeave={(e) => {
+                                              e.currentTarget.style.boxShadow = "none";
+                                            }}
                                         >
                                             {status === "loading" ? (
                                                 <>
