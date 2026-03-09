@@ -43,9 +43,6 @@ export const metadata: Metadata = {
   other: {
     "mobile-web-app-capable": "yes",
   },
-  other: {
-    "mobile-web-app-capable": "yes",
-  },
   openGraph: {
     title: "منصة وشّى | WASHA — فنٌ يرتدى",
     description: "منصة فنية رقمية تجمع المبدعين العرب. معرض، متجر، وتصميم قطعك بالذكاء الاصطناعي.",
@@ -95,9 +92,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider 
-      localization={arSA} 
-      appearance={clerkAppearance} 
+    <ClerkProvider
+      localization={arSA}
+      appearance={clerkAppearance}
       dynamic
     >
       <html lang="ar" dir="rtl" suppressHydrationWarning>
