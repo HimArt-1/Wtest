@@ -37,9 +37,11 @@ export const metadata: Metadata = {
     apple: "/apple-touch-icon.png",
   },
   appleWebApp: {
-    capable: true,
-    statusBarStyle: "black-translucent",
     title: "وشّى",
+    statusBarStyle: "black-translucent",
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
   },
   other: {
     "mobile-web-app-capable": "yes",

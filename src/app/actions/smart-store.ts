@@ -7,7 +7,8 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { currentUser } from "@clerk/nextjs/server";
-import { createUserNotification, createAdminNotification } from "./notifications";
+import { createAdminNotification } from "./notifications";
+import { createUserNotification } from "./user-notifications";
 import type {
     CustomDesignGarment,
     CustomDesignColor,

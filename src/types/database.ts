@@ -158,11 +158,26 @@ export interface OrderItem {
     total_price: number;
 }
 
+// ─── Admin Notifications ───────────────────────────────────
+
+export type AdminNotificationType = "order_new" | "application_new" | "payment_received" | "order_status" | "order_alert" | "system_alert" | "order_update";
+
+export interface AdminNotification {
+    id: string;
+    type: AdminNotificationType;
+    title: string;
+    message: string | null;
+    link: string | null;
+    metadata: Record<string, unknown>;
+    is_read: boolean;
+    created_at: string;
+}
+
 // ─── User Notifications ────────────────────────────────────
 
-export type UserNotificationType = "order_update" | "support_reply" | "system_alert";
+export type UserNotificationType = "order_update" | "support_reply" | "system_alert" | "design_order_update";
 
-export interface UserNotification extends Timestamps {
+export interface UserNotification {
     id: string;
     user_id: string;              // FK → profiles.id
     type: UserNotificationType | string;
@@ -170,7 +185,8 @@ export interface UserNotification extends Timestamps {
     message: string;
     link: string | null;
     is_read: boolean;
-    metadata: any;
+    metadata: Record<string, unknown>;
+    created_at: string;
 }
 
 // ─── Support Tickets & Messages ──────────────────────────
@@ -524,6 +540,11 @@ export interface Database {
                 Insert: Partial<CustomDesignSettings>;
                 Update: Partial<CustomDesignSettings>;
             };
+            admin_notifications: {
+                Row: AdminNotification;
+                Insert: Omit<AdminNotification, "id" | "created_at" | "is_read"> & { id?: string; created_at?: string; is_read?: boolean };
+                Update: Partial<Omit<AdminNotification, "id" | "created_at">>;
+            };
             user_notifications: {
                 Row: UserNotification;
                 Insert: {
@@ -534,9 +555,8 @@ export interface Database {
                     message: string;
                     link?: string | null;
                     is_read?: boolean;
-                    metadata?: any;
+                    metadata?: Record<string, unknown>;
                     created_at?: string;
-                    updated_at?: string;
                 };
                 Update: {
                     id?: string;
@@ -546,9 +566,8 @@ export interface Database {
                     message?: string;
                     link?: string | null;
                     is_read?: boolean;
-                    metadata?: any;
+                    metadata?: Record<string, unknown>;
                     created_at?: string;
-                    updated_at?: string;
                 };
             };
             support_tickets: {

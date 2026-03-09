@@ -26,8 +26,8 @@ import {
     getUnreadNotificationsCount,
     markNotificationRead,
     markAllNotificationsRead,
-    type AdminNotification,
 } from "@/app/actions/notifications";
+import type { AdminNotification } from "@/types/database";
 
 const COMMAND_ITEMS = [
     { href: "/dashboard", label: "نظرة عامة", icon: LayoutDashboard },
@@ -187,11 +187,10 @@ export function AdminTopBar() {
                                             <button
                                                 key={item.href}
                                                 onClick={() => selectItem(item)}
-                                                className={`w-full flex items-center gap-3 px-4 py-3 text-right transition-colors ${
-                                                    isActive
+                                                className={`w-full flex items-center gap-3 px-4 py-3 text-right transition-colors ${isActive
                                                         ? "bg-gold/10 text-gold"
                                                         : "hover:bg-white/[0.04] text-fg/80"
-                                                }`}
+                                                    }`}
                                             >
                                                 <Icon className="w-5 h-5 shrink-0 text-fg/40" />
                                                 <span className="flex-1 font-medium">{item.label}</span>
@@ -266,9 +265,8 @@ export function AdminTopBar() {
                                                 }
                                                 setNotificationsOpen(false);
                                             }}
-                                            className={`flex items-start gap-3 px-4 py-3 border-b border-white/[0.03] hover:bg-white/[0.04] transition-colors ${
-                                                !n.is_read ? "bg-gold/5" : ""
-                                            }`}
+                                            className={`flex items-start gap-3 px-4 py-3 border-b border-white/[0.03] hover:bg-white/[0.04] transition-colors ${!n.is_read ? "bg-gold/5" : ""
+                                                }`}
                                         >
                                             <div className={`mt-0.5 w-2 h-2 rounded-full shrink-0 ${!n.is_read ? "bg-gold" : "bg-transparent"}`} />
                                             <div className="flex-1 min-w-0">

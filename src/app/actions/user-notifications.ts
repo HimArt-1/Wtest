@@ -1,9 +1,18 @@
 "use server";
 
-import { getSupabaseServerClient } from "@/lib/supabase";
-import { UserNotificationType, UserNotification } from "@/types/database";
+import { createClient } from "@supabase/supabase-js";
+import type { UserNotificationType, UserNotification } from "@/types/database";
 import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
+
+// Raw client for user_notifications (bypasses typed schema to avoid postgrest-js never-type issue)
+function getRawClient() {
+    return createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        { auth: { persistSession: false } }
+    );
+}
 
 export async function createUserNotification(data: {
     userId: string;
@@ -11,10 +20,10 @@ export async function createUserNotification(data: {
     title: string;
     message: string;
     link?: string;
-    metadata?: any;
+    metadata?: Record<string, unknown>;
 }) {
-    const supabase = getSupabaseServerClient();
-    const { error } = await (supabase as any).from("user_notifications").insert({
+    const supabase = getRawClient();
+    const { error } = await supabase.from("user_notifications").insert({
         user_id: data.userId,
         type: data.type,
         title: data.title,
@@ -35,12 +44,13 @@ export async function getUserNotifications(limit = 20) {
     const user = await currentUser();
     if (!user) return [];
 
-    const supabase = getSupabaseServerClient();
+    const supabase = getRawClient();
+
     // Resolve profile ID from clerk ID
-    const { data: profile } = await (supabase as any).from("profiles").select("id").eq("clerk_id", user.id).single();
+    const { data: profile } = await supabase.from("profiles").select("id").eq("clerk_id", user.id).single();
     if (!profile) return [];
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
         .from("user_notifications")
         .select("*")
         .eq("user_id", profile.id)
@@ -59,11 +69,12 @@ export async function getUnreadUserNotificationsCount() {
     const user = await currentUser();
     if (!user) return 0;
 
-    const supabase = getSupabaseServerClient();
-    const { data: profile } = await (supabase as any).from("profiles").select("id").eq("clerk_id", user.id).single();
+    const supabase = getRawClient();
+
+    const { data: profile } = await supabase.from("profiles").select("id").eq("clerk_id", user.id).single();
     if (!profile) return 0;
 
-    const { count, error } = await (supabase as any)
+    const { count, error } = await supabase
         .from("user_notifications")
         .select("*", { count: "exact", head: true })
         .eq("user_id", profile.id)
@@ -81,9 +92,8 @@ export async function markUserNotificationRead(id: string) {
     const user = await currentUser();
     if (!user) return { success: false };
 
-    const supabase = getSupabaseServerClient();
-    // RLS will ensure user can only update their own
-    const { error } = await (supabase as any).from("user_notifications").update({ is_read: true }).eq("id", id);
+    const raw = getRawClient();
+    const { error } = await raw.from("user_notifications").update({ is_read: true }).eq("id", id);
     if (error) return { success: false, error: error.message };
 
     revalidatePath("/", "layout");
@@ -94,11 +104,12 @@ export async function markAllUserNotificationsRead() {
     const user = await currentUser();
     if (!user) return { success: false };
 
-    const supabase = getSupabaseServerClient();
-    const { data: profile } = await (supabase as any).from("profiles").select("id").eq("clerk_id", user.id).single();
+    const supabase = getRawClient();
+
+    const { data: profile } = await supabase.from("profiles").select("id").eq("clerk_id", user.id).single();
     if (!profile) return { success: false };
 
-    const { error } = await (supabase as any)
+    const { error } = await supabase
         .from("user_notifications")
         .update({ is_read: true })
         .eq("user_id", profile.id)

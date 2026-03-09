@@ -2,8 +2,14 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { currentUser } from "@clerk/nextjs/server";
+import type { AdminNotificationType, AdminNotification } from "@/types/database";
 
-function getSupabase() {
+// NOTE: "use server" files can only export async functions.
+// Import createUserNotification from "./user-notifications" directly.
+// Import AdminNotification type from "@/types/database" directly.
+
+// Raw client (bypasses typed schema to avoid postgrest-js never-type issue)
+function getNotificationsClient() {
     return createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -11,28 +17,15 @@ function getSupabase() {
     );
 }
 
-export type NotificationType = "order_new" | "application_new" | "payment_received" | "order_status" | "order_alert" | "system_alert" | "order_update";
-
-export interface AdminNotification {
-    id: string;
-    type: NotificationType;
-    title: string;
-    message: string | null;
-    link: string | null;
-    metadata: Record<string, unknown>;
-    is_read: boolean;
-    created_at: string;
-}
-
 /** إنشاء إشعار (يُستدعى من createOrder، applications، إلخ) */
 export async function createAdminNotification(data: {
-    type: NotificationType;
+    type: AdminNotificationType;
     title: string;
     message?: string;
     link?: string;
     metadata?: Record<string, unknown>;
 }) {
-    const supabase = getSupabase();
+    const supabase = getNotificationsClient();
     const { error } = await supabase.from("admin_notifications").insert({
         type: data.type,
         title: data.title,
@@ -46,7 +39,7 @@ export async function createAdminNotification(data: {
 async function requireAdmin() {
     const user = await currentUser();
     if (!user) return null;
-    const supabase = getSupabase();
+    const supabase = getNotificationsClient();
     const { data } = await supabase.from("profiles").select("role").eq("clerk_id", user.id).single();
     return data?.role === "admin" ? supabase : null;
 }
@@ -101,26 +94,4 @@ export async function markAllNotificationsRead() {
     const supabase = await requireAdmin();
     if (!supabase) return;
     await supabase.from("admin_notifications").update({ is_read: true }).eq("is_read", false);
-}
-
-// ─── User Notifications ─────────────────────────────────────
-
-export async function createUserNotification(data: {
-    userId: string;
-    type: string;
-    title: string;
-    message?: string;
-    link?: string;
-    metadata?: Record<string, unknown>;
-}) {
-    const supabase = getSupabase();
-    const { error } = await supabase.from("user_notifications").insert({
-        user_id: data.userId,
-        type: data.type,
-        title: data.title,
-        message: data.message ?? null,
-        link: data.link ?? null,
-        metadata: data.metadata ?? {},
-    });
-    if (error) console.error("[createUserNotification]", error);
 }

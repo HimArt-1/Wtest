@@ -1,5 +1,7 @@
 "use client";
 
+import React from "react";
+
 import { useState, useCallback, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -46,7 +48,7 @@ async function uploadFile(file: File, folder: string): Promise<string | null> {
 
 // ─── Constants ───────────────────────────────────────────
 
-const STATUS_MAP: Record<CustomDesignOrderStatus, { label: string; color: string; icon: any }> = {
+const STATUS_MAP: Record<CustomDesignOrderStatus, { label: string; color: string; icon: React.ElementType }> = {
     new: { label: "جديد", color: "bg-blue-500/10 text-blue-400 border-blue-500/20", icon: AlertCircle },
     in_progress: { label: "قيد التنفيذ", color: "bg-amber-500/10 text-amber-400 border-amber-500/20", icon: Clock },
     awaiting_review: { label: "بانتظار المراجعة", color: "bg-purple-500/10 text-purple-400 border-purple-500/20", icon: Eye },
@@ -334,7 +336,7 @@ export function DesignOrdersClient({ orders, count, totalPages, currentPage, cur
 // ═══════════════════════════════════════════════════════════
 
 function StatCard({ icon: Icon, label, value, color, bg, onClick, active }: {
-    icon: any; label: string; value: string | number; color: string; bg: string; onClick?: () => void; active?: boolean;
+    icon: React.ElementType; label: string; value: string | number; color: string; bg: string; onClick?: () => void; active?: boolean;
 }) {
     return (
         <button
@@ -698,7 +700,7 @@ function OrderDetailModal({ order, adminList, onClose, onOrderUpdated }: { order
 
 // ─── Sub-components ─────────────────────────────────────
 
-function DetailCard({ icon: Icon, label, value, color, imageUrl }: { icon: any; label: string; value: string; color?: string; imageUrl?: string | null }) {
+function DetailCard({ icon: Icon, label, value, color, imageUrl }: { icon: React.ElementType; label: string; value: string; color?: string; imageUrl?: string | null }) {
     return (
         <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-center">
             {imageUrl ? (
@@ -715,7 +717,7 @@ function DetailCard({ icon: Icon, label, value, color, imageUrl }: { icon: any; 
 }
 
 function ResultUpload({ label, field, currentUrl, uploading, onUpload, icon: Icon, accept }: {
-    label: string; field: string; currentUrl: string | null; uploading: boolean; onUpload: (f: File) => void; icon: any; accept?: string;
+    label: string; field: string; currentUrl: string | null; uploading: boolean; onUpload: (f: File) => void; icon: React.ElementType; accept?: string;
 }) {
     const inputRef = useRef<HTMLInputElement>(null);
     return (

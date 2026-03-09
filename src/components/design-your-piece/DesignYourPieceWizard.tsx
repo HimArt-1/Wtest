@@ -136,20 +136,34 @@ export function DesignYourPieceWizard({ garments, styles, artStyles, colorPackag
     useEffect(() => {
         if (!state.garment) return;
         setLoadingColors(true);
-        getGarmentColors(state.garment.id).then((c) => {
-            setColors(c);
-            setLoadingColors(false);
-        });
+        getGarmentColors(state.garment.id)
+            .then((c) => {
+                setColors(c);
+            })
+            .catch((err) => {
+                console.error("Failed to fetch colors:", err);
+                setColors([]);
+            })
+            .finally(() => {
+                setLoadingColors(false);
+            });
     }, [state.garment]);
 
     // Fetch sizes when garment+color change
     useEffect(() => {
         if (!state.garment) return;
         setLoadingSizes(true);
-        getColorSizes(state.garment.id, state.color?.id).then((s) => {
-            setSizes(s);
-            setLoadingSizes(false);
-        });
+        getColorSizes(state.garment.id, state.color?.id)
+            .then((s) => {
+                setSizes(s);
+            })
+            .catch((err) => {
+                console.error("Failed to fetch sizes:", err);
+                setSizes([]);
+            })
+            .finally(() => {
+                setLoadingSizes(false);
+            });
     }, [state.garment, state.color]);
 
     const goNext = () => setState((s) => {
