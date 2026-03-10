@@ -26,8 +26,8 @@ export const metadata: Metadata = {
     default: "منصة وشّى | WASHA — فنٌ يرتدى",
     template: "%s | وشّى",
   },
-  description: "منصة فنية رقمية تجمع المبدعين العرب. معرض، بورتفوليو، متجر، وتصميم قطعك بالذكاء الاصطناعي.",
-  keywords: ["فن", "معرض", "رقمي", "عربي", "بورتفوليو", "متجر فني", "وشّى", "wusha", "فن عربي"],
+  description: "منصة فنية رقمية للأزياء. تصميم، متجر، واكتشاف أزياء فنية مميزة بالذكاء الاصطناعي.",
+  keywords: ["أزياء", "أزياء فنية", "تصميم أزياء", "متجر أزياء", "وشّى", "wusha", "washa", "streetwear", "أزياء عربية"],
   authors: [{ name: "WASHA", url: SITE_URL }],
   creator: "WASHA",
   manifest: "/manifest.json",
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "منصة وشّى | WASHA — فنٌ يرتدى",
-    description: "منصة فنية رقمية تجمع المبدعين العرب. معرض، متجر، وتصميم قطعك بالذكاء الاصطناعي.",
+    description: "منصة فنية رقمية للأزياء. تصميم، متجر، واكتشاف أزياء فنية مميزة.",
     type: "website",
     locale: "ar_SA",
     url: SITE_URL,
@@ -56,7 +56,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "منصة وشّى | WASHA",
-    description: "منصة فنية رقمية تجمع المبدعين العرب",
+    description: "منصة فنية رقمية للأزياء — فنٌ يرتدى",
   },
   robots: {
     index: true,
@@ -113,8 +113,50 @@ export default function RootLayout({
               __html: `(function(){var t=localStorage.getItem('wusha-theme');var p=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';document.documentElement.setAttribute('data-theme',t||p);})();`,
             }}
           />
+          {/* JSON-LD Structured Data */}
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@graph": [
+                  {
+                    "@type": "Organization",
+                    "@id": `${SITE_URL}/#organization`,
+                    name: "وشّى | WASHA",
+                    url: SITE_URL,
+                    logo: `${SITE_URL}/icon-512.png`,
+                    description: "منصة فنية رقمية للأزياء — فنٌ يرتدى",
+                    sameAs: [],
+                  },
+                  {
+                    "@type": "WebSite",
+                    "@id": `${SITE_URL}/#website`,
+                    url: SITE_URL,
+                    name: "وشّى | WASHA",
+                    publisher: { "@id": `${SITE_URL}/#organization` },
+                    inLanguage: "ar",
+                    potentialAction: {
+                      "@type": "SearchAction",
+                      target: `${SITE_URL}/search?q={search_term_string}`,
+                      "query-input": "required name=search_term_string",
+                    },
+                  },
+                ],
+              }),
+            }}
+          />
         </head>
         <body className="font-arabic" style={{ backgroundColor: "var(--wusha-bg)", color: "var(--wusha-text)" }} suppressHydrationWarning>
+          {/* Skip to Content — Accessibility */}
+          <a
+            href="#main-content"
+            className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:right-4 focus:z-[9999] focus:px-6 focus:py-3 focus:rounded-xl focus:font-bold focus:text-sm"
+            style={{ background: "var(--wusha-gold)", color: "var(--wusha-bg)" }}
+          >
+            تخطي إلى المحتوى الرئيسي
+          </a>
+
           {/* Noise Texture Overlay */}
           <div className="noise-overlay" aria-hidden="true" />
 
@@ -127,7 +169,9 @@ export default function RootLayout({
           <ThemeProvider>
             <VisitLogger />
             <ClientErrorLogger />
-            {children}
+            <main id="main-content">
+              {children}
+            </main>
           </ThemeProvider>
 
           {/* Service Worker للـ PWA و Web Push */}

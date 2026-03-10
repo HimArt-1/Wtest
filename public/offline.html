@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>غير متصل — وشّى</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, 'IBM Plex Sans Arabic', sans-serif;
+      background: #080808;
+      color: #f0ebe3;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      direction: rtl;
+    }
+    .container {
+      text-align: center;
+      padding: 40px 24px;
+      max-width: 420px;
+    }
+    .icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #5A3E2B, #ceae7f, #5A3E2B);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+    }
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #ceae7f;
+      margin-bottom: 16px;
+    }
+    p {
+      font-size: 16px;
+      line-height: 1.8;
+      color: rgba(240, 235, 227, 0.6);
+      margin-bottom: 32px;
+    }
+    .btn {
+      display: inline-block;
+      padding: 14px 32px;
+      background: linear-gradient(135deg, #5A3E2B, #ceae7f, #5A3E2B);
+      color: #080808;
+      font-weight: 700;
+      font-size: 15px;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: box-shadow 0.3s;
+    }
+    .btn:hover {
+      box-shadow: 0 0 30px rgba(206, 174, 127, 0.4);
+    }
+    .footer {
+      margin-top: 48px;
+      font-size: 13px;
+      color: rgba(240, 235, 227, 0.25);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">📡</div>
+    <h1>أنت غير متصل</h1>
+    <p>يبدو أنك فقدت الاتصال بالإنترنت. تحقق من اتصالك وحاول مجدداً.</p>
+    <button class="btn" onclick="window.location.reload()">إعادة المحاولة</button>
+    <p class="footer">وشّى — فنٌ يرتدى</p>
+  </div>
+</body>
+</html>

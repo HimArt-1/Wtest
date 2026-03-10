@@ -1,12 +1,19 @@
 {
-  "name": "WUSHA",
-  "short_name": "WUSHA",
-  "description": "Premium Local Streetwear by Haitham Wusha",
+  "name": "وشّى | WASHA",
+  "short_name": "وشّى",
+  "description": "منصة فنية رقمية للأزياء — فنٌ يرتدى",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#111111",
-  "theme_color": "#111111",
+  "background_color": "#080808",
+  "theme_color": "#080808",
   "orientation": "portrait",
+  "dir": "rtl",
+  "lang": "ar",
+  "categories": [
+    "shopping",
+    "lifestyle",
+    "entertainment"
+  ],
   "icons": [
     {
       "src": "/icon-192.png",
@@ -19,6 +26,41 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "المتجر",
+      "short_name": "المتجر",
+      "url": "/store",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "صمم قطعتك",
+      "short_name": "صمم",
+      "url": "/design",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "المعرض",
+      "short_name": "المعرض",
+      "url": "/gallery",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     }
   ]
 }
