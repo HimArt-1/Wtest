@@ -15,7 +15,6 @@ const remoteHosts = [
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: "standalone",
   images: {
     remotePatterns: remoteHosts.map((hostname) => ({
       protocol: 'https',

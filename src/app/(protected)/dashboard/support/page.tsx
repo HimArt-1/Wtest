@@ -2,6 +2,8 @@ import { adminGetSupportTickets } from "@/app/actions/support-tickets";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { SupportDashboardPro } from "./SupportDashboardPro";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
     title: "الدعم الفني | لوحة الإدارة",
 };

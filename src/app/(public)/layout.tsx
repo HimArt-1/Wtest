@@ -1,26 +1,9 @@
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
-import { CartSheet } from "@/components/store/CartSheet";
-import { ensureProfile } from "@/lib/ensure-profile";
+import { PublicPageWrapper } from "@/components/layout/PublicPageWrapper";
 
 export default async function PublicLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
-    await ensureProfile();
-
-    return (
-        <>
-            <Header />
-            <CartSheet />
-            <div className="relative bg-theme min-h-screen">
-                <div className="absolute inset-0 pointer-events-none cyber-grid opacity-[0.15]" aria-hidden />
-                <div className="relative z-10">
-                    {children}
-                </div>
-            </div>
-            <Footer />
-        </>
-    );
+    return <PublicPageWrapper>{children}</PublicPageWrapper>;
 }

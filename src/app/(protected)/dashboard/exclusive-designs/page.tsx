@@ -2,6 +2,8 @@ import { getExclusiveDesigns } from "@/app/actions/settings";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { ExclusiveDesignsClient } from "@/components/admin/ExclusiveDesignsClient";
 
+export const dynamic = "force-dynamic";
+
 export default async function ExclusiveDesignsPage() {
     const designs = await getExclusiveDesigns();
 

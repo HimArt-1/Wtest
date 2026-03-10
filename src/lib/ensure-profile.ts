@@ -31,60 +31,65 @@ export type EnsuredProfile = {
  * يُرجع الملف الشخصي أو null إذا لم يكن المستخدم مسجّل دخول.
  */
 export async function ensureProfile(): Promise<EnsuredProfile | null> {
-    const user = await currentUser();
-    if (!user) return null;
+    try {
+        const user = await currentUser();
+        if (!user) return null;
 
-    const supabase = getAdminSupabase();
-    if (!supabase) return null;
+        const supabase = getAdminSupabase();
+        if (!supabase) return null;
 
-    const { data: existing } = await supabase
-        .from("profiles")
-        .select("id, clerk_id, display_name, username, role, avatar_url, bio, wushsha_level, is_verified")
-        .eq("clerk_id", user.id)
-        .maybeSingle();
+        const { data: existing } = await supabase
+            .from("profiles")
+            .select("id, clerk_id, display_name, username, role, avatar_url, bio, wushsha_level, is_verified")
+            .eq("clerk_id", user.id)
+            .maybeSingle();
 
-    if (existing) return existing as EnsuredProfile;
+        if (existing) return existing as EnsuredProfile;
 
-    const displayName =
-        [user.firstName, user.lastName].filter(Boolean).join(" ") ||
-        user.username ||
-        "مستخدم وشّى";
+        const displayName =
+            [user.firstName, user.lastName].filter(Boolean).join(" ") ||
+            user.username ||
+            "مستخدم وشّى";
 
-    const baseUsername = (
-        user.username ||
-        user.emailAddresses?.[0]?.emailAddress?.split("@")[0] ||
-        "user"
-    )
-        .toLowerCase()
-        .replace(/[^a-z0-9_-]/g, "_")
-        .slice(0, 20);
+        const baseUsername = (
+            user.username ||
+            user.emailAddresses?.[0]?.emailAddress?.split("@")[0] ||
+            "user"
+        )
+            .toLowerCase()
+            .replace(/[^a-z0-9_-]/g, "_")
+            .slice(0, 20);
 
-    const username = `${baseUsername}_${Date.now().toString(36)}`;
+        const username = `${baseUsername}_${Date.now().toString(36)}`;
 
-    const { data: created, error } = await supabase
-        .from("profiles")
-        .insert({
-            clerk_id: user.id,
-            display_name: displayName,
-            username,
-            role: "subscriber",
-            avatar_url: user.imageUrl || null,
-        })
-        .select("id, clerk_id, display_name, username, role, avatar_url, bio, wushsha_level, is_verified")
-        .single();
+        const { data: created, error } = await supabase
+            .from("profiles")
+            .insert({
+                clerk_id: user.id,
+                display_name: displayName,
+                username,
+                role: "subscriber",
+                avatar_url: user.imageUrl || null,
+            })
+            .select("id, clerk_id, display_name, username, role, avatar_url, bio, wushsha_level, is_verified")
+            .single();
 
-    if (error) {
-        if (error.code === "23505") {
-            const { data: retry } = await supabase
-                .from("profiles")
-                .select("id, clerk_id, display_name, username, role, avatar_url, bio, wushsha_level, is_verified")
-                .eq("clerk_id", user.id)
-                .maybeSingle();
-            return retry as EnsuredProfile | null;
+        if (error) {
+            if (error.code === "23505") {
+                const { data: retry } = await supabase
+                    .from("profiles")
+                    .select("id, clerk_id, display_name, username, role, avatar_url, bio, wushsha_level, is_verified")
+                    .eq("clerk_id", user.id)
+                    .maybeSingle();
+                return retry as EnsuredProfile | null;
+            }
+            console.error("[ensureProfile] Insert error:", error);
+            return null;
         }
-        console.error("[ensureProfile] Insert error:", error);
+
+        return created as EnsuredProfile;
+    } catch (err) {
+        console.error("[ensureProfile]", err);
         return null;
     }
-
-    return created as EnsuredProfile;
 }

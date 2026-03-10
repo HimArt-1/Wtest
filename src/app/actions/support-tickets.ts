@@ -151,17 +151,25 @@ export async function createSupportMessage(ticketId: string, message: string) {
 // ─── ADMIN ACTIONS ─────────────────────────────────────────
 
 export async function adminGetSupportTickets() {
-    const supabase = getSupabaseServerClient();
-    const { data, error } = await supabase
-        .from("support_tickets")
-        .select("*, profile:profiles!user_id(display_name, avatar_url)")
-        .order("updated_at", { ascending: false });
-
-    if (error) {
-        console.error("[adminGetSupportTickets]", error);
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
         return [];
     }
-    return data || [];
+    try {
+        const supabase = getSupabaseServerClient();
+        const { data, error } = await supabase
+            .from("support_tickets")
+            .select("*, profile:profiles!user_id(display_name, avatar_url)")
+            .order("updated_at", { ascending: false });
+
+        if (error) {
+            console.error("[adminGetSupportTickets]", error);
+            return [];
+        }
+        return data || [];
+    } catch (err) {
+        console.error("[adminGetSupportTickets]", err);
+        return [];
+    }
 }
 
 export async function adminUpdateSupportTicketStatus(ticketId: string, status: SupportTicketStatus) {

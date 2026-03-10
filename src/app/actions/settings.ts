@@ -537,17 +537,25 @@ export async function getNewsletterSubscribers() {
 // ═══════════════════════════════════════════════════════════
 
 export async function getExclusiveDesigns() {
-    const supabase = getAdminSupabase();
-    const { data, error } = await supabase
-        .from("exclusive_designs")
-        .select("*")
-        .order("sort_order", { ascending: true });
-
-    if (error) {
-        console.error("[getExclusiveDesigns]", error);
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY || !process.env.NEXT_PUBLIC_SUPABASE_URL) {
         return [];
     }
-    return (data || []) as { id: string; title: string; description: string | null; image_url: string; sort_order: number; is_active: boolean }[];
+    try {
+        const supabase = getAdminSupabase();
+        const { data, error } = await supabase
+            .from("exclusive_designs")
+            .select("*")
+            .order("sort_order", { ascending: true });
+
+        if (error) {
+            console.error("[getExclusiveDesigns]", error);
+            return [];
+        }
+        return (data || []) as { id: string; title: string; description: string | null; image_url: string; sort_order: number; is_active: boolean }[];
+    } catch (err) {
+        console.error("[getExclusiveDesigns]", err);
+        return [];
+    }
 }
 
 export async function getActiveExclusiveDesigns() {
