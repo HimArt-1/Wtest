@@ -727,3 +727,30 @@ h6 {
 body.reamaze-active [data-reamaze-widget] {
   opacity: 0 !important;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   Clerk UserButton Popover — متوافق مع النمط الفاتح والداكن
+   النافذة المنبثقة عند الضغط على الصورة الشخصية
+═══════════════════════════════════════════════════════════ */
+
+.cl-userButtonPopoverCard,
+[class*="userButtonPopoverCard"] {
+  background-color: var(--wusha-surface) !important;
+  color: var(--wusha-text) !important;
+  border-color: var(--wusha-border) !important;
+}
+
+.cl-userButtonPopoverCard .cl-userPreviewMainIdentifier,
+.cl-userButtonPopoverCard .cl-userPreviewSecondaryIdentifier,
+.cl-userButtonPopoverCard .cl-userButtonPopoverActionButton,
+.cl-userButtonPopoverCard .cl-userButtonPopoverActionButtonText,
+[class*="userButtonPopoverCard"] [class*="userPreview"],
+[class*="userButtonPopoverCard"] [class*="userButtonPopoverAction"] {
+  color: var(--wusha-text) !important;
+}
+
+.cl-userButtonPopoverCard .cl-userButtonPopoverActionButton:hover,
+[class*="userButtonPopoverCard"] [class*="userButtonPopoverAction"]:hover {
+  background-color: color-mix(in srgb, var(--wusha-gold) 10%, transparent) !important;
+  color: var(--wusha-gold) !important;
+}

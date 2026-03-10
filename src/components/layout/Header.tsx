@@ -128,19 +128,19 @@ export function Header() {
                       appearance={{
                         elements: {
                           avatarBox: "w-10 h-10 border-2 border-gold/30 hover:border-gold transition-colors duration-300",
-                          userButtonPopoverCard: "rounded-2xl",
+                          userButtonPopoverCard: "rounded-2xl !bg-[var(--wusha-surface)] !text-[var(--wusha-text)] !border-[var(--wusha-border)]",
                           userButtonPopoverActions: "[&>button]:hover:bg-gold/10",
-                          userButtonPopoverActionButton: "hover:text-gold hover:bg-gold/10",
-                          userButtonPopoverActionButtonText: "",
+                          userButtonPopoverActionButton: "!text-[var(--wusha-text)] hover:!text-[var(--wusha-gold)] hover:bg-gold/10",
+                          userButtonPopoverActionButtonText: "!text-[var(--wusha-text)]",
                           userButtonPopoverActionButtonIconBox: "text-gold/60",
                           userButtonPopoverFooter: "hidden",
-                          userPreviewMainIdentifier: "",
-                          userPreviewSecondaryIdentifier: "",
+                          userPreviewMainIdentifier: "!text-[var(--wusha-text)]",
+                          userPreviewSecondaryIdentifier: "!text-[color-mix(in_srgb,var(--wusha-text)_60%,transparent)]",
                         },
                         variables: {
                           colorBackground: "var(--wusha-surface)",
                           colorText: "var(--wusha-text)",
-                          colorTextSecondary: "color-mix(in srgb, var(--wusha-text) 50%, transparent)",
+                          colorTextSecondary: "color-mix(in srgb, var(--wusha-text) 60%, transparent)",
                           colorPrimary: "var(--wusha-gold)",
                           colorDanger: "var(--wusha-text)",
                           borderRadius: "1rem",
@@ -164,16 +164,18 @@ export function Header() {
               </SignedOut>
             </div>
 
-            {/* Mobile: Search + Menu Toggle */}
-            <div className="flex md:hidden items-center gap-0.5">
+            {/* Mobile: Search + Bell + Menu Toggle */}
+            <div className="flex md:hidden items-center gap-1">
               <ThemeToggle />
               <Link href="/search" aria-label="البحث">
-                <span className="p-3 transition-colors inline-block [color:color-mix(in_srgb,var(--wusha-text)_80%,transparent)] hover:text-[var(--wusha-gold)]">
+                <span className="p-2.5 rounded-xl transition-colors inline-block [color:color-mix(in_srgb,var(--wusha-text)_80%,transparent)] hover:text-[var(--wusha-gold)] hover:bg-[color:color-mix(in_srgb,var(--wusha-text)_5%,transparent)]">
                   <Search className="w-5 h-5" />
                 </span>
               </Link>
               <SignedIn>
-                <NotificationBell />
+                <div className="flex items-center [&>div]:flex [&>div]:items-center">
+                  <NotificationBell />
+                </div>
               </SignedIn>
               <button
                 className="relative z-[110] p-3 -mr-1 transition-colors rounded-xl [color:color-mix(in_srgb,var(--wusha-text)_90%,transparent)] hover:text-[var(--wusha-gold)] hover:bg-[color:color-mix(in_srgb,var(--wusha-text)_5%,transparent)]"
@@ -260,21 +262,22 @@ export function Header() {
                   <UserButton
                     afterSignOutUrl="/"
                     appearance={{
+                      baseTheme: undefined,
                       elements: {
                         avatarBox: "w-12 h-12 border-2 border-gold/30",
-                        userButtonPopoverCard: "rounded-2xl",
+                        userButtonPopoverCard: "rounded-2xl !bg-[var(--wusha-surface)] !text-[var(--wusha-text)] !border-[var(--wusha-border)]",
                         userButtonPopoverActions: "[&>button]:hover:bg-gold/10",
-                        userButtonPopoverActionButton: "hover:text-gold hover:bg-gold/10",
-                        userButtonPopoverActionButtonText: "",
+                        userButtonPopoverActionButton: "!text-[var(--wusha-text)] hover:!text-[var(--wusha-gold)] hover:bg-gold/10",
+                        userButtonPopoverActionButtonText: "!text-[var(--wusha-text)]",
                         userButtonPopoverActionButtonIconBox: "text-gold/60",
                         userButtonPopoverFooter: "hidden",
-                        userPreviewMainIdentifier: "",
-                        userPreviewSecondaryIdentifier: "",
+                        userPreviewMainIdentifier: "!text-[var(--wusha-text)]",
+                        userPreviewSecondaryIdentifier: "!text-[color-mix(in_srgb,var(--wusha-text)_60%,transparent)]",
                       },
                       variables: {
                         colorBackground: "var(--wusha-surface)",
                         colorText: "var(--wusha-text)",
-                        colorTextSecondary: "color-mix(in srgb, var(--wusha-text) 50%, transparent)",
+                        colorTextSecondary: "color-mix(in srgb, var(--wusha-text) 60%, transparent)",
                         colorPrimary: "var(--wusha-gold)",
                         colorDanger: "var(--wusha-text)",
                         borderRadius: "1rem",

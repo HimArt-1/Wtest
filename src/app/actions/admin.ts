@@ -1009,7 +1009,7 @@ export async function updateOrderStatus(orderId: string, newStatus: string) {
                 type: "order_update",
                 title: "تحديث حالة الطلب",
                 message: `${statusAr} طلبك #${currentOrder.order_number}`,
-                link: `/account/orders`,
+                link: `/account/orders?order=${orderId}`,
                 metadata: { order_id: orderId, new_status: newStatus }
             });
         }

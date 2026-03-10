@@ -4,6 +4,8 @@ import { arSA } from "@clerk/localizations";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { FloatingJoinButton } from "@/components/ui/FloatingJoinButton";
 import { FloatingChatButton } from "@/components/ui/FloatingChatButton";
+import { VisitLogger } from "@/components/ops/VisitLogger";
+import { ClientErrorLogger } from "@/components/ops/ClientErrorLogger";
 import { AnnouncementLoader } from "@/components/ui/AnnouncementLoader";
 import { ServiceWorkerRegister } from "@/components/notifications/ServiceWorkerRegister";
 import Script from "next/script";
@@ -72,6 +74,7 @@ const clerkAppearance = {
     colorBackground: "var(--wusha-surface)",
     colorInputBackground: "var(--wusha-surface-2)",
     colorInputText: "var(--wusha-text)",
+    colorTextSecondary: "color-mix(in srgb, var(--wusha-text) 60%, transparent)",
     fontFamily: "var(--font-arabic), 'IBM Plex Sans Arabic', sans-serif",
     borderRadius: "0.75rem",
   },
@@ -83,6 +86,12 @@ const clerkAppearance = {
     headerTitle: "font-bold",
     headerSubtitle: "",
     formFieldInput: "border-gold/10",
+    /* UserButton popover — متوافق مع النمط الفاتح والداكن */
+    userButtonPopoverCard: "!bg-[var(--wusha-surface)] !text-[var(--wusha-text)] !border-[var(--wusha-border)]",
+    userButtonPopoverActionButton: "!text-[var(--wusha-text)] hover:!text-[var(--wusha-gold)]",
+    userButtonPopoverActionButtonText: "!text-[var(--wusha-text)]",
+    userPreviewMainIdentifier: "!text-[var(--wusha-text)]",
+    userPreviewSecondaryIdentifier: "!text-[color-mix(in_srgb,var(--wusha-text)_60%,transparent)]",
   },
 };
 
@@ -116,6 +125,8 @@ export default function RootLayout({
 
           {/* Main Content */}
           <ThemeProvider>
+            <VisitLogger />
+            <ClientErrorLogger />
             {children}
           </ThemeProvider>
 

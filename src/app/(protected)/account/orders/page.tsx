@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { getUserOrders } from "@/app/actions/orders";
@@ -39,7 +40,9 @@ export default async function OrdersPage() {
                     </Link>
                 </div>
 
-                <OrdersClient orders={orders} designOrders={designOrders} />
+                <Suspense fallback={<div className="py-12 text-center text-theme-subtle">جاري التحميل...</div>}>
+                    <OrdersClient orders={orders} designOrders={designOrders} />
+                </Suspense>
             </div>
         </div>
     );

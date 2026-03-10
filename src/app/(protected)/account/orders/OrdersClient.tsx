@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { Package, Truck, CheckCircle2, XCircle, Clock, Search, ExternalLink, Brush, Loader2, FileText } from "lucide-react";
@@ -56,10 +57,27 @@ export function OrdersClient({
     orders: any[];
     designOrders: CustomDesignOrder[];
 }) {
+    const searchParams = useSearchParams();
     const [selectedDesignOrder, setSelectedDesignOrder] = useState<CustomDesignOrder | null>(null);
     const [cancelingId, setCancelingId] = useState<string | null>(null);
 
     const hasNoOrders = orders.length === 0 && designOrders.length === 0;
+
+    // التمرير للطلب أو التصميم عند القدوم من إشعار
+    useEffect(() => {
+        const orderId = searchParams.get("order");
+        const designId = searchParams.get("design");
+        if (orderId || designId) {
+            const el = document.querySelector(
+                orderId ? `[data-order-id="${orderId}"]` : `[data-design-id="${designId}"]`
+            );
+            if (el) {
+                el.scrollIntoView({ behavior: "smooth", block: "center" });
+                (el as HTMLElement).classList.add("ring-2", "ring-gold/50", "ring-offset-2");
+                setTimeout(() => (el as HTMLElement).classList.remove("ring-2", "ring-gold/50", "ring-offset-2"), 2500);
+            }
+        }
+    }, [searchParams]);
 
     const handleCancelDesign = async (id: string) => {
         if (!confirm("هل أنت متأكد من إلغاء طلب التصميم؟")) return;
@@ -98,7 +116,7 @@ export function OrdersClient({
                             const isAwaiting = dOrder.status === "awaiting_review";
 
                             return (
-                                <div key={dOrder.id} className="p-5 border border-theme-subtle rounded-2xl bg-surface/30 hover:border-gold/20 transition-all flex flex-col justify-between">
+                                <div key={dOrder.id} data-design-id={dOrder.id} className="p-5 border border-theme-subtle rounded-2xl bg-surface/30 hover:border-gold/20 transition-all flex flex-col justify-between">
                                     <div>
                                         <div className="flex items-center justify-between mb-4">
                                             <span className="text-xs text-theme-faint">تصميم #{dOrder.order_number}</span>
@@ -212,6 +230,7 @@ export function OrdersClient({
                         return (
                             <div
                                 key={order.id}
+                                data-order-id={order.id}
                                 className="p-5 border border-theme-subtle rounded-2xl bg-surface/30 hover:border-gold/20 hover:bg-surface/40 transition-all duration-300"
                             >
                                 <div className="flex items-center justify-between mb-4">

@@ -11,6 +11,7 @@ import { sendOrderConfirmationEmail, sendAdminOrderNotificationEmail } from "@/l
 import { sendPushToAll } from "@/lib/push";
 import { checkStockAvailability, decrementStockForOrder } from "@/lib/inventory";
 import { createAdminNotification } from "@/app/actions/notifications";
+import { createUserNotification } from "@/app/actions/user-notifications";
 
 import { getSupabaseAdminClient } from "@/lib/supabase";
 
@@ -189,6 +190,16 @@ export async function createOrder(
         metadata: { order_id: order.id, order_number: order.order_number, total },
     }).catch(() => { });
 
+    // إشعار للمشتري بتأكيد الطلب
+    createUserNotification({
+        userId: buyerId,
+        type: "order_update",
+        title: "تم استلام طلبك ✓",
+        message: `طلبك #${order.order_number} تم تسجيله بنجاح — ${total.toLocaleString()} ر.س`,
+        link: `/account/orders?order=${order.id}`,
+        metadata: { order_id: order.id, order_number: order.order_number, total },
+    }).catch(() => { });
+
     sendAdminOrderNotificationEmail(order.order_number, total, "new_order").catch(console.error);
 
     sendPushToAll("طلب جديد", `طلب #${order.order_number} — ${total.toLocaleString()} ر.س`, "/dashboard/orders").catch(() => { });
@@ -212,7 +223,7 @@ export async function confirmOrderPayment(
 
         const { data: order } = await supabase
             .from("orders")
-            .select("order_number, total, shipping_address, payment_status")
+            .select("order_number, total, shipping_address, payment_status, buyer_id")
             .eq("id", orderId)
             .single();
 
@@ -242,7 +253,7 @@ export async function confirmOrderPayment(
 
         await decrementStockForOrder(orderId);
 
-        const ord = order as { order_number: string; total: number; shipping_address?: { name?: string } } | null;
+        const ord = order as { order_number: string; total: number; buyer_id?: string; shipping_address?: { name?: string } } | null;
         if (ord) {
             createAdminNotification({
                 type: "payment_received",
@@ -251,6 +262,15 @@ export async function confirmOrderPayment(
                 link: "/dashboard/orders",
                 metadata: { order_id: orderId },
             }).catch(() => { });
+            if (ord.buyer_id) {
+                createUserNotification({
+                    userId: ord.buyer_id,
+                    type: "order_update",
+                    title: "تم استلام الدفع ✓",
+                    message: `تم تأكيد الدفع لطلبك #${ord.order_number} — ${ord.total.toLocaleString()} ر.س`,
+                    link: `/account/orders?order=${orderId}`,
+                }).catch(() => { });
+            }
             sendAdminOrderNotificationEmail(ord.order_number, ord.total, "payment_received").catch(console.error);
             sendPushToAll("تم استلام الدفع", `طلب #${ord.order_number} — ${ord.total.toLocaleString()} ر.س`, "/dashboard/orders").catch(() => { });
         }
