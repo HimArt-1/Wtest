@@ -6,10 +6,11 @@
 "use server";
 
 import { createClient } from "@supabase/supabase-js";
+import type { Database, ProductType } from "@/types/database";
 
 // Use anon key for public search queries (no RLS bypass needed for published content)
 function getSearchClient() {
-    return createClient(
+    return createClient<Database>(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         { auth: { persistSession: false, autoRefreshToken: false } }
@@ -79,7 +80,7 @@ export async function globalSearch(
                     .eq("slug", filters.category)
                     .single();
                 if (cat) {
-                    artworkQuery = artworkQuery.eq("category_id", (cat as any).id);
+                    artworkQuery = artworkQuery.eq("category_id", cat.id);
                 }
             }
 
@@ -109,7 +110,7 @@ export async function globalSearch(
 
             const { data, count, error } = await artworkQuery.range(from, to);
             if (error) console.error("[Search] Artworks error:", error.message);
-            result.artworks = { data: (data as any[]) || [], count: count || 0 };
+            result.artworks = { data: data || [], count: count || 0 };
         }
 
         // ─── Search Products ────────────────────────────────────
@@ -127,7 +128,7 @@ export async function globalSearch(
             }
 
             if (filters.productType && filters.productType !== "all") {
-                productQuery = productQuery.eq("type", filters.productType);
+                productQuery = productQuery.eq("type", filters.productType as ProductType);
             }
 
             if (filters.minPrice !== undefined) {
@@ -153,7 +154,7 @@ export async function globalSearch(
 
             const { data, count, error } = await productQuery.range(from, to);
             if (error) console.error("[Search] Products error:", error.message);
-            result.products = { data: (data as any[]) || [], count: count || 0 };
+            result.products = { data: data || [], count: count || 0 };
         }
 
         // ─── Search Artists ─────────────────────────────────────
@@ -177,7 +178,7 @@ export async function globalSearch(
 
             const { data, count, error } = await artistQuery.range(from, to);
             if (error) console.error("[Search] Artists error:", error.message);
-            result.artists = { data: (data as any[]) || [], count: count || 0 };
+            result.artists = { data: data || [], count: count || 0 };
         }
 
         return result;
@@ -198,7 +199,7 @@ export async function getCategories() {
             .order("sort_order", { ascending: true });
 
         if (error) console.error("[Search] Categories error:", error.message);
-        return (data as any[]) || [];
+        return data || [];
     } catch (error) {
         console.error("[Search] Categories fatal error:", error);
         return [];

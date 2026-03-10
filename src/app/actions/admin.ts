@@ -10,6 +10,7 @@ import { createClient } from "@supabase/supabase-js";
 import { currentUser, clerkClient } from "@clerk/nextjs/server";
 import { unstable_noStore as noStore, revalidatePath } from "next/cache";
 import { sendApplicationAcceptedEmail, sendApplicationRejectedEmail } from "@/lib/email";
+import type { Database, UserRole, WushshaLevel, OrderStatus, ApplicationStatus, ArtworkStatus } from "@/types/database";
 
 /** توليد كلمة مرور عشوائية آمنة (12 حرف) */
 function generateTempPassword(): string {
@@ -38,7 +39,7 @@ function getAdminSupabase() {
     if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
         console.warn("[Admin] SUPABASE_SERVICE_ROLE_KEY is not set — falling back to anon key. Add it to Vercel env vars for full admin access.");
     }
-    return createClient(url, key, { auth: { persistSession: false } });
+    return createClient<Database>(url, key, { auth: { persistSession: false } });
 }
 
 // ─── Auth Guard ─────────────────────────────────────────────
@@ -121,7 +122,7 @@ export async function getAdminOverview() {
         });
 
         // ─── Calculate Revenue ───
-        const revenueData = getData(results[4]) as any[];
+        const revenueData = getData(results[4]) as { total: number }[];
         const totalRevenue = revenueData.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
 
         // Month-over-month revenue (Safe Separate Try/Catch)
@@ -137,8 +138,8 @@ export async function getAdminOverview() {
                 supabase.from("orders").select("total").gte("created_at", lastMonthStart).lt("created_at", thisMonthStart).in("payment_status", ["paid"]),
             ]);
 
-            thisMonthRevenue = ((thisMonthResult.data as any[]) || []).reduce((s, o) => s + (Number(o.total) || 0), 0);
-            const lastMonthRevenue = ((lastMonthResult.data as any[]) || []).reduce((s, o) => s + (Number(o.total) || 0), 0);
+            thisMonthRevenue = ((thisMonthResult.data || []) as { total: number }[]).reduce((s, o) => s + (Number(o.total) || 0), 0);
+            const lastMonthRevenue = ((lastMonthResult.data || []) as { total: number }[]).reduce((s, o) => s + (Number(o.total) || 0), 0);
 
             revenueGrowth = lastMonthRevenue > 0
                 ? (((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100).toFixed(1)
@@ -250,7 +251,7 @@ export async function getAdminAnalytics(period: AnalyticsPeriod = "30d"): Promis
                 .select("product_id, quantity, total_price, product:products(title)")
                 .in("order_id", orderIds);
 
-            const items = (itemsData as any[]) || [];
+            const items = (itemsData || []) as { product_id: string | null; quantity: number; total_price: number; product: { title: string } | null }[];
             const byProduct = new Map<string, { title: string; quantity: number; revenue: number }>();
 
             for (const it of items) {
@@ -358,7 +359,7 @@ export async function getAdminInventory(filter: "all" | "low" | "out" = "all") {
             .select("id, title, image_url, type, in_stock, stock_quantity, price, artist:profiles(display_name)")
             .order("title");
         if (error) throw error;
-        const allProducts = (data || []) as any[];
+        const allProducts = data || [];
         const lowStock = allProducts.filter((p) => p.stock_quantity != null && p.stock_quantity <= LOW_STOCK_THRESHOLD && p.stock_quantity > 0);
         const outOfStock = allProducts.filter((p) => !p.in_stock || (p.stock_quantity != null && p.stock_quantity === 0));
         const products = filter === "out" ? outOfStock : (filter === "low" ? lowStock : allProducts);
@@ -406,14 +407,14 @@ export async function getAdminSales(period: "7d" | "30d" | "90d" = "30d") {
             .in("payment_status", ["paid"])
             .in("status", ["confirmed", "processing", "shipped", "delivered"]);
 
-        const orderIds = (orders || []).map((o: any) => o.id);
-        let items: any[] = [];
+        const orderIds = (orders || []).map((o) => o.id);
+        let items: { product_id: string | null; quantity: number; total_price: number; custom_title: string | null; product: { title: string } | null }[] = [];
         if (orderIds.length > 0) {
             const { data: orderItems } = await supabase
                 .from("order_items")
                 .select("product_id, quantity, total_price, custom_title, product:products(title)")
                 .in("order_id", orderIds);
-            items = orderItems || [];
+            items = (orderItems || []) as unknown as { product_id: string | null; quantity: number; total_price: number; custom_title: string | null; product: { title: string } | null }[];
         }
 
         const byProduct = new Map<string, { title: string; quantity: number; revenue: number }>();
@@ -426,7 +427,7 @@ export async function getAdminSales(period: "7d" | "30d" | "90d" = "30d") {
             byProduct.set(key, curr);
         }
 
-        const totalRevenue = (orders || []).reduce((s: number, o: any) => s + (Number(o.total) || 0), 0);
+        const totalRevenue = (orders || []).reduce((s, o) => s + (Number(o.total) || 0), 0);
         const salesByProduct = Array.from(byProduct.entries())
             .map(([productId, v]) => ({ productId, ...v }))
             .sort((a, b) => b.revenue - a.revenue);
@@ -464,7 +465,7 @@ export async function getAdminUsers(
         .select("*", { count: "exact" });
 
     if (role !== "all") {
-        query = query.eq("role", role);
+        query = query.eq("role", role as UserRole);
     }
 
     if (search) {
@@ -481,7 +482,7 @@ export async function getAdminUsers(
     }
 
     return {
-        data: (data as any[]) || [],
+        data: data || [],
         count: count || 0,
         totalPages: count ? Math.ceil(count / perPage) : 0,
     };
@@ -497,7 +498,7 @@ export async function updateUserRole(userId: string, newRole: string) {
 
     const { error } = await supabase
         .from("profiles")
-        .update({ role })
+        .update({ role: role as UserRole })
         .eq("id", userId);
 
     if (error) {
@@ -519,7 +520,7 @@ export async function updateUserWushshaLevel(userId: string, level: number) {
 
     const { error } = await supabase
         .from("profiles")
-        .update({ wushsha_level: lvl })
+        .update({ wushsha_level: lvl as WushshaLevel })
         .eq("id", userId);
 
     if (error) {
@@ -610,7 +611,7 @@ export async function createUser(data: {
 
     const { data: created, error } = await supabase
         .from("profiles")
-        .insert(insertData)
+        .insert(insertData as Database['public']['Tables']['profiles']['Insert'])
         .select("id")
         .single();
 
@@ -711,12 +712,12 @@ export async function getCustomerProfile(userId: string) {
     const profile = profileRes.status === "fulfilled" && profileRes.value.data ? profileRes.value.data : null;
     if (!profile) return null;
 
-    const orders = (ordersRes.status === "fulfilled" && ordersRes.value.data ? ordersRes.value.data : []) as any[];
-    const tickets = (ticketsRes.status === "fulfilled" && ticketsRes.value.data ? ticketsRes.value.data : []) as any[];
+    const orders = (ordersRes.status === "fulfilled" && ordersRes.value.data ? ordersRes.value.data : []);
+    const tickets = (ticketsRes.status === "fulfilled" && ticketsRes.value.data ? ticketsRes.value.data : []);
 
     const totalSpent = orders
-        .filter((o: any) => o.payment_status === "paid")
-        .reduce((sum: number, o: any) => sum + (Number(o.total) || 0), 0);
+        .filter((o) => o.payment_status === "paid")
+        .reduce((sum, o) => sum + (Number(o.total) || 0), 0);
 
     return {
         profile: profile as Record<string, unknown>,
@@ -725,8 +726,8 @@ export async function getCustomerProfile(userId: string) {
         stats: {
             totalOrders: orders.length,
             totalSpent,
-            paidOrders: orders.filter((o: any) => o.payment_status === "paid").length,
-            openTickets: tickets.filter((t: any) => t.status === "open" || t.status === "in_progress").length,
+            paidOrders: orders.filter((o) => o.payment_status === "paid").length,
+            openTickets: tickets.filter((t) => t.status === "open" || t.status === "in_progress").length,
         },
     };
 }
@@ -768,14 +769,13 @@ export async function acceptApplicationAndCreateUser(
         .eq("id", applicationId)
         .single();
 
-    const appData = app as any;
-    if (!appData) return { success: false, error: "الطلب غير موجود" };
-    if (!["pending", "reviewing", "accepted"].includes(appData.status)) {
+    if (!app) return { success: false, error: "الطلب غير موجود" };
+    if (!["pending", "reviewing", "accepted"].includes(app.status)) {
         return { success: false, error: "لا يمكن معالجة هذا الطلب" };
     }
 
     const role = options.role ?? "wushsha";
-    const username = `${appData.full_name.replace(/\s+/g, "_").slice(0, 20)}_${Date.now().toString(36)}`.toLowerCase();
+    const username = `${app.full_name.replace(/\s+/g, "_").slice(0, 20)}_${Date.now().toString(36)}`.toLowerCase();
     let clerkId = options.clerk_id?.trim();
     let tempPassword: string | undefined;
     const appClerkId = `app_${applicationId}`;
@@ -787,11 +787,11 @@ export async function acceptApplicationAndCreateUser(
         .eq("clerk_id", appClerkId)
         .maybeSingle();
 
-    if (existingAppProfile && options.createInClerk && appData.email) {
-        const email = String(appData.email).trim();
+    if (existingAppProfile && options.createInClerk && app.email) {
+        const email = String(app.email).trim();
         if (!email) return { success: false, error: "البريد الإلكتروني مطلوب" };
         tempPassword = generateTempPassword();
-        const nameParts = (appData.full_name || "").trim().split(/\s+/);
+        const nameParts = (app.full_name || "").trim().split(/\s+/);
         const firstName = nameParts[0] || "مستخدم";
         const lastName = nameParts.slice(1).join(" ") || "";
         try {
@@ -814,23 +814,24 @@ export async function acceptApplicationAndCreateUser(
             await supabase.from("applications").update({ profile_id: existingAppProfile.id }).eq("id", applicationId);
             revalidatePath("/dashboard/applications");
             revalidatePath("/dashboard/users");
-            sendApplicationAcceptedEmail(appData.email, appData.full_name || "فنان", tempPassword).catch(console.error);
+            sendApplicationAcceptedEmail(app.email, app.full_name || "فنان", tempPassword).catch(console.error);
             return { success: true, userId: existingAppProfile.id, tempPassword };
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("[acceptApplication] Clerk createUser error:", err);
-            if (err?.errors?.[0]?.code === "form_identifier_exists") {
+            const clerkErr = err as { errors?: { code: string }[]; message?: string };
+            if (clerkErr?.errors?.[0]?.code === "form_identifier_exists") {
                 return { success: false, error: "البريد مسجّل مسبقاً في Clerk." };
             }
-            return { success: false, error: err?.message || "فشل إنشاء المستخدم في Clerk" };
+            return { success: false, error: clerkErr?.message || "فشل إنشاء المستخدم في Clerk" };
         }
     }
 
     // ─── إنشاء المستخدم في Clerk (عند إنشاء ملف جديد) ───
-    if (options.createInClerk && appData.email) {
-        const email = String(appData.email).trim();
+    if (options.createInClerk && app.email) {
+        const email = String(app.email).trim();
         if (!email) return { success: false, error: "البريد الإلكتروني مطلوب لإنشاء حساب Clerk" };
         tempPassword = generateTempPassword();
-        const nameParts = (appData.full_name || "").trim().split(/\s+/);
+        const nameParts = (app.full_name || "").trim().split(/\s+/);
         const firstName = nameParts[0] || "مستخدم";
         const lastName = nameParts.slice(1).join(" ") || "";
         try {
@@ -843,12 +844,13 @@ export async function acceptApplicationAndCreateUser(
                 username: username.slice(0, 128),
             });
             clerkId = clerkUser.id;
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("[acceptApplication] Clerk createUser error:", err);
-            if (err?.errors?.[0]?.code === "form_identifier_exists") {
+            const clerkErr = err as { errors?: { code: string }[]; message?: string };
+            if (clerkErr?.errors?.[0]?.code === "form_identifier_exists") {
                 return { success: false, error: "البريد الإلكتروني مسجّل مسبقاً في Clerk." };
             }
-            return { success: false, error: err?.message || "فشل إنشاء المستخدم في Clerk" };
+            return { success: false, error: clerkErr?.message || "فشل إنشاء المستخدم في Clerk" };
         }
     } else {
         clerkId = clerkId || appClerkId;
@@ -866,10 +868,10 @@ export async function acceptApplicationAndCreateUser(
 
     const insertData: Record<string, unknown> = {
         clerk_id: clerkId,
-        display_name: appData.full_name,
+        display_name: app.full_name,
         username,
         role,
-        bio: appData.motivation?.slice(0, 500) || null,
+        bio: app.motivation?.slice(0, 500) || null,
     };
 
     if (role === "wushsha") {
@@ -878,7 +880,7 @@ export async function acceptApplicationAndCreateUser(
 
     const { data: newProfile, error: insertError } = await supabase
         .from("profiles")
-        .insert(insertData)
+        .insert(insertData as Database['public']['Tables']['profiles']['Insert'])
         .select("id")
         .single();
 
@@ -898,8 +900,8 @@ export async function acceptApplicationAndCreateUser(
 
     revalidatePath("/dashboard/users");
     revalidatePath("/dashboard/applications");
-    if (appData.email) {
-        sendApplicationAcceptedEmail(appData.email, appData.full_name || "فنان", tempPassword).catch(console.error);
+    if (app.email) {
+        sendApplicationAcceptedEmail(app.email, app.full_name || "فنان", tempPassword).catch(console.error);
     }
     return { success: true, userId: newProfile?.id, tempPassword };
 }
@@ -933,7 +935,7 @@ export async function getAdminOrders(page = 1, status = "all") {
             .select(selectQuery, { count: "exact" });
 
         if (status !== "all") {
-            query = query.eq("status", status);
+            query = query.eq("status", status as OrderStatus);
         }
 
         const { data, count, error } = await query
@@ -946,7 +948,7 @@ export async function getAdminOrders(page = 1, status = "all") {
         }
 
         return {
-            data: (data as any[]) || [],
+            data: data || [],
             count: count || 0,
             totalPages: count ? Math.ceil(count / perPage) : 0,
         };
@@ -970,7 +972,7 @@ export async function updateOrderStatus(orderId: string, newStatus: string) {
         .eq("id", orderId)
         .single();
 
-    const updateData: any = { status: newStatus };
+    const updateData: Record<string, unknown> = { status: newStatus };
 
     if (newStatus === "confirmed") updateData.payment_status = "paid";
     if (newStatus === "cancelled") updateData.payment_status = "refunded";
@@ -1033,7 +1035,7 @@ export async function getAdminApplications(status = "all") {
         .select("*", { count: "exact" });
 
     if (status !== "all") {
-        query = query.eq("status", status);
+        query = query.eq("status", status as ApplicationStatus);
     }
 
     const { data, count, error } = await query
@@ -1044,7 +1046,7 @@ export async function getAdminApplications(status = "all") {
         return { data: [], count: 0 };
     }
 
-    const apps = (data as any[]) || [];
+    const apps = data || [];
     // للطلبات المقبولة: التحقق من وجود ملف وحساب Clerk
     const enriched = await Promise.all(
         apps.map(async (app) => {
@@ -1053,11 +1055,11 @@ export async function getAdminApplications(status = "all") {
             let profile: { id: string; clerk_id: string } | null = null;
             if (app.profile_id) {
                 const { data: p } = await supabase.from("profiles").select("id, clerk_id").eq("id", app.profile_id).maybeSingle();
-                profile = p as any;
+                profile = p;
             }
             if (!profile) {
                 const { data: p } = await supabase.from("profiles").select("id, clerk_id").eq("clerk_id", `app_${app.id}`).maybeSingle();
-                profile = p as any;
+                profile = p;
             }
             const hasProfile = !!profile;
             const hasClerkAccount = hasProfile && !String(profile!.clerk_id).startsWith("app_");
@@ -1082,8 +1084,7 @@ export async function reviewApplication(
         .eq("id", id)
         .single();
 
-    const appData = app as any;
-    if (!appData) return { success: false, error: "Application not found" };
+    if (!app) return { success: false, error: "Application not found" };
 
     // Update application status
     const { error } = await supabase
@@ -1100,16 +1101,16 @@ export async function reviewApplication(
         return { success: false, error: error.message };
     }
 
-    if (decision === "rejected" && appData.email) {
-        sendApplicationRejectedEmail(appData.email, appData.full_name || "مقدم الطلب").catch(console.error);
+    if (decision === "rejected" && app.email) {
+        sendApplicationRejectedEmail(app.email, app.full_name || "مقدم الطلب").catch(console.error);
     }
 
     // عند القبول: ربط profile_id إذا وُجد مستخدم بنفس البريد في Clerk
-    if (decision === "accepted" && appData.email) {
+    if (decision === "accepted" && app.email) {
         try {
             const client = await clerkClient();
             const clerkUsers = await client.users.getUserList({
-                emailAddress: [appData.email],
+                emailAddress: [app.email],
                 limit: 1,
             });
             const matched = clerkUsers.data?.[0];
@@ -1156,7 +1157,7 @@ export async function getAdminArtworks(page = 1, status = "all") {
         `, { count: "exact" });
 
     if (status !== "all") {
-        query = query.eq("status", status);
+        query = query.eq("status", status as ArtworkStatus);
     }
 
     const { data, count, error } = await query
@@ -1169,7 +1170,7 @@ export async function getAdminArtworks(page = 1, status = "all") {
     }
 
     return {
-        data: (data as any[]) || [],
+        data: data || [],
         count: count || 0,
         totalPages: count ? Math.ceil(count / perPage) : 0,
     };
@@ -1259,7 +1260,7 @@ export async function createArtworkAdmin(data: {
         is_featured: data.is_featured ?? false,
     };
 
-    const { error } = await supabase.from("artworks").insert(insert);
+    const { error } = await supabase.from("artworks").insert(insert as Database['public']['Tables']['artworks']['Insert']);
 
     if (error) {
         console.error("[createArtworkAdmin]", error);

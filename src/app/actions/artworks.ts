@@ -64,10 +64,8 @@ export async function getArtworks(
             .eq("slug", category)
             .single();
 
-        const catData = data as any;
-
-        if (catData) {
-            query = query.eq("category_id", catData.id);
+        if (data) {
+            query = query.eq("category_id", data.id);
         }
     }
 
@@ -123,9 +121,7 @@ export async function getArtistArtworks(page = 1) {
         .eq("clerk_id", user.id)
         .single();
 
-    const profileData = profile as any;
-
-    if (!profileData) return { data: [], count: 0 };
+    if (!profile) return { data: [], count: 0 };
 
     const itemsPerPage = 12;
     const from = (page - 1) * itemsPerPage;
@@ -134,7 +130,7 @@ export async function getArtistArtworks(page = 1) {
     const { data, count, error } = await supabase
         .from("artworks")
         .select("*", { count: "exact" })
-        .eq("artist_id", profileData.id)
+        .eq("artist_id", profile.id)
         .order("created_at", { ascending: false })
         .range(from, to);
 
@@ -212,20 +208,18 @@ export async function createArtwork(formData: any) {
         .eq("clerk_id", user.id)
         .single();
 
-    const profileData = profile as any;
-
-    if (!profileData) return { success: false, error: "Profile not found" };
+    if (!profile) return { success: false, error: "Profile not found" };
 
     // Insert artwork (admin client bypasses RLS — we've verified user via Clerk)
     const { error } = await adminSupabase.from("artworks").insert({
-        artist_id: profileData.id,
+        artist_id: profile.id,
         title: formData.title,
         description: formData.description,
         category_id: formData.category_id,
         image_url: formData.image_url,
         status: "published", // Auto-publish for now
         tags: formData.tags || [],
-    } as any);
+    });
 
     if (error) {
         console.error("Error creating artwork:", error);
@@ -251,7 +245,7 @@ export async function deleteArtwork(id: string, imageUrl: string) {
         .eq("id", id)
         .single();
 
-    const artworkData = artwork as any;
+    if (!artwork) return { success: false, error: "Unauthorized" };
 
     const { data: profile } = await supabase
         .from("profiles")
@@ -259,9 +253,7 @@ export async function deleteArtwork(id: string, imageUrl: string) {
         .eq("clerk_id", user.id)
         .single();
 
-    const profileData = profile as any;
-
-    if (!artworkData || !profileData || artworkData.artist_id !== profileData.id) {
+    if (!profile || artwork.artist_id !== profile.id) {
         return { success: false, error: "Unauthorized" };
     }
 

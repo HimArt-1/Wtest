@@ -153,11 +153,14 @@ export type ShippingAddress = {
 export type OrderItem = {
     id: string;
     order_id: string;             // FK → orders.id
-    product_id: string;           // FK → products.id
+    product_id: string | null;    // FK → products.id (null for custom designs)
     quantity: number;
     size: ApparelSize | null;
     unit_price: number;
     total_price: number;
+    custom_design_url?: string;
+    custom_garment?: string | null;
+    custom_title?: string | null;
 }
 
 // ─── Admin Notifications ───────────────────────────────────
@@ -228,6 +231,7 @@ export type Application = Timestamps & {
     status: ApplicationStatus;
     reviewer_id: string | null;   // FK → profiles.id (admin)
     reviewer_notes: string | null;
+    profile_id: string | null;    // FK → profiles.id (created user)
 }
 
 // ─── Likes (Many-to-Many) ────────────────────────────────
@@ -441,7 +445,20 @@ export type Database = {
             };
             artworks: {
                 Row: Artwork;
-                Insert: Omit<Artwork, "id" | "created_at" | "updated_at" | "views_count" | "likes_count" | "rating" | "reviews_count"> & { views_count?: number; likes_count?: number; rating?: number; reviews_count?: number };
+                Insert: Omit<Artwork, "id" | "created_at" | "updated_at" | "views_count" | "likes_count" | "rating" | "reviews_count" | "is_featured" | "description" | "category_id" | "thumbnail_url" | "medium" | "dimensions" | "year" | "price"> & {
+                    views_count?: number;
+                    likes_count?: number;
+                    rating?: number;
+                    reviews_count?: number;
+                    is_featured?: boolean;
+                    description?: string | null;
+                    category_id?: string | null;
+                    thumbnail_url?: string | null;
+                    medium?: string | null;
+                    dimensions?: string | null;
+                    year?: number | null;
+                    price?: number | null;
+                };
                 Update: Partial<Omit<Artwork, "id" | "created_at">>;
                 Relationships: [
                     {
@@ -493,9 +510,23 @@ export type Database = {
             };
             order_items: {
                 Row: OrderItem;
-                Insert: Omit<OrderItem, "id" | "quantity"> & { quantity?: number };
+                Insert: Omit<OrderItem, "id" | "quantity" | "size" | "custom_design_url" | "custom_garment" | "custom_title"> & {
+                    quantity?: number;
+                    size: string | null;
+                    custom_design_url?: string;
+                    custom_garment?: string | null;
+                    custom_title?: string | null;
+                };
                 Update: Partial<Omit<OrderItem, "id" | "order_id">>;
-                Relationships: any[];
+                Relationships: [
+                    {
+                        foreignKeyName: "order_items_product_id_fkey";
+                        columns: ["product_id"];
+                        isOneToOne: false;
+                        referencedRelation: "products";
+                        referencedColumns: ["id"];
+                    }
+                ];
             };
             applications: {
                 Row: Application;
@@ -720,9 +751,9 @@ export type Database = {
                 Relationships: any[];
             };
             site_settings: {
-                Row: { id: string; key: string; value: Record<string, unknown>; created_at: string; updated_at: string };
-                Insert: { key: string; value: Record<string, unknown> };
-                Update: Partial<{ key: string; value: Record<string, unknown> }>;
+                Row: { id: string; key: string; value: Record<string, unknown> | unknown[]; created_at: string; updated_at: string };
+                Insert: { key: string; value: Record<string, unknown> | unknown[] };
+                Update: Partial<{ key: string; value: Record<string, unknown> | unknown[] }>;
                 Relationships: any[];
             };
         };

@@ -30,7 +30,7 @@ async function verifyAdmin() {
         .eq("clerk_id", user.id)
         .single();
 
-    return (profile as any)?.role === "admin";
+    return profile?.role === "admin";
 }
 
 export async function getDashboardStats() {
@@ -43,7 +43,7 @@ export async function getDashboardStats() {
         // إجمالي المبيعات والطلبات للإحصاءات السريعة
         const { data: orders, error: ordersError } = await supabase
             .from("orders")
-            .select("total, created_at, status") as any;
+            .select("total, created_at, status");
 
         if (ordersError) throw ordersError;
 
@@ -56,10 +56,10 @@ export async function getDashboardStats() {
 
         // الحسابات
         // 1. حساب الإيرادات (طلبات مؤكدة أو مُسلّمة فقط أو قيد التنفيذ - نستثني الملغاة)
-        const validOrders = orders.filter(
-            (o: any) => o.status !== "cancelled" && o.status !== "refunded"
+        const validOrders = (orders || []).filter(
+            (o) => o.status !== "cancelled" && o.status !== "refunded"
         );
-        const totalRevenue = validOrders.reduce((sum: number, order: any) => sum + order.total, 0);
+        const totalRevenue = validOrders.reduce((sum, order) => sum + Number(order.total), 0);
         const totalOrders = validOrders.length;
 
         // 2. تجميع الإيرادات للأيام السبعة الماضية للرسم البياني
@@ -71,9 +71,9 @@ export async function getDashboardStats() {
 
         const revenueByDay = last7Days.map((dateStr) => {
             const dayOrders = validOrders.filter(
-                (o: any) => o.created_at.startsWith(dateStr)
+                (o) => o.created_at.startsWith(dateStr)
             );
-            const dayTotal = dayOrders.reduce((sum: number, o: any) => sum + o.total, 0);
+            const dayTotal = dayOrders.reduce((sum, o) => sum + Number(o.total), 0);
 
             // تحويل التاريخ من YYYY-MM-DD إلى صيغة عرض مبسطة للعربي
             const dateObj = new Date(dateStr);

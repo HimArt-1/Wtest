@@ -51,7 +51,7 @@ export async function submitApplication(formData: FormData): Promise<ActionRespo
         // portfolio_images has default in DB, so we can omit it or pass []
     };
 
-    const { error } = await (supabase as any)
+    const { error } = await supabase
         .from("applications")
         .insert([insertData]);
 
@@ -101,7 +101,7 @@ export async function subscribeNewsletter(formData: FormData): Promise<ActionRes
     const supabase = getSupabaseServerClient();
 
     // Use upsert with ignoreDuplicates to handle existing email silently
-    const { error } = await (supabase as any)
+    const { error } = await supabase
         .from("newsletter_subscribers")
         .upsert([{ email: validated.data.email, is_active: true }], {
             onConflict: "email",

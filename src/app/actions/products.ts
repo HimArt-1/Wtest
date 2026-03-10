@@ -29,7 +29,7 @@ export async function getProducts(
         .eq("in_stock", true);
 
     if (type !== "all") {
-        query = query.eq("type", type as any);
+        query = query.eq("type", type as ProductType);
     }
 
     const { data, count, error } = await query
@@ -98,10 +98,10 @@ export async function createProduct(input: CreateProductInput) {
         artwork_id: input.artwork_id,
         title: input.title,
         description: input.description,
-        type: input.type as any, // Cast to any to satisfy ProductType
+        type: input.type as ProductType,
         price: input.price,
         image_url: input.image_url,
-        sizes: input.sizes as any[], // Cast to satisfy ApparelSize[]
+        sizes: input.sizes as ApparelSize[],
         in_stock: true,
         stock_quantity: 100, // Unlimited for POD
         is_featured: false,

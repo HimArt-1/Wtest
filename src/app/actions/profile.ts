@@ -63,7 +63,7 @@ export async function updateProfile(
     if (!validatedFields.success) {
         return {
             success: false,
-            errors: validatedFields.error.flatten().fieldErrors as any,
+            errors: validatedFields.error.flatten().fieldErrors as ProfileActionState["errors"],
             message: "البيانات المدخلة غير صحيحة",
         };
     }
@@ -72,8 +72,8 @@ export async function updateProfile(
 
     // 3. Update Database (by clerk_id)
     try {
-        const { error } = await (supabase
-            .from("profiles") as any)
+        const { error } = await supabase
+            .from("profiles")
             .update({
                 display_name: data.display_name,
                 username: data.username,

@@ -3,6 +3,7 @@
 import { clerkClient } from "@clerk/nextjs/server";
 import { createClient } from "@supabase/supabase-js";
 import { currentUser } from "@clerk/nextjs/server";
+import type { Database } from "@/types/database";
 
 // ─── Admin Guard ───────────────────────────────────────────
 
@@ -10,7 +11,7 @@ function getAdminSupabase() {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     if (!url || !key) throw new Error("Missing Supabase env");
-    return createClient(url, key, { auth: { persistSession: false } });
+    return createClient<Database>(url, key, { auth: { persistSession: false } });
 }
 
 async function requireAdmin() {
@@ -79,7 +80,7 @@ export async function getClerkUsersList(
         .in("clerk_id", clerkIds);
 
     const profileByClerkId = new Map(
-        (profiles || []).map((p) => [(p as any).clerk_id, p])
+        (profiles || []).map((p) => [p.clerk_id, p])
     );
 
     const data: ClerkUserWithProfile[] = clerkUsers.map((u) => {
@@ -94,10 +95,10 @@ export async function getClerkUsersList(
             lastSignInAt: u.lastSignInAt ?? null,
             profile: p
                 ? {
-                    id: (p as any).id,
-                    role: (p as any).role,
-                    display_name: (p as any).display_name,
-                    username: (p as any).username,
+                    id: p.id,
+                    role: p.role,
+                    display_name: p.display_name,
+                    username: p.username,
                 }
                 : null,
         };

@@ -150,7 +150,7 @@ export async function createOrder(
 
     const { error: itemsError } = await supabase
         .from("order_items")
-        .insert(orderItems as any[]);
+        .insert(orderItems);
 
     if (itemsError) {
         console.error("Order items error:", itemsError);
@@ -165,7 +165,7 @@ export async function createOrder(
 
     if (options?.couponId) {
         // Increment coupon current_uses atomically via RPC
-        await (supabase as any).rpc("increment_coupon_uses_by_id", { p_coupon_id: options.couponId });
+        await supabase.rpc("increment_coupon_uses_by_id" as never, { p_coupon_id: options.couponId } as never);
     }
 
 

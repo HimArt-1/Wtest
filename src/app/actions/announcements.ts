@@ -5,13 +5,14 @@ import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import type { Announcement, AnnouncementTrigger } from "@/lib/announcement-types";
 import { DEFAULT_TRIGGER } from "@/lib/announcement-types";
+import type { Database } from "@/types/database";
 
 // ─── Admin Supabase Client ──────────────────────────────────
 
 function getAdminSupabase() {
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!serviceKey) throw new Error("SUPABASE_SERVICE_ROLE_KEY is not configured");
-    return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceKey, { auth: { persistSession: false } });
+    return createClient<Database>(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceKey, { auth: { persistSession: false } });
 }
 
 async function requireAdmin() {
@@ -30,7 +31,7 @@ export async function getAnnouncements(): Promise<Announcement[]> {
     if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
         return [];
     }
-    
+
     try {
         const supabase = getAdminSupabase();
         const { data } = await supabase
@@ -39,11 +40,11 @@ export async function getAnnouncements(): Promise<Announcement[]> {
             .eq("key", "announcements")
             .maybeSingle();
 
-        const raw = (data as any)?.value;
+        const raw = data?.value;
         if (!raw || !Array.isArray(raw)) return [];
 
         // Migrate old announcements that don't have trigger field
-        return raw.map((a: any) => ({
+        return (raw as Record<string, unknown>[]).map((a) => ({
             ...a,
             trigger: a.trigger || DEFAULT_TRIGGER,
         })) as Announcement[];
