@@ -2,8 +2,9 @@
 
 import webpush from "web-push";
 import { createClient } from "@supabase/supabase-js";
+import type { Database } from "@/types/database";
 
-const supabase = createClient(
+const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
     { auth: { persistSession: false } }
@@ -41,7 +42,8 @@ export async function sendPushToAll(title: string, body: string, url?: string) {
                 );
                 sent++;
             } catch (e) {
-                if ((e as any)?.statusCode === 410 || (e as any)?.statusCode === 404) {
+                const statusCode = (e as { statusCode?: number })?.statusCode;
+                if (statusCode === 410 || statusCode === 404) {
                     await supabase.from("push_subscriptions").delete().eq("endpoint", sub.endpoint);
                 }
             }

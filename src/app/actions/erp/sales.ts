@@ -21,7 +21,7 @@ async function verifyAdmin() {
         .select("role")
         .eq("clerk_id", user.id)
         .single();
-    return { user, isAdmin: (profile as any)?.role === "admin" };
+    return { user, isAdmin: profile?.role === "admin" };
 }
 
 export async function getSalesRecords(method?: SalesMethodType) {
@@ -62,46 +62,45 @@ export async function recordManualSale(
 
         // 1. Record Sale
         const unitPrice = totalPrice / quantity;
-        const { data: sale, error: saleError } = await (supabase.from("sales_records") as any)
-            .insert([{
+        const { data: sale, error: saleError } = await supabase.from("sales_records")
+            .insert({
                 sales_method: 'booth_manual',
                 sku_id: skuId,
                 quantity: quantity,
                 unit_price: unitPrice,
                 total_price: totalPrice,
                 status: 'completed',
-                notes: notes,
-                created_by: (profile as any)?.id
-            }])
+                notes: notes ?? null,
+                created_by: profile?.id ?? null,
+            })
             .select()
             .single();
 
         if (saleError) throw saleError;
 
         // 2. Adjust Inventory (Deduct)
-        const { data: currentLevel } = await (supabase
+        const { data: currentLevel } = await supabase
             .from("inventory_levels")
             .select("quantity")
             .eq("sku_id", skuId)
             .eq("warehouse_id", warehouseId)
-            .single() as any);
+            .single();
 
         const previousQuantity = currentLevel ? currentLevel.quantity : 0;
-        const newQuantity = previousQuantity - quantity; // Negative change for sale
+        const newQuantity = previousQuantity - quantity;
 
-        const { error: upsertError } = await (supabase.from("inventory_levels") as any)
+        const { error: upsertError } = await supabase.from("inventory_levels")
             .upsert({
                 sku_id: skuId,
                 warehouse_id: warehouseId,
                 quantity: newQuantity,
-                updated_at: new Date().toISOString()
             }, { onConflict: "sku_id,warehouse_id" });
 
         if (upsertError) throw upsertError;
 
         // Record Transaction
-        await (supabase.from("inventory_transactions") as any)
-            .insert([{
+        await supabase.from("inventory_transactions")
+            .insert({
                 sku_id: skuId,
                 warehouse_id: warehouseId,
                 transaction_type: 'sale',
@@ -110,12 +109,13 @@ export async function recordManualSale(
                 new_quantity: newQuantity,
                 reference_id: sale.id,
                 notes: `POS Hand Sale`,
-                created_by: (profile as any)?.id
-            }]);
+                created_by: profile?.id ?? null,
+            });
 
         return { success: true, sale };
-    } catch (e: any) {
-        console.error("Sale error", e);
-        return { error: e.message || "حدث خطأ أثناء تسجيل المبيعات" };
+    } catch (e: unknown) {
+        const err = e as Error;
+        console.error("Sale error", err);
+        return { error: err.message || "حدث خطأ أثناء تسجيل المبيعات" };
     }
 }

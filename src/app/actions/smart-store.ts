@@ -10,6 +10,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { createAdminNotification } from "./notifications";
 import { createUserNotification } from "./user-notifications";
 import type {
+    Database,
     CustomDesignGarment,
     CustomDesignColor,
     CustomDesignSize,
@@ -19,11 +20,10 @@ import type {
     CustomDesignStudioItem,
 } from "@/types/database";
 
-// Use raw client to avoid type mismatch before migration is introspected
 function getSmartStoreSb() {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    return createClient(url, key, { auth: { persistSession: false } });
+    return createClient<Database>(url, key, { auth: { persistSession: false } });
 }
 
 // ─── Public Reads ────────────────────────────────────────
@@ -381,7 +381,7 @@ export async function getDesignPromptTemplate(): Promise<string> {
         .select("ai_prompt_template")
         .eq("id", "default")
         .single();
-    const template = (data as any)?.ai_prompt_template;
+    const template = data?.ai_prompt_template;
     if (template && template.trim().length > 0) return template;
 
     // Default fallback template
@@ -522,22 +522,22 @@ export async function submitDesignOrder(orderData: {
         .select("id, order_number")
         .single();
 
-    if (error) return { error: error.message };
+    if (error || !data) return { error: error?.message || "فشل إنشاء الطلب" };
 
     // Notify all admins about the new design order
     await createAdminNotification({
         type: "order_alert",
         title: "طلب تصميم جديد 🎨",
-        message: `طلب تصميم جديد #${(data as any)?.order_number} — ${orderData.garment_name} (${orderData.color_name}) من ${orderData.customer_name || "عميل"}`,
+        message: `طلب تصميم جديد #${data.order_number} — ${orderData.garment_name} (${orderData.color_name}) من ${orderData.customer_name || "عميل"}`,
         link: "/dashboard/design-orders",
     });
 
-    return { success: true, orderId: (data as any)?.id, orderNumber: (data as any)?.order_number };
+    return { success: true, orderId: data.id, orderNumber: data.order_number };
 }
 
 // ─── Admin: Get Design Orders ───────────────────────────
 
-export async function getDesignOrders(page = 1, status = "all") {
+export async function getDesignOrders(page = 1, status: CustomDesignOrderStatus | "all" = "all") {
     const sb = getSmartStoreSb();
     const perPage = 20;
     const from = (page - 1) * perPage;
@@ -576,16 +576,16 @@ export async function updateDesignOrderStatus(id: string, status: CustomDesignOr
         .eq("id", id)
         .select("user_id, order_number")
         .single();
-    if (error) return { error: error.message };
+    if (error || !order) return { error: error?.message || "فشل تحديث الحالة" };
 
     // If awaiting_review and there's a user, notify them
-    if (status === "awaiting_review" && (order as any).user_id) {
+    if (status === "awaiting_review" && order.user_id) {
         await createUserNotification({
-            userId: (order as any).user_id,
+            userId: order.user_id,
             title: "تصميم مخصص 🎨",
-            message: `تصميمك (الطلب #${(order as any).order_number}) جاهز الآن للمراجعة والتأكيد! يمكنك الاعتماد والتحويل للسلة أو طلب الإلغاء.`,
+            message: `تصميمك (الطلب #${order.order_number}) جاهز الآن للمراجعة والتأكيد! يمكنك الاعتماد والتحويل للسلة أو طلب الإلغاء.`,
             type: "order_update",
-            link: `/account/orders?design=${id}`, // Will jump to orders tab
+            link: `/account/orders?design=${id}`,
         });
     }
 
@@ -605,7 +605,7 @@ export async function uploadDesignResult(id: string, field: "result_design_url" 
 
 export async function skipDesignResults(id: string) {
     const sb = getSmartStoreSb();
-    const { error } = await sb.from("custom_design_orders").update({ skip_results: true, status: "completed" as any }).eq("id", id);
+    const { error } = await sb.from("custom_design_orders").update({ skip_results: true, status: "completed" }).eq("id", id);
     if (error) return { error: error.message };
     return { success: true };
 }
@@ -629,22 +629,22 @@ export async function sendDesignOrderToCustomer(id: string, finalPrice: number) 
         .update({
             final_price: finalPrice,
             is_sent_to_customer: true,
-            status: "awaiting_review" as any // Ensure status is reviewable
+            status: "awaiting_review",
         })
         .eq("id", id)
         .select("user_id, order_number")
         .single();
 
-    if (error) return { error: error.message };
+    if (error || !order) return { error: error?.message || "فشل التحديث" };
 
     // Notify the user that their order is priced and ready for checkout
-    if (order && (order as any).user_id) {
+    if (order.user_id) {
         await createUserNotification({
-            userId: (order as any).user_id,
+            userId: order.user_id,
             title: "تصميم مخصص جاهز للدفع 🛍️",
-            message: `تم تسعير طلبك #${(order as any).order_number} ليصبح جاهزاً للإضافة للسلة والدفع. يرجى مراجعته واعتماده.`,
+            message: `تم تسعير طلبك #${order.order_number} ليصبح جاهزاً للإضافة للسلة والدفع. يرجى مراجعته واعتماده.`,
             type: "order_update",
-            link: `/account/orders?design=${id}`, // Direct them to their orders tab
+            link: `/account/orders?design=${id}`,
         });
     }
 
@@ -681,7 +681,7 @@ export async function approveDesignOrder(id: string) {
     const sb = getSmartStoreSb();
     const { error, data: order } = await sb
         .from("custom_design_orders")
-        .update({ status: "completed" as any })
+        .update({ status: "completed" })
         .eq("id", id)
         .in("status", ["awaiting_review"])
         .select("user_id, order_number")
@@ -691,7 +691,7 @@ export async function approveDesignOrder(id: string) {
     if (order) {
         await createAdminNotification({
             title: "تأكيد تصميم مخصص ✅",
-            message: `قام العميل للتو بمراجعة وتأكيد التصميم للطلب #${(order as any).order_number}.`,
+            message: `قام العميل للتو بمراجعة وتأكيد التصميم للطلب #${order.order_number}.`,
             type: "system_alert",
             link: "/dashboard/smart-store",
         });
@@ -707,7 +707,7 @@ export async function rejectDesignOrder(id: string, reason: string) {
 
     const { error } = await sb
         .from("custom_design_orders")
-        .update({ status: "cancelled" as any, admin_notes: `رفض — السبب: ${text}` })
+        .update({ status: "cancelled", admin_notes: `رفض — السبب: ${text}` })
         .eq("id", id)
         .eq("status", "new");
     if (error) return { error: error.message };
@@ -718,7 +718,7 @@ export async function cancelDesignOrderByCustomer(id: string) {
     const sb = getSmartStoreSb();
     const { error, data: order } = await sb
         .from("custom_design_orders")
-        .update({ status: "cancelled" as any })
+        .update({ status: "cancelled" })
         .eq("id", id)
         .in("status", ["new", "in_progress", "awaiting_review"])
         .select("user_id, order_number")
@@ -728,7 +728,7 @@ export async function cancelDesignOrderByCustomer(id: string) {
     if (order) {
         await createAdminNotification({
             title: "إلغاء تصميم مخصص ❌",
-            message: `قام العميل بإلغاء طلب التصميم المخصص #${(order as any).order_number}.`,
+            message: `قام العميل بإلغاء طلب التصميم المخصص #${order.order_number}.`,
             type: "order_alert",
             link: "/dashboard/smart-store",
         });
@@ -747,7 +747,7 @@ export async function submitModificationRequest(orderId: string, requestText: st
     const { error } = await sb
         .from("custom_design_orders")
         .update({
-            status: "modification_requested" as any,
+            status: "modification_requested",
             modification_request: text,
         })
         .eq("id", orderId)
@@ -758,7 +758,7 @@ export async function submitModificationRequest(orderId: string, requestText: st
     if (order) {
         await createAdminNotification({
             title: "طلب تعديل التصميم ✏️",
-            message: `العميل طلب تعديلاً على الطلب #${(order as any).order_number}. راجع طلب التعديل.`,
+            message: `العميل طلب تعديلاً على الطلب #${order.order_number}. راجع طلب التعديل.`,
             type: "order_alert",
             link: "/dashboard/design-orders",
         });
@@ -794,7 +794,7 @@ export async function getGarmentPricing(garmentName: string) {
 
 export async function confirmDesignOrder(id: string, position?: string | null, size?: string | null, price?: number | null) {
     const sb = getSmartStoreSb();
-    const updateData: any = { status: "completed" };
+    const updateData: Partial<CustomDesignOrder> = { status: "completed" };
     if (position) updateData.print_position = position;
     if (size) updateData.print_size = size;
     if (price !== undefined && price !== null) updateData.final_price = price;
@@ -809,7 +809,7 @@ export async function confirmDesignOrder(id: string, position?: string | null, s
     if (order) {
         await createAdminNotification({
             title: "تأكيد تصميم مخصّص للسلة 🛒",
-            message: `قام العميل للتو بمراجعة وتأكيد التصميم للطلب #${(order as any).order_number} وأضافه للسلة.`,
+            message: `قام العميل للتو بمراجعة وتأكيد التصميم للطلب #${order.order_number} وأضافه للسلة.`,
             type: "system_alert",
             link: "/dashboard/smart-store",
         });
@@ -842,7 +842,7 @@ export async function submitAdditionalDesignOrder(
         .single();
 
     if (fetchErr || !parent) return { error: "الطلب الأساسي غير موجود" };
-    const p = parent as any;
+    const p = parent as CustomDesignOrder;
 
     if (p.status !== "completed") return { error: "يجب تأكيد التصميم الأساسي أولاً" };
     if (p.print_position === data.print_position) return { error: "اختر موقعاً مختلفاً عن التصميم الأساسي" };
@@ -902,16 +902,16 @@ export async function submitAdditionalDesignOrder(
         .select("id, order_number")
         .single();
 
-    if (error) return { error: error.message };
+    if (error || !inserted) return { error: error?.message || "فشل إنشاء الطلب الإضافي" };
 
     await createAdminNotification({
         type: "order_alert",
         title: "تصميم إضافي على الطلب 🎨",
-        message: `طلب تصميم إضافي #${(inserted as any)?.order_number} — ${p.garment_name} (موقع: ${data.print_position}) مرتبط بالطلب #${p.order_number}`,
+        message: `طلب تصميم إضافي #${inserted.order_number} — ${p.garment_name} (موقع: ${data.print_position}) مرتبط بالطلب #${p.order_number}`,
         link: "/dashboard/design-orders",
     });
 
-    return { success: true, orderId: (inserted as any)?.id, orderNumber: (inserted as any)?.order_number };
+    return { success: true, orderId: inserted.id, orderNumber: inserted.order_number };
 }
 
 // ─── Assign Design Order to Admin ────────────────────────
@@ -941,7 +941,7 @@ export async function getDesignOrderStats() {
         sb.from("custom_design_orders").select("final_price").eq("status", "completed").not("final_price", "is", null),
     ]);
 
-    const revenue = ((revenueRes.data as any[]) || []).reduce((sum: number, r: any) => sum + (r.final_price || 0), 0);
+    const revenue = (revenueRes.data || []).reduce((sum: number, r) => sum + (r.final_price || 0), 0);
 
     return {
         new: newRes.count ?? 0,

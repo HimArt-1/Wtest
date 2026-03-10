@@ -26,7 +26,7 @@ async function verifyAdmin() {
         .eq("clerk_id", user.id)
         .single();
 
-    return { user, isAdmin: (profile as any)?.role === "admin" };
+    return { user, isAdmin: profile?.role === "admin" };
 }
 
 // ─── SKUs ───────────────────────────────────────────────
@@ -61,15 +61,15 @@ export async function createSKU(input: {
             .select("type")
             .eq("id", input.product_id)
             .single();
-        const productType = (product.data as any)?.type || "original";
+        const productType = product.data?.type || "original";
         const gen = await generateNextSKU(productType, input.size, input.color_code);
         if ("error" in gen) return { error: gen.error };
         skuValue = gen.sku;
     }
 
     const supabase = getAdminSb();
-    const { data, error } = await (supabase.from("product_skus") as any)
-        .insert([{ ...input, sku: skuValue }])
+    const { data, error } = await supabase.from("product_skus")
+        .insert({ product_id: input.product_id, sku: skuValue!, size: input.size ?? null, color_code: input.color_code ?? null })
         .select()
         .single();
 
@@ -104,8 +104,8 @@ export async function createWarehouse(name: string, location?: string) {
     if (!isAdmin) return { error: "غير مصرح" };
 
     const supabase = getAdminSb();
-    const { data, error } = await (supabase.from("warehouses") as any)
-        .insert([{ name, location }])
+    const { data, error } = await supabase.from("warehouses")
+        .insert({ name, location: location ?? null, is_active: true })
         .select()
         .single();
 
@@ -149,23 +149,22 @@ export async function adjustInventory(
 
     try {
         // Find existing level
-        const { data: currentLevel } = await (supabase
+        const { data: currentLevel } = await supabase
             .from("inventory_levels")
             .select("quantity")
             .eq("sku_id", skuId)
             .eq("warehouse_id", warehouseId)
-            .single() as any);
+            .single();
 
         const previousQuantity = currentLevel ? currentLevel.quantity : 0;
         const newQuantity = previousQuantity + quantityChange;
 
         // Upsert new level
-        const { error: upsertError } = await (supabase.from("inventory_levels") as any)
+        const { error: upsertError } = await supabase.from("inventory_levels")
             .upsert({
                 sku_id: skuId,
                 warehouse_id: warehouseId,
                 quantity: newQuantity,
-                updated_at: new Date().toISOString()
             }, { onConflict: "sku_id,warehouse_id" });
 
         if (upsertError) throw upsertError;
@@ -178,23 +177,24 @@ export async function adjustInventory(
             .single();
 
         // Record transaction
-        const { error: txError } = await (supabase.from("inventory_transactions") as any)
-            .insert([{
+        const { error: txError } = await supabase.from("inventory_transactions")
+            .insert({
                 sku_id: skuId,
                 warehouse_id: warehouseId,
                 transaction_type: transactionType,
                 quantity_change: quantityChange,
                 previous_quantity: previousQuantity,
                 new_quantity: newQuantity,
-                notes: notes,
-                created_by: (profile as any)?.id
-            }]);
+                notes: notes ?? null,
+                created_by: profile?.id ?? null,
+            });
 
         if (txError) throw txError;
 
         return { success: true, newQuantity };
-    } catch (e: any) {
-        console.error("Inventory error", e);
-        return { error: e.message || "حدث خطأ" };
+    } catch (e: unknown) {
+        const err = e as Error;
+        console.error("Inventory error", err);
+        return { error: err.message || "حدث خطأ" };
     }
 }

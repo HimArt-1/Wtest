@@ -1,6 +1,7 @@
 import { getDesignOrders, getDesignPromptTemplate, getDesignOrderStats, getAdminList } from "@/app/actions/smart-store";
 import { DesignOrdersClient } from "@/components/admin/DesignOrdersClient";
 import { AdminHeader } from "@/components/admin/AdminHeader";
+import type { CustomDesignOrderStatus } from "@/types/database";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +12,7 @@ interface PageProps {
 export default async function DesignOrdersPage({ searchParams }: PageProps) {
     const params = (await searchParams) ?? {} as Record<string, string | undefined>;
     const page = Number(params.page) || 1;
-    const status = params.status || "all";
+    const status = (params.status || "all") as CustomDesignOrderStatus | "all";
 
     const [ordersResult, promptTemplate, stats, adminList] = await Promise.all([
         getDesignOrders(page, status),

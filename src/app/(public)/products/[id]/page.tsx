@@ -16,10 +16,10 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     if (!product) return { title: "غير موجود — وشّى" };
 
     return {
-        title: `${(product as any).title} — وشّى`,
-        description: (product as any).description || `منتج بواسطة ${(product as any).artist?.display_name}`,
+        title: `${product.title} — وشّى`,
+        description: product.description || `منتج بواسطة ${product.artist?.display_name}`,
         openGraph: {
-            images: [(product as any).image_url],
+            images: [product.image_url],
         },
     };
 }
@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
-    const product = await getProductById(id) as any;
+    const product = await getProductById(id);
     if (!product) notFound();
 
     const reviews = await getProductReviews(id);
@@ -58,7 +58,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         hasErpStock = erpTotalStock > 0;
     } else {
         // Fallback to old system if no SKUs
-        hasErpStock = product.in_stock && product.stock_quantity > 0;
+        hasErpStock = product.in_stock && (product.stock_quantity ?? 0) > 0;
         if (hasErpStock && product.sizes) {
             product.sizes.forEach((s: string) => availableSizes.add(s.toUpperCase()));
         }

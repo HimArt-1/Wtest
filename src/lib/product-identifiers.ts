@@ -37,12 +37,12 @@ const DEFAULT_CONFIG: IdentifierTemplateConfig = {
  */
 export async function getIdentifierConfig(): Promise<IdentifierTemplateConfig> {
     const supabase = getAdminSb();
-    const { data } = await (supabase as any)
+    const { data } = await supabase
         .from("site_settings")
         .select("value")
         .eq("key", "product_identifiers")
         .maybeSingle();
-    const val = (data as { value?: Record<string, unknown> } | null)?.value;
+    const val = data?.value as Record<string, unknown> | undefined;
     if (!val) return DEFAULT_CONFIG;
     return { ...DEFAULT_CONFIG, ...(val as Partial<IdentifierTemplateConfig>) };
 }
@@ -56,7 +56,7 @@ export async function generateNextSKU(
     size?: string | null,
     color?: string | null
 ): Promise<{ sku: string } | { error: string }> {
-    const supabase = getAdminSb() as any;
+    const supabase = getAdminSb();
     const { data, error } = await supabase.rpc("generate_sku", {
         p_product_type: productType || "original",
         p_size: size || null,
@@ -75,7 +75,7 @@ export async function getUnitSerialsForPrint(
     count: number
 ): Promise<{ codes: string[] } | { error: string }> {
     if (count < 1 || count > 999) return { error: "الكمية يجب أن تكون بين 1 و 999" };
-    const supabase = getAdminSb() as any;
+    const supabase = getAdminSb();
     const { data, error } = await supabase.rpc("get_next_unit_serials", {
         p_sku_id: skuId,
         p_count: count,
@@ -89,7 +89,7 @@ export async function getUnitSerialsForPrint(
  * توليد معرف منتج (للتحقق من وجود الدالة)
  */
 export async function generateNextProductCode(): Promise<{ code: string } | { error: string }> {
-    const supabase = getAdminSb() as any;
+    const supabase = getAdminSb();
     const { data, error } = await supabase.rpc("generate_product_code");
     if (error) return { error: error.message };
     return { code: data as string };

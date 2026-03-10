@@ -15,10 +15,10 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     if (!artwork) return { title: "غير موجود — وشّى" };
 
     return {
-        title: `${(artwork as any).title} — وشّى`,
-        description: (artwork as any).description || `عمل فني بواسطة ${(artwork as any).artist?.display_name}`,
+        title: `${artwork.title} — وشّى`,
+        description: artwork.description || `عمل فني بواسطة ${artwork.artist?.display_name}`,
         openGraph: {
-            images: [(artwork as any).image_url],
+            images: [artwork.image_url],
         },
     };
 }
@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 export default async function ArtworkDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
-    const artwork = await getArtworkById(id) as any;
+    const artwork = await getArtworkById(id);
     if (!artwork) notFound();
 
     const reviews = await getArtworkReviews(id);

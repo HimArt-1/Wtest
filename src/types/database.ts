@@ -441,15 +441,38 @@ export type Database = {
             };
             artworks: {
                 Row: Artwork;
-                Insert: Partial<Artwork>;
-                Update: Partial<Omit<Artwork, "id" | "created_at" | "artist_id">>;
-                Relationships: any[];
+                Insert: Omit<Artwork, "id" | "created_at" | "updated_at" | "views_count" | "likes_count" | "rating" | "reviews_count"> & { views_count?: number; likes_count?: number; rating?: number; reviews_count?: number };
+                Update: Partial<Omit<Artwork, "id" | "created_at">>;
+                Relationships: [
+                    {
+                        foreignKeyName: "artworks_artist_id_fkey";
+                        columns: ["artist_id"];
+                        isOneToOne: false;
+                        referencedRelation: "profiles";
+                        referencedColumns: ["id"];
+                    },
+                    {
+                        foreignKeyName: "artworks_category_id_fkey";
+                        columns: ["category_id"];
+                        isOneToOne: false;
+                        referencedRelation: "categories";
+                        referencedColumns: ["id"];
+                    }
+                ];
             };
             products: {
                 Row: Product;
                 Insert: Omit<Product, "id" | "created_at" | "updated_at" | "reviews_count" | "is_featured" | "in_stock" | "rating" | "images"> & { is_featured?: boolean; in_stock?: boolean; rating?: number; images?: string[] };
                 Update: Partial<Omit<Product, "id" | "created_at" | "artist_id">>;
-                Relationships: any[];
+                Relationships: [
+                    {
+                        foreignKeyName: "products_artist_id_fkey";
+                        columns: ["artist_id"];
+                        isOneToOne: false;
+                        referencedRelation: "profiles";
+                        referencedColumns: ["id"];
+                    }
+                ];
             };
             discount_coupons: {
                 Row: DiscountCoupon;
@@ -554,7 +577,19 @@ export type Database = {
             };
             custom_design_orders: {
                 Row: CustomDesignOrder;
-                Insert: Omit<CustomDesignOrder, "id" | "created_at" | "updated_at" | "order_number" | "status" | "skip_results" | "is_sent_to_customer"> & { status?: CustomDesignOrderStatus; skip_results?: boolean; is_sent_to_customer?: boolean };
+                Insert: Omit<CustomDesignOrder, "id" | "created_at" | "updated_at" | "order_number" | "status" | "skip_results" | "is_sent_to_customer" | "result_design_url" | "result_mockup_url" | "result_pdf_url" | "final_price" | "admin_notes" | "assigned_to" | "modification_request" | "modification_design_url"> & {
+                    status?: CustomDesignOrderStatus;
+                    skip_results?: boolean;
+                    is_sent_to_customer?: boolean;
+                    result_design_url?: string | null;
+                    result_mockup_url?: string | null;
+                    result_pdf_url?: string | null;
+                    final_price?: number | null;
+                    admin_notes?: string | null;
+                    assigned_to?: string | null;
+                    modification_request?: string | null;
+                    modification_design_url?: string | null;
+                };
                 Update: Partial<Omit<CustomDesignOrder, "id" | "created_at" | "order_number">>;
                 Relationships: any[];
             };
@@ -642,9 +677,17 @@ export type Database = {
             };
             product_skus: {
                 Row: ProductSKU;
-                Insert: Omit<ProductSKU, "id" | "created_at" | "updated_at">;
+                Insert: Omit<ProductSKU, "id" | "created_at" | "updated_at" | "barcode_url"> & { barcode_url?: string | null };
                 Update: Partial<Omit<ProductSKU, "id" | "created_at">>;
-                Relationships: any[];
+                Relationships: [
+                    {
+                        foreignKeyName: "product_skus_product_id_fkey";
+                        columns: ["product_id"];
+                        isOneToOne: false;
+                        referencedRelation: "products";
+                        referencedColumns: ["id"];
+                    }
+                ];
             };
             warehouses: {
                 Row: Warehouse;
@@ -660,14 +703,26 @@ export type Database = {
             };
             inventory_transactions: {
                 Row: InventoryTransaction;
-                Insert: Omit<InventoryTransaction, "id" | "created_at">;
+                Insert: Omit<InventoryTransaction, "id" | "created_at" | "reference_id" | "notes" | "created_by"> & { reference_id?: string | null; notes?: string | null; created_by?: string | null };
                 Update: Partial<Omit<InventoryTransaction, "id" | "created_at">>;
                 Relationships: any[];
             };
             sales_records: {
                 Row: SalesRecord;
-                Insert: Omit<SalesRecord, "id" | "created_at" | "updated_at" | "status"> & { status?: string };
+                Insert: Omit<SalesRecord, "id" | "created_at" | "updated_at" | "status" | "notes" | "created_by" | "order_id" | "sku_id"> & { status?: string; notes?: string | null; created_by?: string | null; order_id?: string | null; sku_id?: string | null };
                 Update: Partial<Omit<SalesRecord, "id" | "created_at">>;
+                Relationships: any[];
+            };
+            push_subscriptions: {
+                Row: { id: string; endpoint: string; p256dh: string; auth: string; user_id: string | null; created_at: string };
+                Insert: { endpoint: string; p256dh: string; auth: string; user_id?: string | null };
+                Update: Partial<{ endpoint: string; p256dh: string; auth: string; user_id: string | null }>;
+                Relationships: any[];
+            };
+            site_settings: {
+                Row: { id: string; key: string; value: Record<string, unknown>; created_at: string; updated_at: string };
+                Insert: { key: string; value: Record<string, unknown> };
+                Update: Partial<{ key: string; value: Record<string, unknown> }>;
                 Relationships: any[];
             };
         };
@@ -675,7 +730,18 @@ export type Database = {
             [_ in never]: never;
         };
         Functions: {
-            [_ in never]: never;
+            generate_sku: {
+                Args: { p_product_type: string; p_size: string | null; p_color: string | null };
+                Returns: string;
+            };
+            get_next_unit_serials: {
+                Args: { p_sku_id: string; p_count: number };
+                Returns: { unit_code: string }[];
+            };
+            generate_product_code: {
+                Args: Record<string, never>;
+                Returns: string;
+            };
         };
         Enums: {
             [_ in never]: never;

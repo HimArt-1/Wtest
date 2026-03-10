@@ -18,24 +18,20 @@ export async function getArtistStats() {
         .eq("clerk_id", user.id)
         .single();
 
-    const profileData = profile as any;
-
-    if (!profileData) return null;
+    if (!profile) return null;
 
     // 2. Get Artworks Stats (Views & Likes)
     const { data: artworks, error: artworksError } = await supabase
         .from("artworks")
         .select("views_count, likes_count")
-        .eq("artist_id", profileData.id);
+        .eq("artist_id", profile.id);
 
     let totalViews = 0;
     let totalLikes = 0;
 
-    const artworksData = artworks as any[];
-
-    if (artworksData) {
-        totalViews = artworksData.reduce((sum, art) => sum + (art.views_count || 0), 0);
-        totalLikes = artworksData.reduce((sum, art) => sum + (art.likes_count || 0), 0);
+    if (artworks) {
+        totalViews = artworks.reduce((sum, art) => sum + (art.views_count || 0), 0);
+        totalLikes = artworks.reduce((sum, art) => sum + (art.likes_count || 0), 0);
     }
 
     // 3. Get Sales Stats
@@ -45,26 +41,22 @@ export async function getArtistStats() {
     const { data: products } = await supabase
         .from("products")
         .select("id")
-        .eq("artist_id", profileData.id);
+        .eq("artist_id", profile.id);
 
     let totalSales = 0;
     let totalRevenue = 0; // Number of items sold
 
-    const productsData = products as any[];
-
-    if (productsData && productsData.length > 0) {
-        const productIds = productsData.map(p => p.id);
+    if (products && products.length > 0) {
+        const productIds = products.map(p => p.id);
 
         const { data: orderItems } = await supabase
             .from("order_items")
             .select("total_price, quantity")
             .in("product_id", productIds);
 
-        const orderItemsData = orderItems as any[];
-
-        if (orderItemsData) {
-            totalRevenue = orderItemsData.reduce((sum, item) => sum + (Number(item.total_price) || 0), 0);
-            totalSales = orderItemsData.reduce((sum, item) => sum + (item.quantity || 0), 0);
+        if (orderItems) {
+            totalRevenue = orderItems.reduce((sum, item) => sum + (Number(item.total_price) || 0), 0);
+            totalSales = orderItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
         }
     }
 

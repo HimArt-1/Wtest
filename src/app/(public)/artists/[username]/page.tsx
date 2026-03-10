@@ -19,7 +19,7 @@ async function getArtistByUsername(username: string) {
         .single();
 
     if (error) return null;
-    return data as any;
+    return data;
 }
 
 async function getArtistArtworksPublic(artistId: string) {
@@ -32,7 +32,7 @@ async function getArtistArtworksPublic(artistId: string) {
         .order("created_at", { ascending: false })
         .limit(20);
 
-    return (data as any[]) || [];
+    return data || [];
 }
 
 // ─── Dynamic Metadata ───────────────────────────────────────

@@ -99,7 +99,8 @@ export async function getArtworkById(id: string) {
         .from("artworks")
         .select(`
       *,
-      artist:profiles(id, display_name, username, bio, avatar_url, is_verified)
+      artist:profiles(id, display_name, username, bio, avatar_url, is_verified),
+      category:categories(name_ar, slug)
     `)
         .eq("id", id)
         .single();
