@@ -45,7 +45,7 @@ export async function getVisitStats() {
         if (!admin) return { total: 0, today: 0, uniquePaths: 0, topPaths: [] };
         const supabase = admin.supabase;
         const todayStart = new Date();
-        todayStart.setHours(0, 0, 0, 0, 0, 0);
+        todayStart.setHours(0, 0, 0, 0);
 
         const [totalRes, todayRes, pathsRes] = await Promise.all([
             supabase.from("page_visits").select("id", { count: "exact", head: true }),
@@ -98,7 +98,7 @@ export async function getErrorStats() {
         if (!admin) return { total: 0, today: 0, byType: {} };
         const { supabase } = admin;
         const todayStart = new Date();
-        todayStart.setHours(0, 0, 0, 0, 0, 0);
+        todayStart.setHours(0, 0, 0, 0);
 
         const [totalRes, todayRes, allRes] = await Promise.all([
             supabase.from("system_logs").select("id", { count: "exact", head: true }).eq("type", "error"),
