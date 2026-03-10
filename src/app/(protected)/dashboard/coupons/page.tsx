@@ -11,5 +11,5 @@ export const dynamic = "force-dynamic";
 export default async function AdminCouponsPage() {
     const coupons = await getAllDiscountCoupons();
 
-    return <CouponsClient initialCoupons={coupons as any} />;
+    return <CouponsClient initialCoupons={coupons} />;
 }

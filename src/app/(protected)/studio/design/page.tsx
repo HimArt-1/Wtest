@@ -11,7 +11,7 @@ export default async function DesignPage() {
                 <p className="text-ink/60 mt-2">اختر عملاً فنياً وحوله إلى منتج فريد جاهز للبيع</p>
             </div>
 
-            <DesignStudio artworks={artworks as any[]} />
+            <DesignStudio artworks={(artworks || []) as import("@/types/database").Artwork[]} />
         </div>
     );
 }

@@ -8,10 +8,18 @@ import Image from "next/image";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { createSupportMessage, adminUpdateSupportTicketStatus } from "@/app/actions/support-tickets";
-import { SupportTicketStatus } from "@/types/database";
+import { SupportTicketStatus, SupportTicket, SupportMessage } from "@/types/database";
 import clsx from "clsx";
 
-export function AdminSupportTicketChat({ ticket, initialMessages }: { ticket: any, initialMessages: any[] }) {
+type TicketWithProfile = SupportTicket & {
+    profile?: { display_name: string; avatar_url: string | null; };
+};
+
+type MessageWithSender = SupportMessage & {
+    sender?: { display_name: string; avatar_url: string | null; };
+};
+
+export function AdminSupportTicketChat({ ticket, initialMessages }: { ticket: TicketWithProfile, initialMessages: MessageWithSender[] }) {
     const [messages, setMessages] = useState(initialMessages);
     const [newMessage, setNewMessage] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);

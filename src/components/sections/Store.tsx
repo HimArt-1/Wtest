@@ -23,7 +23,7 @@ export function Store() {
   useEffect(() => {
     async function fetchProducts() {
       const { data } = await getProducts(1, "all");
-      setProducts(data as unknown as ProductWithArtist[]);
+      setProducts((data as unknown as ProductWithArtist[]) || []);
       setLoading(false);
     }
     fetchProducts();
@@ -64,7 +64,24 @@ export function Store() {
         </div>
 
         {loading ? (
-          <div className="text-center py-20 text-theme-subtle">جاري تحميل المنتجات...</div>
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="glass-card rounded-2xl overflow-hidden animate-pulse">
+                <div className="relative aspect-square bg-theme-faint/50 border-b border-theme-subtle"></div>
+                <div className="p-3 sm:p-5">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="h-5 w-16 bg-theme-faint rounded-full"></div>
+                    <div className="h-4 w-8 bg-theme-faint rounded-md"></div>
+                  </div>
+                  <div className="h-4 sm:h-5 w-3/4 bg-theme-faint rounded-md mb-2 sm:mb-3"></div>
+                  <div className="flex items-center justify-between mt-auto pt-2">
+                    <div className="h-6 w-16 bg-theme-faint rounded-md"></div>
+                    <div className="h-9 w-9 bg-theme-faint rounded-xl"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
             {products.map((product, index) => (

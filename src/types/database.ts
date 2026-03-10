@@ -530,7 +530,7 @@ export type Database = {
             };
             applications: {
                 Row: Application;
-                Insert: Omit<Application, "id" | "created_at" | "updated_at" | "status" | "reviewer_id" | "reviewer_notes" | "portfolio_images"> & { portfolio_images?: string[] };
+                Insert: Omit<Application, "id" | "created_at" | "updated_at" | "status" | "reviewer_id" | "reviewer_notes" | "portfolio_images" | "profile_id"> & { portfolio_images?: string[] };
                 Update: Partial<Omit<Application, "id" | "created_at">>;
                 Relationships: any[];
             };

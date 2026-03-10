@@ -219,6 +219,7 @@ export async function createArtwork(formData: any) {
         image_url: formData.image_url,
         status: "published", // Auto-publish for now
         tags: formData.tags || [],
+        currency: "SAR",
     });
 
     if (error) {

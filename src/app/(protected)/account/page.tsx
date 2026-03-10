@@ -43,7 +43,7 @@ export default async function AccountPage() {
             .order("created_at", { ascending: false })
             .limit(1)
             .maybeSingle();
-        applicationStatus = (app as any)?.status || null;
+        applicationStatus = app?.status || null;
     }
 
     const isArtist = profile?.role === "wushsha";

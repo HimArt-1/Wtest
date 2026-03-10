@@ -34,7 +34,7 @@ export default async function ProductsInventoryPage({ searchParams }: PageProps)
         getWarehouses(),
     ]);
 
-    const skus = (skusResult as any)?.skus || [];
+    const skus = ('skus' in skusResult && Array.isArray(skusResult.skus)) ? skusResult.skus : [];
     const inventory = invRes?.inventory || [];
     const warehouses = whRes?.warehouses || [];
 
