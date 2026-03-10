@@ -86,7 +86,7 @@ export function SalesClient({ initialData }: SalesClientProps) {
                             </thead>
                             <tbody>
                                 {data.salesByProduct.map((sp, i) => (
-                                    <tr key={sp.productId} className="border-b border-white/5">
+                                    <tr key={sp.productId} className="border-b border-theme-faint">
                                         <td className="py-3 px-4 text-theme-soft">{i + 1}</td>
                                         <td className="py-3 px-4 font-medium text-theme">{sp.title}</td>
                                         <td className="py-3 px-4 text-theme-strong">{sp.quantity}</td>

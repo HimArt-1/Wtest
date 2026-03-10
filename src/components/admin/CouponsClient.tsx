@@ -105,7 +105,7 @@ export function CouponsClient({ initialCoupons }: { initialCoupons: Coupon[] }) 
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-[color-mix(in_srgb,var(--wusha-bg)_80%,transparent)] backdrop-blur-sm p-4"
                     >
                         <motion.div
                             initial={{ scale: 0.95, y: 20 }}
@@ -280,7 +280,7 @@ export function CouponsClient({ initialCoupons }: { initialCoupons: Coupon[] }) 
                                 )}
                             </div>
 
-                            <div className="flex items-center gap-2 border-t border-white/5 pt-4">
+                            <div className="flex items-center gap-2 border-t border-theme-faint pt-4">
                                 <button
                                     onClick={() => handleToggle(coupon.id, coupon.is_active)}
                                     className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-bold transition-all ${coupon.is_active

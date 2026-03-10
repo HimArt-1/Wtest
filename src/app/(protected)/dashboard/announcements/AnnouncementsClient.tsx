@@ -22,13 +22,13 @@ import {
 const templates = [
     { id: "gold" as const, label: "ذهبي فاخر", preview: "bg-gradient-to-r from-[#5A3E2B] via-[#ceae7f] to-[#5A3E2B] text-theme", icon: Sparkles },
     { id: "gradient" as const, label: "متدرج حيوي", preview: "bg-gradient-to-r from-purple-600 via-pink-500 to-orange-400 text-theme", icon: Zap },
-    { id: "minimal" as const, label: "بسيط أنيق", preview: "bg-white/[0.05] border border-white/[0.1] text-theme-strong", icon: Eye },
+    { id: "minimal" as const, label: "بسيط أنيق", preview: "bg-theme-subtle border border-theme-soft text-theme-strong", icon: Eye },
     { id: "alert" as const, label: "تنبيه عاجل", preview: "bg-red-500/10 border border-red-500/30 text-red-400", icon: AlertTriangle },
     { id: "promo" as const, label: "عرض ترويجي", preview: "bg-gradient-to-r from-emerald-600 to-teal-500 text-theme", icon: Gift },
     // ── قوالب جديدة ──
     { id: "neon" as const, label: "نيون زجاجي", preview: "bg-blue-500/[0.08] border border-blue-400/20 text-blue-200 backdrop-blur-md shadow-[0_0_20px_rgba(59,130,246,0.15)]", icon: Zap },
     { id: "sunset" as const, label: "غروب دافئ", preview: "bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-rose-500/20 border border-amber-400/15 text-amber-100 backdrop-blur-sm", icon: Sparkles },
-    { id: "frost" as const, label: "صقيع لامع", preview: "bg-theme-soft border border-white/[0.12] text-theme-strong backdrop-blur-xl shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]", icon: Eye },
+    { id: "frost" as const, label: "صقيع لامع", preview: "bg-theme-soft border border-theme-soft text-theme-strong backdrop-blur-xl shadow-[inset_0_1px_1px_rgba(0,0,0,0.05)]", icon: Eye },
     { id: "rose" as const, label: "وردي ناعم", preview: "bg-gradient-to-r from-pink-500/10 via-rose-400/10 to-fuchsia-500/10 border border-pink-400/15 text-pink-200 backdrop-blur-sm", icon: Gift },
     { id: "aurora" as const, label: "شفق قطبي", preview: "bg-gradient-to-r from-violet-600/15 via-cyan-500/15 to-emerald-500/15 border border-violet-400/15 text-cyan-100 backdrop-blur-md", icon: Sparkles },
 ];
@@ -285,7 +285,7 @@ export function AnnouncementsClient({ announcements: initial }: { announcements:
                                             onClick={() => setForm({ ...form, template: t.id })}
                                             className={`relative p-3 rounded-xl border-2 transition-all text-center ${form.template === t.id
                                                 ? "border-gold shadow-[0_0_15px_rgba(206,174,127,0.2)]"
-                                                : "border-theme-subtle hover:border-white/[0.15]"}`}
+                                                : "border-theme-subtle hover:border-theme-soft"}`}
                                         >
                                             <div className={`w-full h-6 rounded-lg mb-1.5 ${t.preview}`} />
                                             <span className="text-[10px] text-theme-subtle font-medium">{t.label}</span>
@@ -321,7 +321,7 @@ export function AnnouncementsClient({ announcements: initial }: { announcements:
                                                 onClick={() => updateTrigger({ type: key })}
                                                 className={`p-2.5 rounded-lg border text-right transition-all ${form.trigger.type === key
                                                     ? "border-gold/30 bg-gold/5"
-                                                    : "border-theme-subtle hover:border-white/[0.12]"}`}
+                                                    : "border-theme-subtle hover:border-theme-soft"}`}
                                             >
                                                 <div className="flex items-center gap-2 mb-0.5">
                                                     <val.icon className={`w-3.5 h-3.5 ${form.trigger.type === key ? "text-gold" : "text-theme-faint"}`} />
@@ -366,7 +366,7 @@ export function AnnouncementsClient({ announcements: initial }: { announcements:
                                                         }}
                                                         className={`px-3 py-2 rounded-lg border text-xs font-medium transition-all ${selected
                                                             ? "border-gold/30 bg-gold/10 text-gold"
-                                                            : "border-theme-subtle text-theme-subtle hover:border-white/[0.12]"}`}
+                                                            : "border-theme-subtle text-theme-subtle hover:border-theme-soft"}`}
                                                     >
                                                         {p.label}
                                                     </button>
@@ -405,7 +405,7 @@ export function AnnouncementsClient({ announcements: initial }: { announcements:
                                         <label className="flex items-center gap-2 cursor-pointer">
                                             <input type="checkbox" checked={form.trigger.dismissible}
                                                 onChange={(e) => updateTrigger({ dismissible: e.target.checked })}
-                                                className="rounded border-white/20" />
+                                                className="rounded border-theme-soft" />
                                             <span className="text-xs text-theme-subtle">يمكن إغلاقه</span>
                                         </label>
                                     </div>
@@ -455,7 +455,7 @@ export function AnnouncementsClient({ announcements: initial }: { announcements:
                                 <label className="flex items-center gap-2 cursor-pointer">
                                     <input type="checkbox" checked={form.isActive}
                                         onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
-                                        className="rounded border-white/20" />
+                                        className="rounded border-theme-soft" />
                                     <span className="text-sm text-theme-soft">نشط فوراً</span>
                                 </label>
                                 <div className="flex items-center gap-2">
@@ -487,7 +487,7 @@ export function AnnouncementsClient({ announcements: initial }: { announcements:
                         </button>
                     </div>
                 ) : (
-                    <div className="divide-y divide-white/[0.04]">
+                    <div className="divide-y divide-theme-faint">
                         {filtered.map((a, i) => {
                             const tmpl = templates.find((t) => t.id === a.template);
                             const typeInfo = typeLabels[a.type];

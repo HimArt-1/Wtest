@@ -105,6 +105,8 @@
 .border-theme-strong { border-color: color-mix(in srgb, var(--wusha-text) 22%, transparent); }
 .bg-theme { background-color: var(--wusha-bg); }
 .bg-theme-surface { background-color: var(--wusha-surface); }
+.divide-theme-faint > * + * { border-color: color-mix(in srgb, var(--wusha-text) 6%, transparent); }
+.divide-theme-subtle > * + * { border-color: color-mix(in srgb, var(--wusha-text) 8%, transparent); }
 /* نص على خلفية داكنة (مثل الشارات فوق الصور) */
 .text-on-dark { color: rgba(255, 255, 255, 0.9); }
 .bg-theme-gradient {

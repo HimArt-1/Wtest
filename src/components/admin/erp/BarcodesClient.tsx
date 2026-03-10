@@ -134,7 +134,7 @@ export default function BarcodesClient({ initialSKUs }: { initialSKUs: any[] }) 
             </div>
 
             {/* List */}
-            <div className="bg-surface/30 border border-white/5 rounded-2xl overflow-hidden">
+            <div className="bg-surface/30 border border-theme-faint rounded-2xl overflow-hidden">
                 <table className="w-full text-sm text-right">
                     <thead className="bg-theme-subtle text-theme-soft">
                         <tr>
@@ -145,13 +145,13 @@ export default function BarcodesClient({ initialSKUs }: { initialSKUs: any[] }) 
                             <th className="px-6 py-4 font-medium">إجراءات</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/5">
+                    <tbody className="divide-y divide-theme-faint">
                         {filteredSkus.map((sku) => (
                             <tr key={sku.id} className="hover:bg-theme-faint transition-colors">
                                 <td className="px-6 py-4">
                                     <div className="flex items-center gap-2">
                                         <QrCode className="w-4 h-4 text-gold" />
-                                        <span className="font-mono bg-black/40 px-2 py-1 rounded inline-block text-theme border border-theme-soft">
+                                        <span className="font-mono bg-theme-subtle px-2 py-1 rounded inline-block text-theme border border-theme-soft">
                                             {sku.sku}
                                         </span>
                                     </div>
@@ -202,9 +202,9 @@ export default function BarcodesClient({ initialSKUs }: { initialSKUs: any[] }) 
 
             {/* Add Modal */}
             {isAdding && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[color-mix(in_srgb,var(--wusha-bg)_80%,transparent)] backdrop-blur-sm">
                     <div className="bg-surface border border-theme-soft rounded-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
-                        <div className="p-6 border-b border-white/5 flex justify-between items-center bg-theme-faint">
+                        <div className="p-6 border-b border-theme-faint flex justify-between items-center bg-theme-faint">
                             <h2 className="text-xl font-bold">توليد باركود جديد</h2>
                             <button onClick={() => setIsAdding(false)} className="text-theme-subtle hover:text-theme transition-colors">
                                 إغلاق
@@ -217,7 +217,7 @@ export default function BarcodesClient({ initialSKUs }: { initialSKUs: any[] }) 
                                     <label className="text-sm font-medium text-theme-strong">اختر المنتج الأسّاسي</label>
                                     <select
                                         required
-                                        className="w-full p-3 bg-black/40 border border-theme-soft rounded-xl focus:border-gold/50 outline-none transition-colors"
+                                        className="w-full p-3 bg-theme-subtle border border-theme-soft rounded-xl focus:border-gold/50 outline-none transition-colors"
                                         value={selectedProductId}
                                         onChange={e => setSelectedProductId(e.target.value)}
                                         disabled={loadingProducts}
@@ -235,7 +235,7 @@ export default function BarcodesClient({ initialSKUs }: { initialSKUs: any[] }) 
                                         <input
                                             type="text"
                                             placeholder="مثال: XL"
-                                            className="w-full p-3 bg-black/40 border border-theme-soft rounded-xl focus:border-gold/50 outline-none transition-colors"
+                                            className="w-full p-3 bg-theme-subtle border border-theme-soft rounded-xl focus:border-gold/50 outline-none transition-colors"
                                             value={size}
                                             onChange={e => setSize(e.target.value)}
                                         />
@@ -245,14 +245,14 @@ export default function BarcodesClient({ initialSKUs }: { initialSKUs: any[] }) 
                                         <input
                                             type="text"
                                             placeholder="مثال: blu"
-                                            className="w-full p-3 bg-black/40 border border-theme-soft rounded-xl focus:border-gold/50 outline-none transition-colors"
+                                            className="w-full p-3 bg-theme-subtle border border-theme-soft rounded-xl focus:border-gold/50 outline-none transition-colors"
                                             value={colorCode}
                                             onChange={e => setColorCode(e.target.value)}
                                         />
                                     </div>
                                 </div>
 
-                                <div className="space-y-2 pt-4 border-t border-white/5">
+                                <div className="space-y-2 pt-4 border-t border-theme-faint">
                                     <label className="text-sm font-medium text-gold flex items-center gap-2">
                                         <QrCode className="w-4 h-4" />
                                         <span>الرقم التسلسلي المقترح (SKU)</span>
@@ -273,7 +273,7 @@ export default function BarcodesClient({ initialSKUs }: { initialSKUs: any[] }) 
                             </form>
                         </div>
 
-                        <div className="p-6 border-t border-white/5 bg-theme-faint flex justify-end gap-3">
+                        <div className="p-6 border-t border-theme-faint bg-theme-faint flex justify-end gap-3">
                             <button
                                 type="button"
                                 onClick={() => setIsAdding(false)}
@@ -297,9 +297,9 @@ export default function BarcodesClient({ initialSKUs }: { initialSKUs: any[] }) 
 
             {/* Print Preview Modal */}
             {printSku && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[color-mix(in_srgb,var(--wusha-bg)_80%,transparent)] backdrop-blur-sm">
                     <div className="bg-surface border border-theme-soft rounded-2xl w-full max-w-sm flex flex-col overflow-hidden relative shadow-2xl">
-                        <div className="p-4 border-b border-white/5 flex justify-between items-center bg-theme-faint">
+                        <div className="p-4 border-b border-theme-faint flex justify-between items-center bg-theme-faint">
                             <h3 className="font-bold flex items-center gap-2">
                                 <Printer className="w-4 h-4 text-gold" />
                                 طباعة ملصق (50x30mm)
@@ -309,7 +309,7 @@ export default function BarcodesClient({ initialSKUs }: { initialSKUs: any[] }) 
                             </button>
                         </div>
 
-                        <div className="p-8 flex flex-col items-center justify-center bg-black/20">
+                        <div className="p-8 flex flex-col items-center justify-center bg-theme-faint">
                             {/* Hidden container where we construct the DOM for printing */}
                             <div className="hidden">
                                 <div ref={printRef} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '50mm', height: '30mm', overflow: 'hidden' }}>
@@ -343,7 +343,7 @@ export default function BarcodesClient({ initialSKUs }: { initialSKUs: any[] }) 
                             </div>
                         </div>
 
-                        <div className="p-4 border-t border-white/5 bg-theme-faint">
+                        <div className="p-4 border-t border-theme-faint bg-theme-faint">
                             <button
                                 onClick={handlePrintSticker}
                                 className="w-full py-3 rounded-xl font-bold bg-gold text-black hover:bg-gold/90 transition-colors shadow-lg flex justify-center items-center gap-2"

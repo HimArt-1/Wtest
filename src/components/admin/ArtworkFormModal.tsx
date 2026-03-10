@@ -230,7 +230,7 @@ export function ArtworkFormModal({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+                className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[color-mix(in_srgb,var(--wusha-bg)_70%,transparent)] backdrop-blur-sm"
                 onClick={handleClose}
             >
                 <motion.div
@@ -419,7 +419,7 @@ export function ArtworkFormModal({
                                 type="checkbox"
                                 checked={form.is_featured}
                                 onChange={(e) => setForm({ ...form, is_featured: e.target.checked })}
-                                className="rounded border-white/20 text-gold focus:ring-gold/30"
+                                className="rounded border-theme-soft text-gold focus:ring-gold/30"
                             />
                             <span className="text-sm text-theme-strong">عمل مميز (يظهر في الصفحة الرئيسية)</span>
                         </label>

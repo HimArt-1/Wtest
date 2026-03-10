@@ -170,7 +170,7 @@ function Modal({ open, onClose, title, children }: { open: boolean; onClose: () 
     if (!open) return null;
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+            <div className="fixed inset-0 bg-[color-mix(in_srgb,var(--wusha-bg)_60%,transparent)] backdrop-blur-sm" onClick={onClose} />
             <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -240,7 +240,7 @@ function ImageUploader({ value, onChange, folder, label }: {
                         className="h-28 max-w-full rounded-xl object-cover border border-theme-soft bg-theme-subtle"
                     />
                     {uploading && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-xl">
+                        <div className="absolute inset-0 flex items-center justify-center bg-theme-subtle rounded-xl">
                             <Loader2 className="w-6 h-6 text-gold animate-spin" />
                         </div>
                     )}
@@ -256,7 +256,7 @@ function ImageUploader({ value, onChange, folder, label }: {
                 </div>
             )}
             {/* Upload button */}
-            <label className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-theme-subtle border border-dashed border-white/[0.15] hover:border-gold/30 cursor-pointer transition-colors text-sm text-theme-subtle hover:text-theme-soft w-fit">
+            <label className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-theme-subtle border border-dashed border-theme-soft hover:border-gold/30 cursor-pointer transition-colors text-sm text-theme-subtle hover:text-theme-soft w-fit">
                 <Upload className="w-4 h-4" />
                 {uploading ? "جاري الرفع..." : (preview || value) ? "تغيير الصورة" : "رفع صورة من الجهاز"}
                 <input ref={inputRef} type="file" accept="image/*" onChange={handleFile} className="hidden" disabled={uploading} />
@@ -913,7 +913,7 @@ function StudioItemsTab({ items, onRefresh }: { items: CustomDesignStudioItem[];
                                         <Camera className="w-8 h-8 text-theme-faint" />
                                     </div>
                                 )}
-                                <div className="absolute top-2 left-2 px-2 py-1 rounded bg-black/60 backdrop-blur-md text-gold text-xs font-bold border border-gold/20">
+                                <div className="absolute top-2 left-2 px-2 py-1 rounded bg-[color-mix(in_srgb,var(--wusha-bg)_60%,transparent)] backdrop-blur-md text-gold text-xs font-bold border border-gold/20">
                                     {item.price > 0 ? `+${item.price} ر.س` : "مجاني"}
                                 </div>
                             </div>

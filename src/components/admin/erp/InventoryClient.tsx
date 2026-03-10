@@ -74,7 +74,7 @@ export default function InventoryClient({
             </div>
 
             {/* List */}
-            <div className="bg-surface/30 border border-white/5 rounded-2xl overflow-hidden">
+            <div className="bg-surface/30 border border-theme-faint rounded-2xl overflow-hidden">
                 <table className="w-full text-sm text-right">
                     <thead className="bg-theme-subtle text-theme-soft">
                         <tr>
@@ -84,7 +84,7 @@ export default function InventoryClient({
                             <th className="px-6 py-4 font-medium">آخر تحديث</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/5">
+                    <tbody className="divide-y divide-theme-faint">
                         {filteredInventory.map((item) => (
                             <tr key={item.id} className="hover:bg-theme-faint transition-colors">
                                 <td className="px-6 py-4">
@@ -128,9 +128,9 @@ export default function InventoryClient({
 
             {/* Adjust Modal */}
             {isAdjusting && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[color-mix(in_srgb,var(--wusha-bg)_80%,transparent)] backdrop-blur-sm">
                     <div className="bg-surface border border-theme-soft rounded-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
-                        <div className="p-6 border-b border-white/5 flex justify-between items-center bg-theme-faint">
+                        <div className="p-6 border-b border-theme-faint flex justify-between items-center bg-theme-faint">
                             <h2 className="text-xl font-bold">تعديل المخزون</h2>
                             <button onClick={() => setIsAdjusting(false)} className="text-theme-subtle hover:text-theme transition-colors">
                                 إغلاق
@@ -145,7 +145,7 @@ export default function InventoryClient({
                                     <label className="text-sm font-medium text-theme-strong">المنتج المراد جردّه (الباركود)</label>
                                     <select
                                         required
-                                        className="w-full p-3 bg-black/40 border border-theme-soft rounded-xl focus:border-gold/50 outline-none transition-colors font-mono text-sm"
+                                        className="w-full p-3 bg-theme-subtle border border-theme-soft rounded-xl focus:border-gold/50 outline-none transition-colors font-mono text-sm"
                                         value={selectedSkuId}
                                         onChange={e => setSelectedSkuId(e.target.value)}
                                     >
@@ -162,7 +162,7 @@ export default function InventoryClient({
                                     <label className="text-sm font-medium text-theme-strong">المستودع</label>
                                     <select
                                         required
-                                        className="w-full p-3 bg-black/40 border border-theme-soft rounded-xl focus:border-gold/50 outline-none transition-colors"
+                                        className="w-full p-3 bg-theme-subtle border border-theme-soft rounded-xl focus:border-gold/50 outline-none transition-colors"
                                         value={selectedWarehouseId}
                                         onChange={e => setSelectedWarehouseId(e.target.value)}
                                     >
@@ -177,7 +177,7 @@ export default function InventoryClient({
                                     <input
                                         type="number"
                                         required
-                                        className="w-full p-3 bg-black/40 border border-theme-soft rounded-xl focus:border-gold/50 outline-none transition-colors text-center font-bold text-lg"
+                                        className="w-full p-3 bg-theme-subtle border border-theme-soft rounded-xl focus:border-gold/50 outline-none transition-colors text-center font-bold text-lg"
                                         value={quantityToAdd}
                                         onChange={e => setQuantityToAdd(Number(e.target.value))}
                                     />
@@ -187,7 +187,7 @@ export default function InventoryClient({
                                     <label className="text-theme-strong font-medium">ملاحظات الجرد</label>
                                     <textarea
                                         rows={3}
-                                        className="w-full p-3 bg-black/40 border border-theme-soft rounded-xl focus:border-gold/50 outline-none transition-colors resize-none"
+                                        className="w-full p-3 bg-theme-subtle border border-theme-soft rounded-xl focus:border-gold/50 outline-none transition-colors resize-none"
                                         placeholder="مثال: توريد جديد من المصنع، إتلاف، عينة..."
                                         value={notes}
                                         onChange={(e) => setNotes(e.target.value)}
@@ -196,7 +196,7 @@ export default function InventoryClient({
                             </form>
                         </div>
 
-                        <div className="p-6 border-t border-white/5 bg-theme-faint flex justify-end gap-3">
+                        <div className="p-6 border-t border-theme-faint bg-theme-faint flex justify-end gap-3">
                             <button
                                 type="button"
                                 onClick={() => setIsAdjusting(false)}

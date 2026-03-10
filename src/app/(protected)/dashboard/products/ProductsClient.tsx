@@ -633,7 +633,7 @@ function BarcodeModal({ product, sku, onClose, onCreated, onError }: {
 
     return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[color-mix(in_srgb,var(--wusha-bg)_60%,transparent)] backdrop-blur-sm"
             onClick={onClose}>
             <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
                 onClick={(e) => e.stopPropagation()}
@@ -704,7 +704,7 @@ function BarcodeModal({ product, sku, onClose, onCreated, onError }: {
                         </div>
 
                         {/* Format Toggle */}
-                        <div className="flex gap-2 border-t border-white/5 pt-4">
+                        <div className="flex gap-2 border-t border-theme-faint pt-4">
                             <button onClick={() => setCodeType("barcode")}
                                 className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors border ${codeType === "barcode" ? "bg-gold/10 text-gold border-gold/30" : "bg-theme-subtle border-transparent text-theme-subtle"}`}>
                                 Code 128
@@ -779,7 +779,7 @@ function BarcodeModal({ product, sku, onClose, onCreated, onError }: {
                                     نسخ
                                 </button>
                             </div>
-                            <div className="flex gap-2 items-center border-t border-white/5 pt-3">
+                            <div className="flex gap-2 items-center border-t border-theme-faint pt-3">
                                 <span className="text-xs text-theme-soft shrink-0">طباعة مجموعة:</span>
                                 <input type="number" min={1} max={999} placeholder="عدد الملصقات"
                                     value={batchCount} onChange={(e) => setBatchCount(e.target.value)}
@@ -912,7 +912,7 @@ function ProductFormModal({
         : artists;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[color-mix(in_srgb,var(--wusha-bg)_60%,transparent)] backdrop-blur-sm" onClick={onClose}>
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} onClick={(e) => e.stopPropagation()}
                 className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border border-theme-soft bg-bg shadow-2xl styled-scrollbar">
                 <div className="flex items-center justify-between px-6 py-4 border-b border-theme-subtle sticky top-0 bg-bg z-10">
@@ -977,7 +977,7 @@ function ProductFormModal({
                                         setUploadFile(f); setPreviewUrl(URL.createObjectURL(f));
                                     } else if (f) queueMicrotask(() => onError("الملف غير مدعوم أو أكبر من 5 ميجابايت"));
                                 }}
-                                className="border border-dashed border-white/[0.15] rounded-xl p-5 text-center cursor-pointer hover:border-gold/30 hover:bg-theme-faint transition-all">
+                                className="border border-dashed border-theme-soft rounded-xl p-5 text-center cursor-pointer hover:border-gold/30 hover:bg-theme-faint transition-all">
                                 <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleFileSelect} className="hidden" />
                                 {previewUrl ? (
                                     <div className="relative inline-block">
@@ -1036,7 +1036,7 @@ function ProductFormModal({
                         <label className="flex items-center gap-2 cursor-pointer">
                             <input type="checkbox" checked={form.in_stock}
                                 onChange={(e) => setForm((f) => ({ ...f, in_stock: e.target.checked }))}
-                                className="rounded border-white/20" />
+                                className="rounded border-theme-soft" />
                             <span className="text-sm text-theme-soft">متوفر للطلب</span>
                         </label>
                         {mode === "add" ? (

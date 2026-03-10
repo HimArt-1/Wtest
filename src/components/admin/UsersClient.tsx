@@ -302,7 +302,7 @@ export function UsersClient({
                                         type="checkbox"
                                         checked={users.length > 0 && selectedIds.size === users.length}
                                         onChange={toggleSelectAll}
-                                        className="rounded border-white/20"
+                                        className="rounded border-theme-soft"
                                     />
                                 </th>
                                 <th className="text-right px-6 py-3.5 text-theme-faint font-medium text-xs">المستخدم</th>
@@ -327,7 +327,7 @@ export function UsersClient({
                                             type="checkbox"
                                             checked={selectedIds.has(user.id)}
                                             onChange={() => toggleSelect(user.id)}
-                                            className="rounded border-white/20"
+                                            className="rounded border-theme-soft"
                                         />
                                     </td>
                                     <td className="px-6 py-3.5">
@@ -549,7 +549,7 @@ function AddUserModal({
     if (!open) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[color-mix(in_srgb,var(--wusha-bg)_60%,transparent)] backdrop-blur-sm" onClick={onClose}>
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -723,7 +723,7 @@ function EditUserModal({
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[color-mix(in_srgb,var(--wusha-bg)_60%,transparent)] backdrop-blur-sm" onClick={onClose}>
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -812,7 +812,7 @@ function EditUserModal({
                             type="checkbox"
                             checked={form.is_verified}
                             onChange={(e) => setForm((f) => ({ ...f, is_verified: e.target.checked }))}
-                            className="rounded border-white/20"
+                            className="rounded border-theme-soft"
                         />
                         <span className="text-sm text-theme-soft">حساب موثق</span>
                     </label>

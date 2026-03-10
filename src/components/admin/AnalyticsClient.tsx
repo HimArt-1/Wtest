@@ -265,7 +265,7 @@ export function AnalyticsClient({
                             </thead>
                             <tbody>
                                 {data.topProducts.map((p, i) => (
-                                    <tr key={p.productId} className="border-b border-white/5">
+                                    <tr key={p.productId} className="border-b border-theme-faint">
                                         <td className="py-3 px-4 text-theme-soft">{i + 1}</td>
                                         <td className="py-3 px-4 font-medium text-theme">{p.title}</td>
                                         <td className="py-3 px-4 text-theme-strong">{p.quantity}</td>

@@ -107,7 +107,7 @@ export function NotificationsAdminClient({ notifications, alerts }: Notification
                         <p className="text-sm">لا توجد إشعارات</p>
                     </div>
                 ) : (
-                    <div className="divide-y divide-white/[0.04] max-h-[500px] overflow-y-auto styled-scrollbar">
+                    <div className="divide-y divide-theme-faint max-h-[500px] overflow-y-auto styled-scrollbar">
                         {notifications.map((n: any, i: number) => (
                             <motion.div
                                 key={n.id}

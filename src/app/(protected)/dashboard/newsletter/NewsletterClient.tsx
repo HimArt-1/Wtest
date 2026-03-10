@@ -87,7 +87,7 @@ export function NewsletterClient({ subscribers: initial }: { subscribers: Subscr
             </div>
 
             {/* Subscribers List */}
-            <div className="rounded-2xl border border-theme-subtle bg-surface/50 backdrop-blur-sm overflow-hidden divide-y divide-white/[0.04]">
+            <div className="rounded-2xl border border-theme-subtle bg-surface/50 backdrop-blur-sm overflow-hidden divide-y divide-theme-faint">
                 {subscribers.length === 0 ? (
                     <div className="p-12 text-center text-theme-faint text-sm">لا يوجد مشتركون بعد</div>
                 ) : (

@@ -264,7 +264,7 @@ export function AdminSidebar({ pendingApps = 0 }: { pendingApps?: number }) {
             <AnimatePresence>
                 {isMobileOpen && (
                     <motion.div
-                        className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
+                        className="fixed inset-0 z-40 bg-[color-mix(in_srgb,var(--wusha-bg)_60%,transparent)] backdrop-blur-sm md:hidden"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}

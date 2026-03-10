@@ -192,7 +192,7 @@ export function DashboardClient({ stats, recentOrders, pendingApplications, topP
                             </h3>
                             <span className="text-[10px] text-theme-faint">آخر 7 أيام</span>
                         </div>
-                        <div className="divide-y divide-white/[0.03]">
+                        <div className="divide-y divide-theme-faint">
                             {topProducts.length > 0 ? topProducts.map((p, i) => (
                                 <div key={p.productId} className="px-5 py-3 flex items-center gap-3 hover:bg-theme-faint transition-colors">
                                     <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-black shrink-0 ${i === 0 ? "bg-gold/10 text-gold" : "bg-theme-subtle text-theme-faint"}`}>
@@ -222,7 +222,7 @@ export function DashboardClient({ stats, recentOrders, pendingApplications, topP
                                 إدارة ←
                             </Link>
                         </div>
-                        <div className="divide-y divide-white/[0.03]">
+                        <div className="divide-y divide-theme-faint">
                             {lowStockProducts.length > 0 ? lowStockProducts.map((p: any) => (
                                 <div key={p.id} className="px-5 py-3 flex items-center justify-between hover:bg-theme-faint transition-colors">
                                     <p className="text-xs text-theme-soft truncate flex-1">{p.title}</p>

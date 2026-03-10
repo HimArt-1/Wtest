@@ -441,7 +441,7 @@ function OrderDetailModal({ order, adminList, onClose, onOrderUpdated }: { order
     if (isNewOrder) {
         return (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+                <div className="fixed inset-0 bg-[color-mix(in_srgb,var(--wusha-bg)_70%,transparent)] backdrop-blur-sm" onClick={onClose} />
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -513,7 +513,7 @@ function OrderDetailModal({ order, adminList, onClose, onOrderUpdated }: { order
 
     return (
         <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-12 overflow-y-auto">
-            <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+            <div className="fixed inset-0 bg-[color-mix(in_srgb,var(--wusha-bg)_70%,transparent)] backdrop-blur-sm" onClick={onClose} />
             <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -731,7 +731,7 @@ function ResultUpload({ label, field, currentUrl, uploading, onUpload, icon: Ico
                     <p className="text-[10px] text-theme-faint">لم يتم الرفع بعد</p>
                 )}
             </div>
-            <label className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-theme-subtle border border-dashed border-white/[0.12] hover:border-gold/30 cursor-pointer text-xs text-theme-subtle whitespace-nowrap transition-colors">
+            <label className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-theme-subtle border border-dashed border-theme-soft hover:border-gold/30 cursor-pointer text-xs text-theme-subtle whitespace-nowrap transition-colors">
                 {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
                 {uploading ? "جاري..." : currentUrl ? "تغيير" : "رفع"}
                 <input ref={inputRef} type="file" accept={accept ?? "image/*"} onChange={(e) => { const f = e.target.files?.[0]; if (f) onUpload(f); }} className="hidden" disabled={uploading} />
@@ -759,7 +759,7 @@ function PromptSettingsModal({ template, onClose }: { template: string; onClose:
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+            <div className="fixed inset-0 bg-[color-mix(in_srgb,var(--wusha-bg)_60%,transparent)] backdrop-blur-sm" onClick={onClose} />
             <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}

@@ -108,7 +108,7 @@ export function StatCard({
         relative overflow-hidden rounded-2xl border border-theme-soft
         bg-surface/80 backdrop-blur-xl p-6
         transition-all duration-500 group
-        hover:border-white/[0.15] hover:scale-[1.02] ${styles.glow}
+        hover:border-theme-soft hover:scale-[1.02] ${styles.glow}
         ${href ? "cursor-pointer" : ""}
         shadow-lg shadow-black/20
     `;

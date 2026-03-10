@@ -153,7 +153,7 @@ export function SupportDashboardPro({ initialTickets }: { initialTickets: any[] 
                         <p className="text-xs text-theme-faint mt-1">جميع الأمور تسير على ما يرام!</p>
                     </div>
                 ) : (
-                    <div className="divide-y divide-white/[0.04]">
+                    <div className="divide-y divide-theme-faint">
                         {filteredTickets.map((ticket, i) => {
                             const status = getStatusInfo(ticket.status);
                             const priority = getPriorityInfo(ticket.priority);

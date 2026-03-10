@@ -30,7 +30,7 @@ export default function DashboardError({
                     <button type="button" onClick={reset} className="btn-gold py-2.5 px-6 text-sm cursor-pointer">
                         إعادة المحاولة
                     </button>
-                    <Link href="/" className="py-2.5 px-6 border border-white/20 rounded-xl text-theme-soft hover:bg-theme-subtle text-sm transition-colors">
+                    <Link href="/" className="py-2.5 px-6 border border-theme-soft rounded-xl text-theme-soft hover:bg-theme-subtle text-sm transition-colors">
                         الصفحة الرئيسية
                     </Link>
                     <Link href="/dashboard" className="py-2.5 px-6 border border-gold/30 rounded-xl text-gold/90 hover:bg-gold/10 text-sm transition-colors">

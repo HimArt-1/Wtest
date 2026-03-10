@@ -90,7 +90,7 @@ export function ApplicationsClient({ applications, count, currentStatus }: Appli
                         initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.05 }}
-                        className="rounded-2xl border border-theme-subtle bg-surface/50 backdrop-blur-sm p-6 hover:border-white/[0.1] transition-all group"
+                        className="rounded-2xl border border-theme-subtle bg-surface/50 backdrop-blur-sm p-6 hover:border-theme-soft transition-all group"
                     >
                         {/* Header */}
                         <div className="flex items-start justify-between mb-4">
@@ -312,7 +312,7 @@ function CreateClerkOnlyModal({
     if (!application) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[color-mix(in_srgb,var(--wusha-bg)_60%,transparent)] backdrop-blur-sm" onClick={onClose}>
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -334,7 +334,7 @@ function CreateClerkOnlyModal({
                             <p className="text-sm font-medium mb-2">تم إنشاء الحساب بنجاح ✓</p>
                             <p className="text-xs text-theme-soft mb-3">انسخ كلمة المرور وأرسلها للمستخدم:</p>
                             <div className="flex items-center gap-2">
-                                <code className="flex-1 px-3 py-2 bg-black/30 rounded-lg text-sm font-mono break-all select-all" dir="ltr">
+                                <code className="flex-1 px-3 py-2 bg-theme-subtle rounded-lg text-sm font-mono break-all select-all" dir="ltr">
                                     {tempPassword}
                                 </code>
                                 <button
@@ -429,7 +429,7 @@ function AcceptAndCreateModal({
     if (!application) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[color-mix(in_srgb,var(--wusha-bg)_60%,transparent)] backdrop-blur-sm" onClick={onClose}>
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -452,7 +452,7 @@ function AcceptAndCreateModal({
                             <p className="text-sm font-medium mb-2">تم إنشاء الحساب بنجاح ✓</p>
                             <p className="text-xs text-theme-soft mb-3">المستخدم يمكنه تسجيل الدخول بالبريد وكلمة المرور التالية. انسخها وأرسلها له:</p>
                             <div className="flex items-center gap-2">
-                                <code className="flex-1 px-3 py-2 bg-black/30 rounded-lg text-sm font-mono break-all select-all" dir="ltr">
+                                <code className="flex-1 px-3 py-2 bg-theme-subtle rounded-lg text-sm font-mono break-all select-all" dir="ltr">
                                     {tempPassword}
                                 </code>
                                 <button
@@ -489,7 +489,7 @@ function AcceptAndCreateModal({
                                 type="checkbox"
                                 checked={createInClerk}
                                 onChange={(e) => setCreateInClerk(e.target.checked)}
-                                className="rounded border-white/20"
+                                className="rounded border-theme-soft"
                             />
                             <span className="text-sm text-theme-strong">إنشاء حساب في Clerk (ليتمكن من تسجيل الدخول)</span>
                         </label>

@@ -202,7 +202,7 @@ export function ExclusiveDesignsClient({ initialDesigns }: ExclusiveDesignsClien
                                         />
                                         <label
                                             htmlFor="exclusive-img"
-                                            className="flex-1 max-w-xs p-4 rounded-xl border-2 border-dashed border-white/20 hover:border-gold/40 cursor-pointer flex flex-col items-center gap-2"
+                                            className="flex-1 max-w-xs p-4 rounded-xl border-2 border-dashed border-theme-soft hover:border-gold/40 cursor-pointer flex flex-col items-center gap-2"
                                         >
                                             {uploading ? (
                                                 <Loader2 className="w-8 h-8 animate-spin text-gold" />
@@ -236,7 +236,7 @@ export function ExclusiveDesignsClient({ initialDesigns }: ExclusiveDesignsClien
                                     </button>
                                     <button
                                         onClick={resetForm}
-                                        className="px-6 py-2 rounded-xl border border-white/20 text-theme-soft hover:bg-theme-subtle"
+                                        className="px-6 py-2 rounded-xl border border-theme-soft text-theme-soft hover:bg-theme-subtle"
                                     >
                                         إلغاء
                                     </button>
@@ -264,7 +264,7 @@ export function ExclusiveDesignsClient({ initialDesigns }: ExclusiveDesignsClien
                                     <div className="absolute top-2 left-2 flex gap-1">
                                         <button
                                             onClick={() => handleToggleActive(d)}
-                                            className="p-1.5 rounded-lg bg-black/50 hover:bg-black/70"
+                                            className="p-1.5 rounded-lg bg-theme-subtle hover:bg-theme-soft"
                                             title={d.is_active ? "إخفاء" : "إظهار"}
                                         >
                                             {d.is_active ? (
@@ -277,14 +277,14 @@ export function ExclusiveDesignsClient({ initialDesigns }: ExclusiveDesignsClien
                                     <div className="absolute bottom-2 left-2 right-2 flex gap-1 justify-end">
                                         <button
                                             onClick={() => startEdit(d)}
-                                            className="p-1.5 rounded-lg bg-black/50 hover:bg-gold/20"
+                                            className="p-1.5 rounded-lg bg-theme-subtle hover:bg-gold/20"
                                         >
                                             <Pencil className="w-4 h-4" />
                                         </button>
                                         <button
                                             onClick={() => handleDelete(d.id)}
                                             disabled={deleting === d.id}
-                                            className="p-1.5 rounded-lg bg-black/50 hover:bg-red-500/30 text-red-400"
+                                            className="p-1.5 rounded-lg bg-theme-subtle hover:bg-red-500/30 text-red-400"
                                         >
                                             {deleting === d.id ? (
                                                 <Loader2 className="w-4 h-4 animate-spin" />

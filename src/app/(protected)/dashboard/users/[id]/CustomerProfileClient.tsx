@@ -186,7 +186,7 @@ export function CustomerProfileClient({ profile, orders, tickets, stats }: Props
                         <span className="text-[10px] text-theme-faint">{tickets.length} تذكرة</span>
                     </div>
                     {tickets.length > 0 ? (
-                        <div className="divide-y divide-white/[0.03]">
+                        <div className="divide-y divide-theme-faint">
                             {tickets.map((t: any) => {
                                 const statusInfo = getTicketStatusInfo(t.status);
                                 return (

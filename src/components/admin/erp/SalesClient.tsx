@@ -94,7 +94,7 @@ export default function SalesClient({
                 </div>
                 <button
                     onClick={() => setIsSelling(true)}
-                    className="shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2 bg-gold text-black font-semibold rounded-xl hover:bg-gold/90 transition-colors"
+                    className="shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2 bg-gold text-[#0a0a0a] font-semibold rounded-xl hover:bg-gold/90 transition-colors"
                 >
                     <Plus className="w-5 h-5" />
                     <span>عملية بيع جديدة (POS)</span>
@@ -102,7 +102,7 @@ export default function SalesClient({
             </div>
 
             {/* List */}
-            <div className="bg-surface/30 border border-white/5 rounded-2xl overflow-hidden">
+            <div className="bg-surface/30 border border-theme-faint rounded-2xl overflow-hidden">
                 <table className="w-full text-sm text-right">
                     <thead className="bg-theme-subtle text-theme-soft">
                         <tr>
@@ -113,7 +113,7 @@ export default function SalesClient({
                             <th className="px-6 py-4 font-medium">التاريخ</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/5">
+                    <tbody className="divide-y divide-theme-faint">
                         {filteredSales.map((item) => (
                             <tr key={item.id} className="hover:bg-theme-faint transition-colors">
                                 <td className="px-6 py-4">
@@ -166,9 +166,9 @@ export default function SalesClient({
 
             {/* POS Modal */}
             {isSelling && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[color-mix(in_srgb,var(--wusha-bg)_80%,transparent)] backdrop-blur-sm">
                     <div className="bg-surface border border-theme-soft rounded-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
-                        <div className="p-6 border-b border-white/5 flex justify-between items-center bg-theme-faint">
+                        <div className="p-6 border-b border-theme-faint flex justify-between items-center bg-theme-faint">
                             <h2 className="text-xl font-bold flex items-center gap-2">
                                 <Store className="w-5 h-5 text-gold" />
                                 تسجيل بيع يدوي جديد (بدون متجر)
@@ -189,7 +189,7 @@ export default function SalesClient({
                                     <label className="text-sm font-medium text-theme-strong">المنتج (حدد بالباركود)</label>
                                     <select
                                         required
-                                        className="w-full p-3 bg-black/40 border border-theme-soft rounded-xl focus:border-gold/50 outline-none transition-colors font-mono text-sm"
+                                        className="w-full p-3 bg-theme-subtle border border-theme-soft rounded-xl focus:border-gold/50 outline-none transition-colors font-mono text-sm"
                                         value={selectedSkuId}
                                         onChange={e => handleSkuChange(e.target.value)}
                                     >
@@ -207,7 +207,7 @@ export default function SalesClient({
                                         <label className="text-sm font-medium text-theme-strong">سحب من مستودع</label>
                                         <select
                                             required
-                                            className="w-full p-3 bg-black/40 border border-theme-soft rounded-xl focus:border-gold/50 outline-none transition-colors text-sm"
+                                            className="w-full p-3 bg-theme-subtle border border-theme-soft rounded-xl focus:border-gold/50 outline-none transition-colors text-sm"
                                             value={selectedWarehouseId}
                                             onChange={e => setSelectedWarehouseId(e.target.value)}
                                         >
@@ -222,7 +222,7 @@ export default function SalesClient({
                                             type="number"
                                             required
                                             min="1"
-                                            className="w-full p-3 bg-black/40 border border-theme-soft rounded-xl focus:border-gold/50 outline-none transition-colors text-center"
+                                            className="w-full p-3 bg-theme-subtle border border-theme-soft rounded-xl focus:border-gold/50 outline-none transition-colors text-center"
                                             value={quantity}
                                             onChange={e => handleQuantityChange(Number(e.target.value))}
                                         />
@@ -236,7 +236,7 @@ export default function SalesClient({
                                         required
                                         step="0.01"
                                         min="0"
-                                        className="w-full p-3 bg-black/40 border-b-2 border-transparent focus:border-gold rounded-xl outline-none transition-colors font-bold text-2xl text-gold"
+                                        className="w-full p-3 bg-theme-subtle border-b-2 border-transparent focus:border-gold rounded-xl outline-none transition-colors font-bold text-2xl text-gold"
                                         value={totalPrice}
                                         onChange={e => setTotalPrice(Number(e.target.value))}
                                     />
@@ -247,7 +247,7 @@ export default function SalesClient({
                                     <label className="text-theme-strong font-medium">ملاحظات (اختياري)</label>
                                     <textarea
                                         rows={2}
-                                        className="w-full p-3 bg-black/40 border border-theme-soft rounded-xl focus:border-gold/50 outline-none transition-colors resize-none"
+                                        className="w-full p-3 bg-theme-subtle border border-theme-soft rounded-xl focus:border-gold/50 outline-none transition-colors resize-none"
                                         placeholder="مثال: بيع من بوث معرض الرياض، الدفع كاش أو شبكة..."
                                         value={notes}
                                         onChange={(e) => setNotes(e.target.value)}
@@ -256,7 +256,7 @@ export default function SalesClient({
                             </form>
                         </div>
 
-                        <div className="p-6 border-t border-white/5 bg-theme-faint flex justify-end gap-3">
+                        <div className="p-6 border-t border-theme-faint bg-theme-faint flex justify-end gap-3">
                             <button
                                 type="button"
                                 onClick={() => setIsSelling(false)}
@@ -268,7 +268,7 @@ export default function SalesClient({
                                 type="submit"
                                 form="sales-form"
                                 disabled={isSaving || !selectedSkuId || !selectedWarehouseId || quantity <= 0}
-                                className="px-5 py-2.5 rounded-xl font-medium bg-gold text-black hover:bg-gold/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                className="px-5 py-2.5 rounded-xl font-medium bg-gold text-[#0a0a0a] hover:bg-gold/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                             >
                                 {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                                 إصدار فاتورة وخصم المخزون

@@ -87,7 +87,7 @@ export function ActivityLogClient({ activities }: { activities: Activity[] }) {
                         <p className="text-sm">لا توجد أنشطة مسجلة</p>
                     </div>
                 ) : (
-                    <div className="divide-y divide-white/[0.04]">
+                    <div className="divide-y divide-theme-faint">
                         {filtered.map((activity, index) => {
                             const Icon = typeIcons[activity.type] || Package;
                             const color = typeColors[activity.type] || "text-theme-subtle bg-theme-subtle";

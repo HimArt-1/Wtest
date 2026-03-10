@@ -33,7 +33,7 @@ function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: 
         <button
             type="button"
             onClick={() => onChange(!checked)}
-            className="flex items-center justify-between w-full p-4 rounded-xl bg-theme-faint border border-theme-subtle hover:border-white/[0.1] transition-all group"
+            className="flex items-center justify-between w-full p-4 rounded-xl bg-theme-faint border border-theme-subtle hover:border-theme-soft transition-all group"
         >
             <div className="flex items-center gap-3">
                 {checked ? <Eye className="w-4 h-4 text-green-400" /> : <EyeOff className="w-4 h-4 text-theme-faint" />}

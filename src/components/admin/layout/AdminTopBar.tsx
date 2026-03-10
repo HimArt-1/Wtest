@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import {
     getAdminNotifications,
     getUnreadNotificationsCount,
@@ -104,7 +105,7 @@ export function AdminTopBar() {
 
     return (
         <>
-            <header className="sticky top-0 z-40 bg-black/60 backdrop-blur-xl border-b border-theme-subtle">
+            <header className="sticky top-0 z-40 bg-[color-mix(in_srgb,var(--wusha-surface)_95%,transparent)] backdrop-blur-xl border-b border-theme-subtle">
                 <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
                     {/* Search / Command Palette Trigger */}
                     <button
@@ -118,8 +119,9 @@ export function AdminTopBar() {
                         </kbd>
                     </button>
 
-                    {/* Right: Notifications + User */}
+                    {/* Right: Theme + Notifications + User */}
                     <div className="flex items-center gap-2">
+                        <ThemeToggle />
                         <button
                             onClick={() => setNotificationsOpen(!notificationsOpen)}
                             className="relative p-2.5 rounded-xl hover:bg-theme-subtle text-theme-subtle hover:text-theme transition-colors"
@@ -127,7 +129,7 @@ export function AdminTopBar() {
                         >
                             <Bell className="w-5 h-5" />
                             {unreadCount > 0 && (
-                                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full bg-gold text-bg text-[10px] font-bold flex items-center justify-center px-1">
+                                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full bg-gold text-[#0a0a0a] text-[10px] font-bold flex items-center justify-center px-1">
                                     {unreadCount > 99 ? "99+" : unreadCount}
                                 </span>
                             )}
@@ -155,7 +157,7 @@ export function AdminTopBar() {
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={() => setSearchOpen(false)}
-                            className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm"
+                            className="fixed inset-0 z-[100] bg-[color-mix(in_srgb,var(--wusha-bg)_70%,transparent)] backdrop-blur-sm"
                         />
                         <motion.div
                             initial={{ opacity: 0, scale: 0.96, y: -20 }}
@@ -164,7 +166,7 @@ export function AdminTopBar() {
                             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
                             className="fixed top-[20%] left-1/2 -translate-x-1/2 w-full max-w-xl z-[101] mx-4"
                         >
-                            <div className="rounded-2xl border border-white/[0.1] bg-surface/95 backdrop-blur-2xl shadow-2xl overflow-hidden">
+                            <div className="rounded-2xl border border-theme-soft bg-[var(--wusha-surface)]/95 backdrop-blur-2xl shadow-2xl overflow-hidden">
                                 <div className="flex items-center gap-3 px-4 py-3 border-b border-theme-subtle">
                                     <Search className="w-5 h-5 text-gold" />
                                     <input
@@ -227,7 +229,7 @@ export function AdminTopBar() {
                             initial={{ opacity: 0, y: -20 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -20 }}
-                            className="fixed top-16 left-4 right-4 sm:left-auto sm:right-8 sm:w-[400px] z-50 rounded-2xl border border-theme-soft bg-surface/95 backdrop-blur-2xl shadow-2xl overflow-hidden"
+                            className="fixed top-16 left-4 right-4 sm:left-auto sm:right-8 sm:w-[400px] z-50 rounded-2xl border border-theme-soft bg-[var(--wusha-surface)]/95 backdrop-blur-2xl shadow-2xl overflow-hidden"
                         >
                             <div className="flex items-center justify-between px-4 py-3 border-b border-theme-subtle">
                                 <h3 className="font-bold text-theme">الإشعارات</h3>
