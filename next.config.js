@@ -13,6 +13,7 @@ const remoteHosts = [
   ...(supabaseHost ? [supabaseHost] : []),
 ];
 
+/** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
     remotePatterns: remoteHosts.map((hostname) => ({
@@ -30,15 +31,4 @@ const nextConfig = {
   },
 };
 
-const withPWA = require("@ducanh2912/next-pwa").default({
-  dest: "public",
-  register: true,
-  skipWaiting: true,
-  disable: process.env.NODE_ENV === "development",
-  buildExcludes: [/server\/.*$/, /edge\/.*$/, /middleware-manifest\.json$/],
-  workboxOptions: {
-    exclude: [/server\/.*$/, /edge\/.*$/, /middleware-manifest\.json$/],
-  },
-});
-
-module.exports = withPWA(nextConfig);
+module.exports = nextConfig;
