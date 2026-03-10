@@ -133,7 +133,7 @@ export function CartSheet() {
                                             </div>
 
                                             <div className="flex items-center justify-between">
-                                                <span className="font-bold text-gold text-sm">
+                                                <span suppressHydrationWarning className="font-bold text-gold text-sm">
                                                     {item.price.toLocaleString()} ر.س
                                                 </span>
 
@@ -214,19 +214,19 @@ export function CartSheet() {
                                 <div className="space-y-2 pt-2 border-t border-theme-subtle">
                                     <div className="flex items-center justify-between text-sm text-theme-soft">
                                         <span>المجموع الفرعي</span>
-                                        <span>{getSubtotal().toLocaleString()} ر.س</span>
+                                        <span suppressHydrationWarning>{getSubtotal().toLocaleString()} ر.س</span>
                                     </div>
 
                                     {coupon && (
                                         <div className="flex items-center justify-between text-sm text-green-400">
                                             <span>الخصم ({coupon.discount_type === 'percentage' ? `${coupon.discount_value}%` : `${coupon.discount_value} ر.س`})</span>
-                                            <span>-{getDiscountAmount().toLocaleString()} ر.س</span>
+                                            <span suppressHydrationWarning>-{getDiscountAmount().toLocaleString()} ر.س</span>
                                         </div>
                                     )}
 
                                     <div className="flex items-center justify-between pt-2">
                                         <span className="font-bold" style={{ color: "var(--wusha-text)" }}>المجموع الإجمالي</span>
-                                        <span className="text-xl font-bold text-gold">{getCartTotal().toLocaleString()} ر.س</span>
+                                        <span suppressHydrationWarning className="text-xl font-bold text-gold">{getCartTotal().toLocaleString()} ر.س</span>
                                     </div>
                                 </div>
 
@@ -235,14 +235,14 @@ export function CartSheet() {
                                     onClick={() => toggleCart(false)}
                                     className="w-full flex items-center justify-center gap-2 font-bold py-3.5 rounded-xl transition-all duration-300 mt-2"
                                     style={{
-                                      background: "linear-gradient(to right, var(--wusha-gold), var(--wusha-gold-light))",
-                                      color: "var(--wusha-bg)",
+                                        background: "linear-gradient(to right, var(--wusha-gold), var(--wusha-gold-light))",
+                                        color: "var(--wusha-bg)",
                                     }}
                                     onMouseEnter={(e) => {
-                                      e.currentTarget.style.boxShadow = "0 0 20px var(--neon-gold)";
+                                        e.currentTarget.style.boxShadow = "0 0 20px var(--neon-gold)";
                                     }}
                                     onMouseLeave={(e) => {
-                                      e.currentTarget.style.boxShadow = "none";
+                                        e.currentTarget.style.boxShadow = "none";
                                     }}
                                 >
                                     إتمام الشراء

@@ -114,7 +114,7 @@ export function ProductCard({ product }: ProductCardProps) {
                     </h3>
                     <div className="flex items-center justify-between mt-1.5">
                         <span className="text-[10px] text-theme-subtle">{product.store_name || product.artist?.display_name}</span>
-                        <span className="text-xs font-bold text-gold">{Number(product.price).toLocaleString()} ر.س</span>
+                        <span suppressHydrationWarning className="text-xs font-bold text-gold">{Number(product.price).toLocaleString()} ر.س</span>
                     </div>
                 </div>
             </Link>
@@ -174,7 +174,7 @@ export function ProductCard({ product }: ProductCardProps) {
                 </h3>
                 <div className="flex items-center justify-between mt-1.5">
                     <span className="text-[10px] text-fg/30">{product.store_name || product.artist?.display_name}</span>
-                    <span className="text-xs font-bold text-gold">{Number(product.price).toLocaleString()} ر.س</span>
+                    <span suppressHydrationWarning className="text-xs font-bold text-gold">{Number(product.price).toLocaleString()} ر.س</span>
                 </div>
             </div>
         </Link>

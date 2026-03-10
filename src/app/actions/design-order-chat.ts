@@ -1,28 +1,8 @@
 "use server";
 
-import { createClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
-import type { Database, DesignOrderMessage } from "@/types/database";
-
-// Admin/Service client to bypass RLS for fetching everything easily
-function getServiceRoleClient() {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!url || !key) {
-        console.error("Missing Supabase Service Role Env Vars:", { url: !!url, key: !!key });
-    }
-    return createClient<Database>(url!, key!);
-}
-
-// Public client for anonymous inserts
-function getPublicClient() {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    if (!url || !key) {
-        console.error("Missing Supabase Public Env Vars:", { url: !!url, key: !!key });
-    }
-    return createClient<Database>(url!, key!);
-}
+import type { DesignOrderMessage } from "@/types/database";
+import { getSupabaseAdminClient, getSupabaseServerClient } from "@/lib/supabase";
 
 /**
  * Fetch all messages for a specific design order.
@@ -32,10 +12,10 @@ export async function getDesignOrderMessages(orderId: string) {
     // Attempt with service role first for admin context, but fallback to public
     let sb;
     try {
-        sb = getServiceRoleClient();
+        sb = getSupabaseAdminClient();
     } catch (e) {
         console.warn("Falling back to public client for message fetch due to service role init error");
-        sb = getPublicClient();
+        sb = getSupabaseServerClient();
     }
 
     const { data, error } = await sb
@@ -47,8 +27,8 @@ export async function getDesignOrderMessages(orderId: string) {
     if (error) {
         console.error(`Error fetching order messages for ${orderId}:`, error);
         // Retry with public client if service role failed or errored out
-        if (sb !== getPublicClient()) {
-            const publicSb = getPublicClient();
+        if (sb !== getSupabaseServerClient()) {
+            const publicSb = getSupabaseServerClient();
             const { data: publicData, error: publicError } = await publicSb
                 .from("design_order_messages")
                 .select("*")
@@ -69,10 +49,10 @@ export async function getDesignOrderMessages(orderId: string) {
 export async function customerSendOrderMessage(orderId: string, message: string) {
     if (!message.trim()) return { success: false, error: "الرسالة فارغة" };
 
-    const sb = getPublicClient();
+    const sb = getSupabaseServerClient();
 
     // RLS policy: Anyone can insert as long as is_admin_reply = false
-    const { error } = await (sb as any)
+    const { error } = await sb
         .from("design_order_messages")
         .insert({
             order_id: orderId,
@@ -96,9 +76,9 @@ export async function customerSendOrderMessage(orderId: string, message: string)
 export async function adminSendOrderMessage(orderId: string, message: string) {
     if (!message.trim()) return { success: false, error: "الرسالة فارغة" };
 
-    const sb = getServiceRoleClient();
+    const sb = getSupabaseAdminClient();
 
-    const { error } = await (sb as any)
+    const { error } = await sb
         .from("design_order_messages")
         .insert({
             order_id: orderId,

@@ -104,7 +104,7 @@ export default function DesignTrackerClient({ orderId }: { orderId: string }) {
                         </div>
                         <div>
                             <h2 className="font-bold text-white">طلب #{order.order_number}</h2>
-                            <p className="text-xs text-white/30">
+                            <p suppressHydrationWarning className="text-xs text-white/30">
                                 {new Date(order.created_at).toLocaleDateString("ar-SA", { year: "numeric", month: "long", day: "numeric" })}
                             </p>
                         </div>
@@ -187,14 +187,14 @@ export default function DesignTrackerClient({ orderId }: { orderId: string }) {
                             className={`flex ${msg.is_admin_reply ? "justify-start" : "justify-end"}`}
                         >
                             <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${msg.is_admin_reply
-                                    ? "bg-gold/10 text-white/80 rounded-tr-sm"
-                                    : "bg-white/[0.06] text-white/70 rounded-tl-sm"
+                                ? "bg-gold/10 text-white/80 rounded-tr-sm"
+                                : "bg-white/[0.06] text-white/70 rounded-tl-sm"
                                 }`}>
                                 <p className="text-[10px] text-white/30 mb-1 font-bold">
                                     {msg.is_admin_reply ? "فريق التصميم" : "أنت"}
                                 </p>
                                 {msg.message}
-                                <p className="text-[9px] text-white/20 mt-1.5">
+                                <p suppressHydrationWarning className="text-[9px] text-white/20 mt-1.5">
                                     {new Date(msg.created_at).toLocaleTimeString("ar-SA", { hour: "2-digit", minute: "2-digit" })}
                                 </p>
                             </div>

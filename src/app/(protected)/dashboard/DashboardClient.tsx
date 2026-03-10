@@ -68,8 +68,8 @@ function KPICard({ title, value, subtitle, icon: Icon, color, href, growth, dela
             </div>
             <div className="flex items-end justify-between">
                 <div>
-                    <p className="text-2xl font-black">{value}</p>
-                    {subtitle && <p className="text-[10px] opacity-40 mt-0.5">{subtitle}</p>}
+                    <p suppressHydrationWarning className="text-2xl font-black">{value}</p>
+                    {subtitle && <p suppressHydrationWarning className="text-[10px] opacity-40 mt-0.5">{subtitle}</p>}
                 </div>
                 {chart && <MiniChart data={chart} color="bg-current" />}
             </div>
@@ -167,9 +167,9 @@ export function DashboardClient({ stats, recentOrders, pendingApplications, topP
                                     <tr key={order.id} className="border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors">
                                         <td className="px-5 py-3 font-mono text-xs text-gold">{order.order_number}</td>
                                         <td className="px-4 py-3 text-fg/60 text-xs">{order.buyer?.display_name || "—"}</td>
-                                        <td className="px-4 py-3 font-bold text-fg text-xs">{Number(order.total).toLocaleString()} ر.س</td>
+                                        <td suppressHydrationWarning className="px-4 py-3 font-bold text-fg text-xs">{Number(order.total).toLocaleString()} ر.س</td>
                                         <td className="px-4 py-3"><StatusBadge status={order.status} type="order" /></td>
-                                        <td className="px-5 py-3 text-fg/25 text-[11px]" dir="ltr">
+                                        <td suppressHydrationWarning className="px-5 py-3 text-fg/25 text-[11px]" dir="ltr">
                                             {new Date(order.created_at).toLocaleDateString("ar-SA", { month: "short", day: "numeric" })}
                                         </td>
                                     </tr>
@@ -202,7 +202,7 @@ export function DashboardClient({ stats, recentOrders, pendingApplications, topP
                                         <p className="text-xs font-medium text-fg/70 truncate">{p.title}</p>
                                         <p className="text-[10px] text-fg/25">{p.quantity} قطعة</p>
                                     </div>
-                                    <span className="text-xs font-bold text-gold shrink-0">{p.revenue.toLocaleString()} ر.س</span>
+                                    <span suppressHydrationWarning className="text-xs font-bold text-gold shrink-0">{p.revenue.toLocaleString()} ر.س</span>
                                 </div>
                             )) : (
                                 <div className="px-5 py-8 text-center text-fg/15 text-xs">لا توجد مبيعات</div>
@@ -255,7 +255,7 @@ export function DashboardClient({ stats, recentOrders, pendingApplications, topP
                             <Link key={app.id} href="/dashboard/applications"
                                 className="p-4 rounded-xl border border-white/[0.06] hover:border-gold/20 bg-white/[0.02] hover:bg-white/[0.04] transition-all">
                                 <p className="font-bold text-fg/80 text-sm truncate">{app.full_name}</p>
-                                <p className="text-[10px] text-fg/30 mt-1">{app.art_style} · {new Date(app.created_at).toLocaleDateString("ar-SA")}</p>
+                                <p suppressHydrationWarning className="text-[10px] text-fg/30 mt-1">{app.art_style} · {new Date(app.created_at).toLocaleDateString("ar-SA")}</p>
                             </Link>
                         ))}
                     </div>

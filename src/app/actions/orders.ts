@@ -12,20 +12,7 @@ import { sendPushToAll } from "@/lib/push";
 import { checkStockAvailability, decrementStockForOrder } from "@/lib/inventory";
 import { createAdminNotification } from "@/app/actions/notifications";
 
-function getAdminClient() {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    
-    if (!url || !key) {
-        throw new Error("Supabase configuration is missing");
-    }
-    
-    return createClient(
-        url,
-        key,
-        { auth: { persistSession: false, autoRefreshToken: false } }
-    );
-}
+import { getSupabaseAdminClient } from "@/lib/supabase";
 
 interface OrderItemInput {
     product_id: string | null;
@@ -66,7 +53,7 @@ export async function createOrder(
         return { success: false, error: "يجب تسجيل الدخول لإتمام الطلب" };
     }
 
-    const supabase = getAdminClient();
+    const supabase = getSupabaseAdminClient();
 
     // 2. Get or create buyer's profile
     const { data: profile } = await supabase
@@ -88,6 +75,11 @@ export async function createOrder(
                 display_name: user.firstName || user.username || "مشترك",
                 username: user.username || `user_${user.id.slice(-8)}`,
                 role: "subscriber",
+                bio: null,
+                avatar_url: null,
+                cover_url: null,
+                website: null,
+                wushsha_level: null,
             })
             .select("id")
             .single();
@@ -130,6 +122,7 @@ export async function createOrder(
             payment_status: isCod ? "pending" : "pending",
             coupon_id: options?.couponId || null,
             discount_amount: options?.discountAmount || 0,
+            notes: null,
         })
         .select("id, order_number")
         .single();
@@ -156,7 +149,7 @@ export async function createOrder(
 
     const { error: itemsError } = await supabase
         .from("order_items")
-        .insert(orderItems);
+        .insert(orderItems as any[]);
 
     if (itemsError) {
         console.error("Order items error:", itemsError);
@@ -171,7 +164,7 @@ export async function createOrder(
 
     if (options?.couponId) {
         // Increment coupon current_uses atomically via RPC
-        await supabase.rpc("increment_coupon_uses_by_id", { p_coupon_id: options.couponId });
+        await (supabase as any).rpc("increment_coupon_uses_by_id", { p_coupon_id: options.couponId });
     }
 
 
@@ -215,13 +208,23 @@ export async function confirmOrderPayment(
     options?: { customerEmail?: string }
 ) {
     try {
-        const supabase = getAdminClient();
+        const supabase = getSupabaseAdminClient();
 
         const { data: order } = await supabase
             .from("orders")
-            .select("order_number, total, shipping_address")
+            .select("order_number, total, shipping_address, payment_status")
             .eq("id", orderId)
             .single();
+
+        if (!order) {
+            console.error("[confirmOrderPayment] Order not found:", orderId);
+            return { success: false };
+        }
+
+        if (order.payment_status === "paid") {
+            console.log("[confirmOrderPayment] Order already paid:", orderId);
+            return { success: true };
+        }
 
         const { error } = await supabase
             .from("orders")
@@ -270,7 +273,7 @@ export async function getUserOrders() {
     const user = await currentUser();
     if (!user) return { data: [], count: 0 };
 
-    const supabase = getAdminClient();
+    const supabase = getSupabaseAdminClient();
 
     // Get profile
     const { data: profile } = await supabase
@@ -299,6 +302,6 @@ export async function getUserOrders() {
         return { data: [], count: 0 };
     }
 
-    return { data: (data as any[]) || [], count: count || 0 };
+    return { data: data || [], count: count || 0 };
 }
 

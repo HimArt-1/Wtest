@@ -26,7 +26,7 @@ export async function followArtist(artistId: string) {
     if (!profile) return { success: false, error: "الملف الشخصي غير موجود" };
     if (profile.id === artistId) return { success: false, error: "لا يمكن متابعة نفسك" };
 
-    const { error } = await (supabase as any)
+    const { error } = await supabase
         .from("artist_follows")
         .insert({ follower_id: profile.id, artist_id: artistId });
 
@@ -53,7 +53,7 @@ export async function unfollowArtist(artistId: string) {
 
     if (!profile) return { success: false, error: "الملف الشخصي غير موجود" };
 
-    const { error: deleteError } = await (supabase as any)
+    const { error: deleteError } = await supabase
         .from("artist_follows")
         .delete()
         .eq("follower_id", profile.id)
@@ -78,7 +78,7 @@ export async function isFollowingArtist(artistId: string): Promise<boolean> {
 
     if (!profile) return false;
 
-    const { data: followRow } = await (supabase as any)
+    const { data: followRow } = await supabase
         .from("artist_follows")
         .select("id")
         .eq("follower_id", profile.id)
@@ -90,7 +90,7 @@ export async function isFollowingArtist(artistId: string): Promise<boolean> {
 
 export async function getArtistFollowersCount(artistId: string): Promise<number> {
     const supabase = getSupabaseAdminClient();
-    const { count } = await (supabase as any)
+    const { count } = await supabase
         .from("artist_follows")
         .select("id", { count: "exact", head: true })
         .eq("artist_id", artistId);
@@ -113,7 +113,7 @@ export async function addToWishlist(productId: string) {
 
     if (!profile) return { success: false, error: "الملف الشخصي غير موجود" };
 
-    const { error } = await (supabase as any)
+    const { error } = await supabase
         .from("product_wishlist")
         .insert({ user_id: profile.id, product_id: productId });
 
@@ -141,7 +141,7 @@ export async function removeFromWishlist(productId: string) {
 
     if (!profile) return { success: false, error: "الملف الشخصي غير موجود" };
 
-    const { error: deleteError } = await (supabase as any)
+    const { error: deleteError } = await supabase
         .from("product_wishlist")
         .delete()
         .eq("user_id", profile.id)
@@ -167,7 +167,7 @@ export async function isInWishlist(productId: string): Promise<boolean> {
 
     if (!profile) return false;
 
-    const { data: wishlistRow } = await (supabase as any)
+    const { data: wishlistRow } = await supabase
         .from("product_wishlist")
         .select("id")
         .eq("user_id", profile.id)
@@ -191,7 +191,7 @@ export async function getWishlistProducts() {
 
     if (!profile) return { data: [], count: 0 };
 
-    const { data: wishlistItems } = await (supabase as any)
+    const { data: wishlistItems } = await supabase
         .from("product_wishlist")
         .select("product_id")
         .eq("user_id", profile.id)
@@ -224,7 +224,7 @@ export async function getWishlistProductIds(): Promise<string[]> {
 
     if (!profile) return [];
 
-    const { data: wishlistData } = await (supabase as any)
+    const { data: wishlistData } = await supabase
         .from("product_wishlist")
         .select("product_id")
         .eq("user_id", profile.id);
@@ -248,7 +248,7 @@ export async function likeProduct(productId: string) {
 
     if (!profile) return { success: false, error: "الملف الشخصي غير موجود" };
 
-    const { error } = await (supabase as any)
+    const { error } = await supabase
         .from("product_likes")
         .insert({ user_id: profile.id, product_id: productId });
 
@@ -275,7 +275,7 @@ export async function unlikeProduct(productId: string) {
 
     if (!profile) return { success: false, error: "الملف الشخصي غير موجود" };
 
-    const { error: deleteError } = await (supabase as any)
+    const { error: deleteError } = await supabase
         .from("product_likes")
         .delete()
         .eq("user_id", profile.id)
@@ -300,7 +300,7 @@ export async function isProductLiked(productId: string): Promise<boolean> {
 
     if (!profile) return false;
 
-    const { data: likeRow } = await (supabase as any)
+    const { data: likeRow } = await supabase
         .from("product_likes")
         .select("id")
         .eq("user_id", profile.id)
@@ -312,7 +312,7 @@ export async function isProductLiked(productId: string): Promise<boolean> {
 
 export async function getProductLikesCount(productId: string): Promise<number> {
     const supabase = getSupabaseAdminClient();
-    const { count } = await (supabase as any)
+    const { count } = await supabase
         .from("product_likes")
         .select("id", { count: "exact", head: true })
         .eq("product_id", productId);

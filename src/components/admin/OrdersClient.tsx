@@ -148,7 +148,7 @@ export function OrdersClient({
                                                     )}
                                                 </div>
                                             </td>
-                                            <td className="px-4 py-3.5 font-bold text-fg">{Number(order.total).toLocaleString()} ر.س</td>
+                                            <td suppressHydrationWarning className="px-4 py-3.5 font-bold text-fg">{Number(order.total).toLocaleString()} ر.س</td>
                                             <td className="px-4 py-3.5"><StatusBadge status={order.status} type="order" /></td>
                                             <td className="px-4 py-3.5">
                                                 <span className={`text-xs font-bold ${order.payment_status === "paid" ? "text-forest" : "text-amber-400"
@@ -158,7 +158,7 @@ export function OrdersClient({
                                                             order.payment_status === "refunded" ? "مسترجع" : "معلق"}
                                                 </span>
                                             </td>
-                                            <td className="px-4 py-3.5 text-fg/30 text-xs" dir="ltr">
+                                            <td suppressHydrationWarning className="px-4 py-3.5 text-fg/30 text-xs" dir="ltr">
                                                 {new Date(order.created_at).toLocaleDateString("ar-SA", { year: "numeric", month: "short", day: "numeric" })}
                                             </td>
                                             <td className="px-6 py-3.5">
@@ -231,11 +231,11 @@ export function OrdersClient({
                                                                         <div className="flex-1 min-w-0">
                                                                             <p className="text-sm font-medium text-fg truncate">{title}</p>
                                                                             <p className="text-xs text-fg/40">{subtitle}</p>
-                                                                            <p className="text-xs text-fg/50 mt-0.5">
+                                                                            <p suppressHydrationWarning className="text-xs text-fg/50 mt-0.5">
                                                                                 {item.quantity} × {Number(item.unit_price).toLocaleString()} ر.س
                                                                             </p>
                                                                         </div>
-                                                                        <span className="text-sm font-bold text-gold">
+                                                                        <span suppressHydrationWarning className="text-sm font-bold text-gold">
                                                                             {Number(item.total_price).toLocaleString()} ر.س
                                                                         </span>
                                                                     </div>

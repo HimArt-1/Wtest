@@ -17,14 +17,14 @@ export type ApparelSize = "XS" | "S" | "M" | "L" | "XL" | "XXL";
 
 // ─── Base Types ──────────────────────────────────────────
 
-export interface Timestamps {
+export type Timestamps = {
     created_at: string;
     updated_at: string;
 }
 
 // ─── Profiles ────────────────────────────────────────────
 
-export interface Profile extends Timestamps {
+export type Profile = Timestamps & {
     id: string;                    // UUID — matches Clerk user ID
     clerk_id: string;              // Clerk user ID
     display_name: string;
@@ -41,7 +41,7 @@ export interface Profile extends Timestamps {
     total_artworks: number;
 }
 
-export interface SocialLinks {
+export type SocialLinks = {
     instagram?: string;
     twitter?: string;
     youtube?: string;
@@ -51,7 +51,7 @@ export interface SocialLinks {
 
 // ─── Categories ──────────────────────────────────────────
 
-export interface Category {
+export type Category = {
     id: string;
     name_ar: string;              // الاسم بالعربية
     name_en: string;              // Name in English
@@ -63,7 +63,7 @@ export interface Category {
 
 // ─── Artworks ────────────────────────────────────────────
 
-export interface Artwork extends Timestamps {
+export type Artwork = Timestamps & {
     id: string;
     artist_id: string;            // FK → profiles.id
     title: string;
@@ -85,7 +85,7 @@ export interface Artwork extends Timestamps {
 
 // ─── Products ────────────────────────────────────────────
 
-export interface Product extends Timestamps {
+export type Product = {
     id: string;
     artwork_id: string | null;    // FK → artworks.id (if based on artwork)
     artist_id: string;            // FK → profiles.id
@@ -104,11 +104,13 @@ export interface Product extends Timestamps {
     reviews_count: number;
     badge: string | null;         // e.g., "محدود", "NFT", "جديد"
     is_featured: boolean;
+    created_at: string;
+    updated_at: string;
 }
 
 // ─── Orders ──────────────────────────────────────────────
 
-export interface DiscountCoupon extends Timestamps {
+export type DiscountCoupon = Timestamps & {
     id: string;
     code: string;
     discount_type: "percentage" | "fixed";
@@ -120,7 +122,7 @@ export interface DiscountCoupon extends Timestamps {
     details: string | null;
 }
 
-export interface Order extends Timestamps {
+export type Order = Timestamps & {
     id: string;
     buyer_id: string;             // FK → profiles.id
     order_number: string;         // human-readable order number
@@ -137,7 +139,7 @@ export interface Order extends Timestamps {
     discount_amount: number;
 }
 
-export interface ShippingAddress {
+export type ShippingAddress = {
     name: string;
     line1: string;
     line2?: string;
@@ -148,7 +150,7 @@ export interface ShippingAddress {
     phone?: string;
 }
 
-export interface OrderItem {
+export type OrderItem = {
     id: string;
     order_id: string;             // FK → orders.id
     product_id: string;           // FK → products.id
@@ -162,7 +164,7 @@ export interface OrderItem {
 
 export type AdminNotificationType = "order_new" | "application_new" | "payment_received" | "order_status" | "order_alert" | "system_alert" | "order_update";
 
-export interface AdminNotification {
+export type AdminNotification = {
     id: string;
     type: AdminNotificationType;
     title: string;
@@ -177,7 +179,7 @@ export interface AdminNotification {
 
 export type UserNotificationType = "order_update" | "support_reply" | "system_alert" | "design_order_update";
 
-export interface UserNotification {
+export type UserNotification = {
     id: string;
     user_id: string;              // FK → profiles.id
     type: UserNotificationType | string;
@@ -194,7 +196,7 @@ export interface UserNotification {
 export type SupportTicketStatus = "open" | "in_progress" | "resolved" | "closed";
 export type SupportTicketPriority = "low" | "normal" | "high";
 
-export interface SupportTicket extends Timestamps {
+export type SupportTicket = Timestamps & {
     id: string;
     user_id: string;              // FK → profiles.id
     subject: string;
@@ -202,7 +204,7 @@ export interface SupportTicket extends Timestamps {
     priority: SupportTicketPriority;
 }
 
-export interface SupportMessage extends Timestamps {
+export type SupportMessage = Timestamps & {
     id: string;
     ticket_id: string;            // FK → support_tickets.id
     sender_id: string;            // FK → profiles.id
@@ -212,7 +214,7 @@ export interface SupportMessage extends Timestamps {
 
 // ─── Applications ────────────────────────────────────────
 
-export interface Application extends Timestamps {
+export type Application = Timestamps & {
     id: string;
     full_name: string;
     email: string;
@@ -230,7 +232,7 @@ export interface Application extends Timestamps {
 
 // ─── Likes (Many-to-Many) ────────────────────────────────
 
-export interface ArtworkLike {
+export type ArtworkLike = {
     user_id: string;              // FK → profiles.id
     artwork_id: string;           // FK → artworks.id
     created_at: string;
@@ -238,7 +240,7 @@ export interface ArtworkLike {
 
 // ─── Artist Follows ───────────────────────────────────────
 
-export interface ArtistFollow {
+export type ArtistFollow = {
     id: string;
     follower_id: string;
     artist_id: string;
@@ -247,7 +249,7 @@ export interface ArtistFollow {
 
 // ─── Product Wishlist ────────────────────────────────────
 
-export interface ProductWishlistItem {
+export type ProductWishlistItem = {
     id: string;
     user_id: string;
     product_id: string;
@@ -256,7 +258,7 @@ export interface ProductWishlistItem {
 
 // ─── Product Likes ───────────────────────────────────────
 
-export interface ProductLike {
+export type ProductLike = {
     id: string;
     user_id: string;
     product_id: string;
@@ -265,7 +267,7 @@ export interface ProductLike {
 
 // ─── Newsletter ──────────────────────────────────────────
 
-export interface NewsletterSubscriber {
+export type NewsletterSubscriber = {
     id: string;
     email: string;
     subscribed_at: string;
@@ -274,7 +276,7 @@ export interface NewsletterSubscriber {
 
 // ─── Smart Store (صمم قطعتك) ─────────────────────────────
 
-export interface CustomDesignGarment {
+export type CustomDesignGarment = {
     id: string;
     name: string;
     slug: string;
@@ -293,7 +295,7 @@ export interface CustomDesignGarment {
     updated_at: string;
 }
 
-export interface CustomDesignColor {
+export type CustomDesignColor = {
     id: string;
     garment_id: string;
     name: string;
@@ -305,7 +307,7 @@ export interface CustomDesignColor {
     updated_at: string;
 }
 
-export interface CustomDesignSize {
+export type CustomDesignSize = {
     id: string;
     garment_id: string;
     color_id: string | null;
@@ -317,7 +319,7 @@ export interface CustomDesignSize {
     updated_at: string;
 }
 
-export interface CustomDesignStyle {
+export type CustomDesignStyle = {
     id: string;
     name: string;
     description: string | null;
@@ -328,7 +330,7 @@ export interface CustomDesignStyle {
     updated_at: string;
 }
 
-export interface CustomDesignArtStyle {
+export type CustomDesignArtStyle = {
     id: string;
     name: string;
     description: string | null;
@@ -339,7 +341,7 @@ export interface CustomDesignArtStyle {
     updated_at: string;
 }
 
-export interface CustomDesignColorPackage {
+export type CustomDesignColorPackage = {
     id: string;
     name: string;
     colors: { hex: string; name: string }[];
@@ -350,7 +352,7 @@ export interface CustomDesignColorPackage {
     updated_at: string;
 }
 
-export interface CustomDesignStudioItem {
+export type CustomDesignStudioItem = {
     id: string;
     name: string;
     description: string | null;
@@ -366,7 +368,7 @@ export interface CustomDesignStudioItem {
 
 // ─── ERP (Inventory, SKUs, Sales) ────────────────────────
 
-export interface ProductSKU extends Timestamps {
+export type ProductSKU = Timestamps & {
     id: string;
     product_id: string;
     sku: string;
@@ -375,14 +377,14 @@ export interface ProductSKU extends Timestamps {
     barcode_url: string | null;
 }
 
-export interface Warehouse extends Timestamps {
+export type Warehouse = Timestamps & {
     id: string;
     name: string;
     location: string | null;
     is_active: boolean;
 }
 
-export interface InventoryLevel extends Timestamps {
+export type InventoryLevel = Timestamps & {
     id: string;
     sku_id: string;
     warehouse_id: string;
@@ -391,7 +393,7 @@ export interface InventoryLevel extends Timestamps {
 
 export type InventoryTransactionType = 'addition' | 'sale' | 'adjustment' | 'transfer' | 'return';
 
-export interface InventoryTransaction {
+export type InventoryTransaction = {
     id: string;
     sku_id: string;
     warehouse_id: string;
@@ -407,7 +409,7 @@ export interface InventoryTransaction {
 
 export type SalesMethodType = 'online_store' | 'booth_manual' | 'custom_design';
 
-export interface SalesRecord extends Timestamps {
+export type SalesRecord = Timestamps & {
     id: string;
     sales_method: SalesMethodType;
     order_id: string | null;
@@ -422,28 +424,32 @@ export interface SalesRecord extends Timestamps {
 
 // ─── Database Schema (Supabase-compatible) ───────────────
 
-export interface Database {
+export type Database = {
     public: {
         Tables: {
             profiles: {
                 Row: Profile;
                 Insert: Omit<Profile, "id" | "created_at" | "updated_at" | "total_sales" | "total_artworks" | "is_verified" | "social_links"> & { is_verified?: boolean; social_links?: SocialLinks | null };
                 Update: Partial<Omit<Profile, "id" | "created_at">>;
+                Relationships: any[];
             };
             categories: {
                 Row: Category;
                 Insert: Omit<Category, "id" | "sort_order"> & { sort_order?: number };
                 Update: Partial<Omit<Category, "id">>;
+                Relationships: any[];
             };
             artworks: {
                 Row: Artwork;
                 Insert: Partial<Artwork>;
                 Update: Partial<Omit<Artwork, "id" | "created_at" | "artist_id">>;
+                Relationships: any[];
             };
             products: {
                 Row: Product;
                 Insert: Omit<Product, "id" | "created_at" | "updated_at" | "reviews_count" | "is_featured" | "in_stock" | "rating" | "images"> & { is_featured?: boolean; in_stock?: boolean; rating?: number; images?: string[] };
                 Update: Partial<Omit<Product, "id" | "created_at" | "artist_id">>;
+                Relationships: any[];
             };
             discount_coupons: {
                 Row: DiscountCoupon;
@@ -454,96 +460,115 @@ export interface Database {
                     updated_at?: string;
                 };
                 Update: Partial<Omit<DiscountCoupon, "id" | "created_at">>;
+                Relationships: any[];
             };
             orders: {
                 Row: Order;
                 Insert: Omit<Order, "id" | "created_at" | "updated_at" | "order_number" | "status" | "payment_status" | "shipping_cost" | "tax" | "discount_amount"> & { status?: OrderStatus; payment_status?: PaymentStatus; shipping_cost?: number; tax?: number; discount_amount?: number; coupon_id?: string | null; };
                 Update: Partial<Omit<Order, "id" | "created_at" | "buyer_id">>;
+                Relationships: any[];
             };
             order_items: {
                 Row: OrderItem;
                 Insert: Omit<OrderItem, "id" | "quantity"> & { quantity?: number };
                 Update: Partial<Omit<OrderItem, "id" | "order_id">>;
+                Relationships: any[];
             };
             applications: {
                 Row: Application;
                 Insert: Omit<Application, "id" | "created_at" | "updated_at" | "status" | "reviewer_id" | "reviewer_notes" | "portfolio_images"> & { portfolio_images?: string[] };
                 Update: Partial<Omit<Application, "id" | "created_at">>;
+                Relationships: any[];
             };
             artwork_likes: {
                 Row: ArtworkLike;
                 Insert: Omit<ArtworkLike, "created_at">;
-                Update: never;
+                Update: Partial<Omit<ArtworkLike, "created_at">>;
+                Relationships: any[];
             };
             artist_follows: {
                 Row: ArtistFollow;
                 Insert: Omit<ArtistFollow, "id" | "created_at"> & { id?: string; created_at?: string };
-                Update: never;
+                Update: Partial<Omit<ArtistFollow, "id" | "created_at">>;
+                Relationships: any[];
             };
             product_wishlist: {
                 Row: ProductWishlistItem;
                 Insert: Omit<ProductWishlistItem, "id" | "created_at"> & { id?: string; created_at?: string };
-                Update: never;
+                Update: Partial<Omit<ProductWishlistItem, "id" | "created_at">>;
+                Relationships: any[];
             };
             product_likes: {
                 Row: ProductLike;
                 Insert: Omit<ProductLike, "id" | "created_at"> & { id?: string; created_at?: string };
-                Update: never;
+                Update: Partial<Omit<ProductLike, "id" | "created_at">>;
+                Relationships: any[];
             };
             newsletter_subscribers: {
                 Row: NewsletterSubscriber;
                 Insert: Omit<NewsletterSubscriber, "id" | "subscribed_at" | "is_active"> & { is_active?: boolean };
                 Update: Partial<Omit<NewsletterSubscriber, "id" | "subscribed_at">>;
+                Relationships: any[];
             };
             custom_design_garments: {
                 Row: CustomDesignGarment;
                 Insert: Omit<CustomDesignGarment, "id" | "created_at" | "updated_at" | "sort_order" | "is_active"> & { sort_order?: number; is_active?: boolean };
                 Update: Partial<Omit<CustomDesignGarment, "id" | "created_at">>;
+                Relationships: any[];
             };
             custom_design_colors: {
                 Row: CustomDesignColor;
                 Insert: Omit<CustomDesignColor, "id" | "created_at" | "updated_at" | "sort_order" | "is_active"> & { sort_order?: number; is_active?: boolean };
                 Update: Partial<Omit<CustomDesignColor, "id" | "created_at">>;
+                Relationships: any[];
             };
             custom_design_sizes: {
                 Row: CustomDesignSize;
                 Insert: Omit<CustomDesignSize, "id" | "created_at" | "updated_at" | "is_active"> & { is_active?: boolean };
                 Update: Partial<Omit<CustomDesignSize, "id" | "created_at">>;
+                Relationships: any[];
             };
             custom_design_styles: {
                 Row: CustomDesignStyle;
                 Insert: Omit<CustomDesignStyle, "id" | "created_at" | "updated_at" | "sort_order" | "is_active"> & { sort_order?: number; is_active?: boolean };
                 Update: Partial<Omit<CustomDesignStyle, "id" | "created_at">>;
+                Relationships: any[];
             };
             custom_design_art_styles: {
                 Row: CustomDesignArtStyle;
                 Insert: Omit<CustomDesignArtStyle, "id" | "created_at" | "updated_at" | "sort_order" | "is_active"> & { sort_order?: number; is_active?: boolean };
                 Update: Partial<Omit<CustomDesignArtStyle, "id" | "created_at">>;
+                Relationships: any[];
             };
             custom_design_color_packages: {
                 Row: CustomDesignColorPackage;
                 Insert: Omit<CustomDesignColorPackage, "id" | "created_at" | "updated_at" | "sort_order" | "is_active"> & { sort_order?: number; is_active?: boolean };
                 Update: Partial<Omit<CustomDesignColorPackage, "id" | "created_at">>;
+                Relationships: any[];
             };
             custom_design_studio_items: {
                 Row: CustomDesignStudioItem;
                 Insert: Omit<CustomDesignStudioItem, "id" | "created_at" | "updated_at" | "sort_order" | "is_active" | "price"> & { sort_order?: number; is_active?: boolean; price?: number };
                 Update: Partial<Omit<CustomDesignStudioItem, "id" | "created_at">>;
+                Relationships: any[];
             };
             custom_design_orders: {
                 Row: CustomDesignOrder;
                 Insert: Omit<CustomDesignOrder, "id" | "created_at" | "updated_at" | "order_number" | "status" | "skip_results" | "is_sent_to_customer"> & { status?: CustomDesignOrderStatus; skip_results?: boolean; is_sent_to_customer?: boolean };
                 Update: Partial<Omit<CustomDesignOrder, "id" | "created_at" | "order_number">>;
+                Relationships: any[];
             };
             custom_design_settings: {
                 Row: CustomDesignSettings;
                 Insert: Partial<CustomDesignSettings>;
                 Update: Partial<CustomDesignSettings>;
+                Relationships: any[];
             };
             admin_notifications: {
                 Row: AdminNotification;
                 Insert: Omit<AdminNotification, "id" | "created_at" | "is_read"> & { id?: string; created_at?: string; is_read?: boolean };
                 Update: Partial<Omit<AdminNotification, "id" | "created_at">>;
+                Relationships: any[];
             };
             user_notifications: {
                 Row: UserNotification;
@@ -569,32 +594,42 @@ export interface Database {
                     metadata?: Record<string, unknown>;
                     created_at?: string;
                 };
+                Relationships: any[];
             };
             support_tickets: {
-                Row: { id: string, user_id: string, subject: string, status: string, priority: string, created_at: string, updated_at: string };
-                Insert: { id?: string, user_id: string, subject: string, status?: string, priority?: string, created_at?: string, updated_at?: string };
-                Update: { id?: string, user_id?: string, subject?: string, status?: string, priority?: string, created_at?: string, updated_at?: string };
+                Row: SupportTicket;
+                Insert: Omit<SupportTicket, "id" | "created_at" | "updated_at" | "status" | "priority"> & { status?: SupportTicketStatus; priority?: SupportTicketPriority };
+                Update: Partial<Omit<SupportTicket, "id" | "created_at">>;
+                Relationships: [
+                    {
+                        foreignKeyName: "support_tickets_user_id_fkey";
+                        columns: ["user_id"];
+                        isOneToOne: false;
+                        referencedRelation: "profiles";
+                        referencedColumns: ["id"];
+                    }
+                ];
             };
             support_messages: {
                 Row: SupportMessage;
-                Insert: {
-                    id?: string;
-                    ticket_id: string;
-                    sender_id: string;
-                    message: string;
-                    is_admin_reply?: boolean;
-                    created_at?: string;
-                    updated_at?: string;
-                };
-                Update: {
-                    id?: string;
-                    ticket_id?: string;
-                    sender_id?: string;
-                    message?: string;
-                    is_admin_reply?: boolean;
-                    created_at?: string;
-                    updated_at?: string;
-                };
+                Insert: Omit<SupportMessage, "id" | "created_at" | "updated_at" | "is_admin_reply"> & { is_admin_reply?: boolean };
+                Update: Partial<Omit<SupportMessage, "id" | "created_at">>;
+                Relationships: [
+                    {
+                        foreignKeyName: "support_messages_ticket_id_fkey";
+                        columns: ["ticket_id"];
+                        isOneToOne: false;
+                        referencedRelation: "support_tickets";
+                        referencedColumns: ["id"];
+                    },
+                    {
+                        foreignKeyName: "support_messages_sender_id_fkey";
+                        columns: ["sender_id"];
+                        isOneToOne: false;
+                        referencedRelation: "profiles";
+                        referencedColumns: ["id"];
+                    }
+                ];
             };
             design_order_messages: {
                 Row: DesignOrderMessage;
@@ -603,32 +638,50 @@ export interface Database {
                     created_at?: string;
                 };
                 Update: Partial<Omit<DesignOrderMessage, "id" | "created_at">>;
+                Relationships: any[];
             };
             product_skus: {
                 Row: ProductSKU;
                 Insert: Omit<ProductSKU, "id" | "created_at" | "updated_at">;
                 Update: Partial<Omit<ProductSKU, "id" | "created_at">>;
+                Relationships: any[];
             };
             warehouses: {
                 Row: Warehouse;
                 Insert: Omit<Warehouse, "id" | "created_at" | "updated_at">;
                 Update: Partial<Omit<Warehouse, "id" | "created_at">>;
+                Relationships: any[];
             };
             inventory_levels: {
                 Row: InventoryLevel;
                 Insert: Omit<InventoryLevel, "id" | "created_at" | "updated_at">;
                 Update: Partial<Omit<InventoryLevel, "id" | "created_at">>;
+                Relationships: any[];
             };
             inventory_transactions: {
                 Row: InventoryTransaction;
                 Insert: Omit<InventoryTransaction, "id" | "created_at">;
                 Update: Partial<Omit<InventoryTransaction, "id" | "created_at">>;
+                Relationships: any[];
             };
             sales_records: {
                 Row: SalesRecord;
                 Insert: Omit<SalesRecord, "id" | "created_at" | "updated_at" | "status"> & { status?: string };
                 Update: Partial<Omit<SalesRecord, "id" | "created_at">>;
+                Relationships: any[];
             };
+        };
+        Views: {
+            [_ in never]: never;
+        };
+        Functions: {
+            [_ in never]: never;
+        };
+        Enums: {
+            [_ in never]: never;
+        };
+        CompositeTypes: {
+            [_ in never]: never;
         };
     };
 }
@@ -637,7 +690,7 @@ export interface Database {
 
 export type CustomDesignOrderStatus = "new" | "in_progress" | "awaiting_review" | "completed" | "cancelled" | "modification_requested";
 
-export interface CustomDesignOrder {
+export type CustomDesignOrder = {
     id: string;
     order_number: number;
     user_id?: string | null;
@@ -700,13 +753,13 @@ export interface CustomDesignOrder {
     updated_at: string;
 }
 
-export interface CustomDesignSettings {
+export type CustomDesignSettings = {
     id: string;
     ai_prompt_template: string;
     updated_at: string;
 }
 
-export interface DesignOrderMessage {
+export type DesignOrderMessage = {
     id: string;
     order_id: string;
     message: string;

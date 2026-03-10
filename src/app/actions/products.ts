@@ -5,6 +5,7 @@
 
 "use server";
 
+import { Database, ProductType, ApparelSize } from "@/types/database";
 import { getSupabaseServerClient } from "@/lib/supabase";
 import { unstable_noStore as noStore, revalidatePath } from "next/cache";
 import { currentUser } from "@clerk/nextjs/server";
@@ -28,7 +29,7 @@ export async function getProducts(
         .eq("in_stock", true);
 
     if (type !== "all") {
-        query = query.eq("type", type);
+        query = query.eq("type", type as any);
     }
 
     const { data, count, error } = await query
@@ -88,7 +89,7 @@ export async function createProduct(input: CreateProductInput) {
         .eq("clerk_id", user.id)
         .single();
 
-    const profileData = profile as any;
+    const profileData = profile;
 
     if (!profileData) return { success: false, error: "Profile not found" };
 
@@ -97,15 +98,17 @@ export async function createProduct(input: CreateProductInput) {
         artwork_id: input.artwork_id,
         title: input.title,
         description: input.description,
-        type: input.type,
+        type: input.type as any, // Cast to any to satisfy ProductType
         price: input.price,
-        image_url: input.image_url, // In a real app, we'd upload the mockup first
-        sizes: input.sizes,
+        image_url: input.image_url,
+        sizes: input.sizes as any[], // Cast to satisfy ApparelSize[]
         in_stock: true,
         stock_quantity: 100, // Unlimited for POD
         is_featured: false,
         currency: "SAR",
-    } as any);
+        original_price: null,
+        badge: null,
+    });
 
     if (error) {
         console.error("Error creating product:", error);

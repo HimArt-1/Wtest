@@ -9,7 +9,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { createOrder } from "@/app/actions/orders";
-import { STRIPE_ENABLED } from "@/app/actions/checkout";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { StripePaymentForm } from "@/components/checkout/StripePaymentForm";
@@ -346,8 +345,8 @@ function CheckoutContent() {
                                     type="button"
                                     onClick={() => setPaymentMethod("cod")}
                                     className={`w-full p-4 rounded-xl border flex items-center justify-between transition-all text-right ${paymentMethod === "cod"
-                                            ? "border-gold/40 bg-gold/10"
-                                            : "border-white/10 bg-white/[0.02] hover:border-white/20"
+                                        ? "border-gold/40 bg-gold/10"
+                                        : "border-white/10 bg-white/[0.02] hover:border-white/20"
                                         }`}
                                 >
                                     <div className="flex items-center gap-3">
@@ -360,13 +359,13 @@ function CheckoutContent() {
                                     <span className="text-xs bg-gold/20 text-gold px-2 py-1 rounded">متاح</span>
                                 </button>
 
-                                {STRIPE_ENABLED && (
+                                {process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY && (
                                     <button
                                         type="button"
                                         onClick={() => setPaymentMethod("stripe")}
                                         className={`w-full p-4 rounded-xl border flex items-center justify-between transition-all text-right ${paymentMethod === "stripe"
-                                                ? "border-gold/40 bg-gold/10"
-                                                : "border-white/10 bg-white/[0.02] hover:border-white/20"
+                                            ? "border-gold/40 bg-gold/10"
+                                            : "border-white/10 bg-white/[0.02] hover:border-white/20"
                                             }`}
                                     >
                                         <div className="flex items-center gap-3">
