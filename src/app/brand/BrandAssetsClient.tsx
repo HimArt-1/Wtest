@@ -123,11 +123,11 @@ export default function BrandAssetsClient({ config }: { config: any }) {
             <div className="w-full lg:w-2/5 space-y-6">
               <h3 className="text-3xl font-bold text-theme-strong">انعكاس الهوية</h3>
               <p className="text-theme-subtle leading-loose">
-                صُممت بطاقة العمل لتعكس فلسفة "وشّى" بمزج الأناقة الكلاسيكية بالتقنية الحديثة. يرمز اللون الأسود العميق للغموض والفخامة، في حين يبرز الشعار الذهبي البصمة الفريدة، بالإضافة لمعلومات الاتصال المنسقة بعناية لسهولة الوصول.
+                صُممت بطاقة العمل لتعكس فلسفة "وشّى" بمزج الأناقة الكلاسيكية بالتقنية الحديثة. يرمز اللون البني الغامق #322014 للغموض والفخامة، في حين يبرز الشعار الذهبي البصمة الفريدة، بالإضافة لمعلومات الاتصال المنسقة بعناية لسهولة الوصول.
               </p>
               <div className="flex gap-4 pt-4">
                 <span className="px-3 py-1 bg-theme-strong/5 border border-theme-strong/10 rounded-md text-xs font-semibold text-theme-subtle">الطباعة: رقائق الذهب الساخنة</span>
-                <span className="px-3 py-1 bg-theme-strong/5 border border-theme-strong/10 rounded-md text-xs font-semibold text-theme-subtle">الورق: أسود مطفي 600 جرام</span>
+                <span className="px-3 py-1 bg-theme-strong/5 border border-theme-strong/10 rounded-md text-xs font-semibold text-theme-subtle">الورق: بني غامق #322014 مطفي 600 جرام</span>
               </div>
             </div>
           </div>
