@@ -68,6 +68,8 @@ export type SiteSettingsType = {
             social_tiktok?: string;
             social_snapchat?: string;
             social_whatsapp?: string;
+            linktree_title?: string;
+            linktree_subtitle?: string;
         };
 };
 
@@ -205,6 +207,8 @@ export async function getSiteSettings() {
             social_tiktok: settings.brand_assets?.social_tiktok ?? "@wusha.art",
             social_snapchat: settings.brand_assets?.social_snapchat ?? "@wusha.art",
             social_whatsapp: settings.brand_assets?.social_whatsapp ?? "+966532235005",
+            linktree_title: settings.brand_assets?.linktree_title ?? "وشّى منصة الفن",
+            linktree_subtitle: settings.brand_assets?.linktree_subtitle ?? "الإبداع بين يديك",
         },
     };
     } catch (error) {

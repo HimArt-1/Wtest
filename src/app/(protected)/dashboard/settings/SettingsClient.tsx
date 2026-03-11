@@ -129,6 +129,8 @@ export function SettingsClient({ settings }: SettingsProps) {
         social_tiktok: settings.brand_assets?.social_tiktok ?? "@wusha.art",
         social_snapchat: settings.brand_assets?.social_snapchat ?? "@wusha.art",
         social_whatsapp: settings.brand_assets?.social_whatsapp ?? "+966532235005",
+        linktree_title: settings.brand_assets?.linktree_title ?? "وشّى منصة الفن",
+        linktree_subtitle: settings.brand_assets?.linktree_subtitle ?? "الإبداع بين يديك",
     });
 
     const [saving, setSaving] = useState<string | null>(null);
@@ -565,7 +567,24 @@ export function SettingsClient({ settings }: SettingsProps) {
 
                     {/* Social Media Links Settings */}
                     <div className="p-4 rounded-xl border border-theme-subtle bg-theme-faint space-y-4">
-                        <h4 className="font-bold text-sm text-theme mb-2">روابط التواصل الاجتماعي (Social Card)</h4>
+                        <h4 className="font-bold text-sm text-theme mb-2">منصة الروابط (Linktree Profile)</h4>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-2 pb-4 border-b border-theme-strong/10">
+                            <Field
+                                label="العنوان الرئيسي للمنصة"
+                                value={brandAssets.linktree_title}
+                                onChange={(v) => setBrandAssets({ ...brandAssets, linktree_title: v })}
+                                placeholder="وشّى منصة الفن"
+                            />
+                            <Field
+                                label="النص الفرعي (Subtitle)"
+                                value={brandAssets.linktree_subtitle}
+                                onChange={(v) => setBrandAssets({ ...brandAssets, linktree_subtitle: v })}
+                                placeholder="الإبداع بين يديك"
+                            />
+                        </div>
+
+                        <h4 className="font-semibold text-sm text-theme mb-2">روابط المنصات والحسابات</h4>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <Field
                                 label="Instagram"

@@ -88,18 +88,18 @@ export default function LinkClient({ config }: { config: any }) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="text-2xl font-bold text-white mb-2 tracking-wide"
+              className="text-2xl font-bold text-white mb-2 tracking-wide text-center"
             >
-              وشّى منصة الفن
+              {config.linktree_title || "وشّى منصة الفن"}
             </motion.h1>
             
             <motion.p 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.3 }}
-              className="text-gold/80 text-sm tracking-widest uppercase mb-10"
+              className="text-gold/80 text-sm tracking-widest uppercase mb-10 text-center"
             >
-              الإبداع بين يديك
+              {config.linktree_subtitle || "الإبداع بين يديك"}
             </motion.p>
 
             {/* Interactive Social Buttons List */}
