@@ -27,7 +27,12 @@ export default function BrandAssetsClient({ config }: { config: any }) {
       // Use toPng from html-to-image which renders DOM properly including SVGs and Arabic Fonts
       const dataUrl = await toPng(element, { 
         cacheBust: true,
-        pixelRatio: 4 // High Quality equivalent to scale
+        pixelRatio: 4, // High Quality
+        style: {
+          transform: 'none', // Force flat rendering (Remove 3D tilt)
+          transition: 'none', // Disable animations during capture
+          boxShadow: 'none', // Remove external floating shadow for a clean export
+        }
       });
       const link = document.createElement("a");
       link.download = `${filename}.png`;
