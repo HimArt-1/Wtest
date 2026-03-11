@@ -101,7 +101,7 @@ export default function BrandAssetsClient({ config }: { config: any }) {
                   <div className="absolute inset-0 border border-gold/10 rounded-xl" />
                   <div className="absolute top-0 right-0 w-32 h-32 bg-gold/5 blur-3xl z-0" />
                   
-                  <div className="h-full flex flex-col justify-between p-8 relative z-10">
+                  <div className="h-full flex flex-col justify-between p-6 sm:p-8 pt-8 relative z-10">
                     <div className="flex justify-between items-start">
                       <div>
                         <h2 className="text-2xl font-bold text-white mb-1">{config.business_card_name}</h2>
@@ -110,18 +110,18 @@ export default function BrandAssetsClient({ config }: { config: any }) {
                       <Logo size="sm" />
                     </div>
                     
-                    <div className="space-y-1.5 mt-4 w-full overflow-hidden">
+                    <div className="space-y-1.5 sm:space-y-2 mt-4 mb-1 sm:mb-2 w-full">
                       <div className="flex items-center gap-3 text-white/70 text-xs sm:text-sm w-full">
                         <Phone className="w-4 h-4 text-gold flex-shrink-0" />
-                        <span dir="ltr" className="tracking-wider px-1 inline-block truncate min-w-0">{config.business_card_phone}</span>
+                        <span dir="ltr" className="tracking-wider px-1 pb-1 inline-block truncate min-w-0">{config.business_card_phone}</span>
                       </div>
                       <div className="flex items-center gap-3 text-white/70 text-xs sm:text-sm w-full">
                         <Mail className="w-4 h-4 text-gold flex-shrink-0" />
-                        <span dir="ltr" className="px-1 inline-block truncate min-w-0">{config.business_card_email}</span>
+                        <span dir="ltr" className="px-1 pb-1 inline-block truncate min-w-0">{config.business_card_email}</span>
                       </div>
-                      <div className="flex items-center gap-3 text-white/70 text-xs sm:text-sm w-full overflow-hidden">
+                      <div className="flex items-center gap-3 text-white/70 text-xs sm:text-sm w-full">
                         <Globe className="w-4 h-4 text-gold flex-shrink-0" />
-                        <span dir="ltr" className="px-1 inline-block truncate min-w-0 text-left">{config.business_card_website}</span>
+                        <span dir="ltr" className="px-1 pb-1.5 inline-block truncate min-w-0 text-left leading-relaxed">{config.business_card_website}</span>
                       </div>
                     </div>
                   </div>
