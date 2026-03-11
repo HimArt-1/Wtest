@@ -110,7 +110,7 @@ export default function BrandAssetsClient({ config }: { config: any }) {
                       <Logo size="sm" />
                     </div>
                     
-                    <div className="space-y-3 mt-8 w-full overflow-hidden">
+                    <div className="space-y-1.5 mt-4 w-full overflow-hidden">
                       <div className="flex items-center gap-3 text-white/70 text-xs sm:text-sm w-full">
                         <Phone className="w-4 h-4 text-gold flex-shrink-0" />
                         <span dir="ltr" className="tracking-wider px-1 inline-block truncate min-w-0">{config.business_card_phone}</span>
