@@ -11,7 +11,12 @@ import {
   Thermometer,
   ShieldAlert,
   Shirt,
-  Download
+  Download,
+  Instagram,
+  Twitter,
+  Music,
+  Ghost,
+  MessageCircle
 } from "lucide-react";
 import { toPng } from "html-to-image";
 import { Logo } from "@/components/ui/Logo";
@@ -315,6 +320,104 @@ export default function BrandAssetsClient({ config }: { config: any }) {
                   حفظ بطاقة التعليمات (جودة عالية)
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 4. Social Media (Linktree) Card */}
+        <div className="mt-32 md:mt-48 mb-32 md:mb-48">
+          <SectionTitle title="بطاقة التواصل الاجتماعي" subtitle="Social Links Card" number="04" align="right" />
+          
+          <div className="flex flex-col-reverse lg:flex-row items-center gap-12 lg:gap-20">
+            <div className="w-full lg:w-2/5 space-y-6">
+              <h3 className="text-3xl font-bold text-theme-strong">منصة رقمية موحدة</h3>
+              <p className="text-theme-subtle leading-loose">
+                بطاقة أنيقة بأسلوب مباشر (Linktree) تجمع كافة روابط وشّى الرقمية. مُصممة بأسلوب عصري يسهل مشاركته عبر منصات التواصل الاجتماعي أو إضافتها لملف التعريف الخاص بشركتكم لتكون بوابة شاملة للتواصل مع العملاء.
+              </p>
+              <div className="pt-4 border-t border-theme-strong/10">
+                <button
+                  onClick={() => handleDownload("social-card", "wusha-social-links-card")}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-theme-strong/5 hover:bg-gold hover:text-white transition-colors text-theme-strong rounded-xl text-sm font-bold shadow-sm"
+                >
+                  <Download className="w-4 h-4" />
+                  حفظ بطاقة التواصل بالكامل (رأسية)
+                </button>
+              </div>
+            </div>
+
+            <div className="w-full lg:w-3/5 flex justify-center perspective-1000">
+              <motion.div 
+                initial={{ opacity: 0, y: 50, rotateX: -10 }}
+                whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
+                whileHover={{ scale: 1.02, boxShadow: "0 30px 60px -15px rgba(202,160,82,0.2)" }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ duration: 0.6 }}
+                className="relative w-full max-w-[320px] aspect-[9/16]"
+              >
+                <div
+                  id="social-card"
+                  className="w-full h-full rounded-2xl p-6 sm:p-8 flex flex-col items-center justify-start overflow-hidden relative shadow-2xl border border-white/10"
+                  style={{
+                    background: "linear-gradient(135deg, #1A110A 0%, #322014 100%)",
+                    boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 60px rgba(202, 160, 82, 0.15) inset"
+                  }}
+                >
+                  {/* Subtle Top Glow */}
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-gold/10 blur-[80px] z-0 rounded-full" />
+                  
+                  {/* Grainy Texture */}
+                  <div className="absolute inset-0 opacity-[0.03] bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] pointer-events-none mix-blend-overlay z-0" />
+                  
+                  <div className="relative z-10 w-full flex flex-col items-center pt-4">
+                    <Logo size="md" className="mb-4" />
+                    <h2 className="text-xl font-bold text-white mb-1 tracking-wide">وشّى منصة الفن</h2>
+                    <p className="text-gold/80 text-xs tracking-widest uppercase mb-8">@washha.sa</p>
+
+                    {/* Social Buttons List */}
+                    <div className="w-full flex flex-col gap-3">
+                      {config.social_instagram && (
+                        <div className="w-full px-5 py-3.5 rounded-xl border border-white/10 bg-white/5 flex items-center gap-3">
+                          <Instagram className="w-5 h-5 text-gold" />
+                          <span className="text-white/90 text-sm font-medium tracking-wide flex-1 text-left" dir="ltr">{config.social_instagram}</span>
+                        </div>
+                      )}
+                      
+                      {config.social_twitter && (
+                        <div className="w-full px-5 py-3.5 rounded-xl border border-white/10 bg-white/5 flex items-center gap-3">
+                          <Twitter className="w-5 h-5 text-gold" />
+                          <span className="text-white/90 text-sm font-medium tracking-wide flex-1 text-left" dir="ltr">{config.social_twitter}</span>
+                        </div>
+                      )}
+                      
+                      {config.social_tiktok && (
+                        <div className="w-full px-5 py-3.5 rounded-xl border border-white/10 bg-white/5 flex items-center gap-3">
+                          <Music className="w-5 h-5 text-gold" />
+                          <span className="text-white/90 text-sm font-medium tracking-wide flex-1 text-left" dir="ltr">{config.social_tiktok}</span>
+                        </div>
+                      )}
+                      
+                      {config.social_snapchat && (
+                        <div className="w-full px-5 py-3.5 rounded-xl border border-white/10 bg-white/5 flex items-center gap-3">
+                          <Ghost className="w-5 h-5 text-gold" />
+                          <span className="text-white/90 text-sm font-medium tracking-wide flex-1 text-left" dir="ltr">{config.social_snapchat}</span>
+                        </div>
+                      )}
+
+                      {config.social_whatsapp && (
+                        <div className="w-full px-5 py-3.5 rounded-xl border border-white/10 bg-white/5 flex items-center gap-3 mt-4">
+                          <MessageCircle className="w-5 h-5 text-green-400" />
+                          <span className="text-white/90 text-sm font-medium tracking-wide flex-1 text-left" dir="ltr">{config.social_whatsapp}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Web URL Footer */}
+                  <div className="mt-auto relative z-10 w-full text-center pb-2">
+                    <span dir="ltr" className="text-white/40 text-xs tracking-[0.2em] uppercase block">www.washa.shop</span>
+                  </div>
+                </div>
+              </motion.div>
             </div>
           </div>
         </div>

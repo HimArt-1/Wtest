@@ -124,6 +124,11 @@ export function SettingsClient({ settings }: SettingsProps) {
         thank_you_title: settings.brand_assets?.thank_you_title ?? "شكراً لثقتكم",
         thank_you_message: settings.brand_assets?.thank_you_message ?? "نحن في \"وشّى\" نصنع الفن بحُب وإتقان، \nونتمنى أن تنال هذه القطعة الفنية إعجابك كما نالت شغفنا بصنعها.\n\nيسعدنا مشاركتك لإطلالتك معنا!",
         thank_you_handle: settings.brand_assets?.thank_you_handle ?? "@washha.sa",
+        social_instagram: settings.brand_assets?.social_instagram ?? "@wusha.art",
+        social_twitter: settings.brand_assets?.social_twitter ?? "@wusha_art",
+        social_tiktok: settings.brand_assets?.social_tiktok ?? "@wusha.art",
+        social_snapchat: settings.brand_assets?.social_snapchat ?? "@wusha.art",
+        social_whatsapp: settings.brand_assets?.social_whatsapp ?? "+966532235005",
     });
 
     const [saving, setSaving] = useState<string | null>(null);
@@ -554,6 +559,48 @@ export function SettingsClient({ settings }: SettingsProps) {
                             value={brandAssets.thank_you_handle}
                             onChange={(v) => setBrandAssets({ ...brandAssets, thank_you_handle: v })}
                             placeholder="@washha.sa"
+                            dir="ltr"
+                        />
+                    </div>
+
+                    {/* Social Media Links Settings */}
+                    <div className="p-4 rounded-xl border border-theme-subtle bg-theme-faint space-y-4">
+                        <h4 className="font-bold text-sm text-theme mb-2">روابط التواصل الاجتماعي (Social Card)</h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <Field
+                                label="Instagram"
+                                value={brandAssets.social_instagram}
+                                onChange={(v) => setBrandAssets({ ...brandAssets, social_instagram: v })}
+                                placeholder="@wusha.art"
+                                dir="ltr"
+                            />
+                            <Field
+                                label="Twitter (X)"
+                                value={brandAssets.social_twitter}
+                                onChange={(v) => setBrandAssets({ ...brandAssets, social_twitter: v })}
+                                placeholder="@wusha_art"
+                                dir="ltr"
+                            />
+                            <Field
+                                label="TikTok"
+                                value={brandAssets.social_tiktok}
+                                onChange={(v) => setBrandAssets({ ...brandAssets, social_tiktok: v })}
+                                placeholder="@wusha.art"
+                                dir="ltr"
+                            />
+                            <Field
+                                label="Snapchat"
+                                value={brandAssets.social_snapchat}
+                                onChange={(v) => setBrandAssets({ ...brandAssets, social_snapchat: v })}
+                                placeholder="@wusha.art"
+                                dir="ltr"
+                            />
+                        </div>
+                        <Field
+                            label="رقم الواتساب (للرابط)"
+                            value={brandAssets.social_whatsapp}
+                            onChange={(v) => setBrandAssets({ ...brandAssets, social_whatsapp: v })}
+                            placeholder="+966532235005"
                             dir="ltr"
                         />
                     </div>

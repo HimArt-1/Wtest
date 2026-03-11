@@ -63,6 +63,11 @@ export type SiteSettingsType = {
             thank_you_title?: string;
             thank_you_message?: string;
             thank_you_handle?: string;
+            social_instagram?: string;
+            social_twitter?: string;
+            social_tiktok?: string;
+            social_snapchat?: string;
+            social_whatsapp?: string;
         };
 };
 
@@ -95,7 +100,12 @@ export async function getSiteSettings() {
                 business_card_website: "www.washa.shop",
                 thank_you_title: "شكراً لثقتكم",
                 thank_you_message: "نحن في \"وشّى\" نصنع الفن بحُب وإتقان، \nونتمنى أن تنال هذه القطعة الفنية إعجابك كما نالت شغفنا بصنعها.\n\nيسعدنا مشاركتك لإطلالتك معنا!",
-                thank_you_handle: "@washha.sa"
+                thank_you_handle: "@washha.sa",
+                social_instagram: "@wusha.art",
+                social_twitter: "@wusha_art",
+                social_tiktok: "@wusha.art",
+                social_snapchat: "@wusha.art",
+                social_whatsapp: "+966532235005"
             },
         };
     }
@@ -130,7 +140,12 @@ export async function getSiteSettings() {
                 business_card_website: "www.washa.shop",
                 thank_you_title: "شكراً لثقتكم",
                 thank_you_message: "نحن في \"وشّى\" نصنع الفن بحُب وإتقان، \nونتمنى أن تنال هذه القطعة الفنية إعجابك كما نالت شغفنا بصنعها.\n\nيسعدنا مشاركتك لإطلالتك معنا!",
-                thank_you_handle: "@washha.sa"
+                thank_you_handle: "@washha.sa",
+                social_instagram: "@wusha.art",
+                social_twitter: "@wusha_art",
+                social_tiktok: "@wusha.art",
+                social_snapchat: "@wusha.art",
+                social_whatsapp: "+966532235005"
             },
         };
     }
@@ -184,7 +199,12 @@ export async function getSiteSettings() {
             business_card_website: settings.brand_assets?.business_card_website ?? "www.washa.shop",
             thank_you_title: settings.brand_assets?.thank_you_title ?? "شكراً لثقتكم",
             thank_you_message: settings.brand_assets?.thank_you_message ?? "نحن في \"وشّى\" نصنع الفن بحُب وإتقان، \nونتمنى أن تنال هذه القطعة الفنية إعجابك كما نالت شغفنا بصنعها.\n\nيسعدنا مشاركتك لإطلالتك معنا!",
-            thank_you_handle: settings.brand_assets?.thank_you_handle ?? "@washha.sa"
+            thank_you_handle: settings.brand_assets?.thank_you_handle ?? "@washha.sa",
+            social_instagram: settings.brand_assets?.social_instagram ?? "@wusha.art",
+            social_twitter: settings.brand_assets?.social_twitter ?? "@wusha_art",
+            social_tiktok: settings.brand_assets?.social_tiktok ?? "@wusha.art",
+            social_snapchat: settings.brand_assets?.social_snapchat ?? "@wusha.art",
+            social_whatsapp: settings.brand_assets?.social_whatsapp ?? "+966532235005",
         },
     };
     } catch (error) {
@@ -212,7 +232,12 @@ export async function getSiteSettings() {
                 business_card_website: "www.washa.shop",
                 thank_you_title: "شكراً لثقتكم",
                 thank_you_message: "نحن في \"وشّى\" نصنع الفن بحُب وإتقان، \nونتمنى أن تنال هذه القطعة الفنية إعجابك كما نالت شغفنا بصنعها.\n\nيسعدنا مشاركتك لإطلالتك معنا!",
-                thank_you_handle: "@washha.sa"
+                thank_you_handle: "@washha.sa",
+                social_instagram: "@wusha.art",
+                social_twitter: "@wusha_art",
+                social_tiktok: "@wusha.art",
+                social_snapchat: "@wusha.art",
+                social_whatsapp: "+966532235005"
             },
         };
     }
