@@ -1,5 +1,3 @@
-"use client";
-
 import { motion } from "framer-motion";
 import { 
   Sparkles, 
@@ -15,8 +13,21 @@ import {
   Shirt
 } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
+import { getSiteSettings } from "@/app/actions/settings";
 
-export default function BrandAssetsPage() {
+export default async function BrandAssetsPage() {
+  const settings = await getSiteSettings();
+  const config = settings.brand_assets || {
+    business_card_name: "حمزة آرت",
+    business_card_title: "المدير الإبداعي | Founder",
+    business_card_phone: "+966 53 223 5005",
+    business_card_email: "washaksa@hotmail.com",
+    business_card_website: "www.washa.shop",
+    thank_you_title: "شكراً لثقتكم",
+    thank_you_message: "نحن في \"وشّى\" نصنع الفن بحُب وإتقان، \nونتمنى أن تنال هذه القطعة الفنية إعجابك كما نالت شغفنا بصنعها.\n\nيسعدنا مشاركتك لإطلالتك معنا!",
+    thank_you_handle: "@washha.sa"
+  };
+
   return (
     <div className="min-h-screen bg-theme-bg pt-24 pb-32 overflow-hidden selection:bg-gold/30 selection:text-gold">
       
@@ -76,8 +87,8 @@ export default function BrandAssetsPage() {
                  <div className="h-full flex flex-col justify-between p-8">
                    <div className="flex justify-between items-start">
                      <div>
-                       <h2 className="text-2xl font-bold text-white mb-1">حمزة آرت</h2>
-                       <p className="text-gold text-sm font-medium tracking-wide">المدير الإبداعي | Founder</p>
+                       <h2 className="text-2xl font-bold text-white mb-1">{config.business_card_name}</h2>
+                       <p className="text-gold text-sm font-medium tracking-wide">{config.business_card_title}</p>
                      </div>
                      <Logo size="sm" />
                    </div>
@@ -85,15 +96,15 @@ export default function BrandAssetsPage() {
                    <div className="space-y-3 mt-8">
                      <div className="flex items-center gap-3 text-white/70 text-sm">
                        <Phone className="w-4 h-4 text-gold flex-shrink-0" />
-                       <span dir="ltr" className="tracking-wider">+966 53 223 5005</span>
+                       <span dir="ltr" className="tracking-wider">{config.business_card_phone}</span>
                      </div>
                      <div className="flex items-center gap-3 text-white/70 text-sm">
                        <Mail className="w-4 h-4 text-gold flex-shrink-0" />
-                       <span dir="ltr">washaksa@hotmail.com</span>
+                       <span dir="ltr">{config.business_card_email}</span>
                      </div>
                      <div className="flex items-center gap-3 text-white/70 text-sm">
                        <Globe className="w-4 h-4 text-gold flex-shrink-0" />
-                       <span dir="ltr">www.washa.shop</span>
+                       <span dir="ltr">{config.business_card_website}</span>
                      </div>
                    </div>
                  </div>
@@ -159,17 +170,14 @@ export default function BrandAssetsPage() {
                 <Logo size="sm" className="mb-8" />
                 
                 <div className="flex-1 flex flex-col justify-center">
-                  <h3 className="text-2xl font-serif text-[#111] dark:text-white mb-6">شكراً لثقتكم</h3>
-                  <p className="text-[#555] dark:text-gray-400 text-sm leading-8 mb-8">
-                    نحن في "وشّى" نصنع الفن بحُب وإتقان، 
-                    ونتمنى أن تنال هذه القطعة الفنية إعجابك كما نالت شغفنا بصنعها.
-                    <br/><br/>
-                    يسعدنا مشاركتك لإطلالتك معنا!
-                  </p>
+                  <h3 className="text-2xl font-serif text-[#111] dark:text-white mb-6">{config.thank_you_title}</h3>
+                  <div className="text-[#555] dark:text-gray-400 text-sm leading-8 mb-8 whitespace-pre-line">
+                    {config.thank_you_message}
+                  </div>
                 </div>
 
                 <div className="w-full flex items-center justify-between mt-auto pt-6 border-t border-[#E5E0D8] dark:border-white/10">
-                  <span className="text-gold font-bold tracking-widest text-xs">@washha.sa</span>
+                  <span className="text-gold font-bold tracking-widest text-xs">{config.thank_you_handle}</span>
                   <div className="w-8 h-8 rounded-full border border-gold flex items-center justify-center">
                     <span className="text-gold font-serif italic text-sm">W</span>
                   </div>

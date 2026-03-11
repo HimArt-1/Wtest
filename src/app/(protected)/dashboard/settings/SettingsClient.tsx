@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import {
     Eye, EyeOff, Globe, Truck, Save, Loader2, Tag, QrCode,
-    Instagram, Twitter, Mail, Phone, Sparkles, type LucideIcon,
+    Instagram, Twitter, Mail, Phone, Sparkles, Image as ImageIcon, type LucideIcon,
 } from "lucide-react";
 import { updateSiteSetting, uploadExclusiveDesignImage, type SiteSettingsType } from "@/app/actions/settings";
 
@@ -113,6 +113,17 @@ export function SettingsClient({ settings }: SettingsProps) {
         step2_prompt: settings.ai_simulation?.step2_prompt ?? "صمم لي ذئب بستايل سايبربانك مع ألوان نيون وخلفية مظلمة...",
         step2_art_style: settings.ai_simulation?.step2_art_style ?? "رسم رقمي (Digital Art)",
         step2_result_image: settings.ai_simulation?.step2_result_image ?? "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=400&q=80",
+    });
+
+    const [brandAssets, setBrandAssets] = useState({
+        business_card_name: settings.brand_assets?.business_card_name ?? "حمزة آرت",
+        business_card_title: settings.brand_assets?.business_card_title ?? "المدير الإبداعي | Founder",
+        business_card_phone: settings.brand_assets?.business_card_phone ?? "+966 53 223 5005",
+        business_card_email: settings.brand_assets?.business_card_email ?? "washaksa@hotmail.com",
+        business_card_website: settings.brand_assets?.business_card_website ?? "www.washa.shop",
+        thank_you_title: settings.brand_assets?.thank_you_title ?? "شكراً لثقتكم",
+        thank_you_message: settings.brand_assets?.thank_you_message ?? "نحن في \"وشّى\" نصنع الفن بحُب وإتقان، \nونتمنى أن تنال هذه القطعة الفنية إعجابك كما نالت شغفنا بصنعها.\n\nيسعدنا مشاركتك لإطلالتك معنا!",
+        thank_you_handle: settings.brand_assets?.thank_you_handle ?? "@washha.sa",
     });
 
     const [saving, setSaving] = useState<string | null>(null);
@@ -470,6 +481,91 @@ export function SettingsClient({ settings }: SettingsProps) {
                 >
                     {saving === "ai_simulation" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                     حفظ إعدادات المحاكاة
+                </button>
+            </SettingsCard>
+
+            {/* ─── 7. Brand Assets Config ─── */}
+            <SettingsCard title="إعدادات بطاقات الهوية والتصاميم" icon={ImageIcon}>
+                <p className="text-theme-subtle text-sm mb-4">تتحكم هذه الإعدادات بالنصوص المعروضة على بطاقات التصاميم (في صفحة /brand).</p>
+                
+                <div className="space-y-6">
+                    {/* Business Card Settings */}
+                    <div className="p-4 rounded-xl border border-theme-subtle bg-theme-faint space-y-4">
+                        <h4 className="font-bold text-sm text-theme mb-2">بطاقة العمل (Business Card)</h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <Field
+                                label="الاسم"
+                                value={brandAssets.business_card_name}
+                                onChange={(v) => setBrandAssets({ ...brandAssets, business_card_name: v })}
+                                placeholder="حمزة آرت"
+                            />
+                            <Field
+                                label="المسمى الوظيفي"
+                                value={brandAssets.business_card_title}
+                                onChange={(v) => setBrandAssets({ ...brandAssets, business_card_title: v })}
+                                placeholder="المدير الإبداعي | Founder"
+                            />
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <Field
+                                label="رقم الهاتف"
+                                value={brandAssets.business_card_phone}
+                                onChange={(v) => setBrandAssets({ ...brandAssets, business_card_phone: v })}
+                                placeholder="+966..."
+                                dir="ltr"
+                            />
+                            <Field
+                                label="البريد الإلكتروني"
+                                value={brandAssets.business_card_email}
+                                onChange={(v) => setBrandAssets({ ...brandAssets, business_card_email: v })}
+                                placeholder="washaksa@hotmail.com"
+                                dir="ltr"
+                            />
+                        </div>
+                        <Field
+                            label="الموقع الإلكتروني"
+                            value={brandAssets.business_card_website}
+                            onChange={(v) => setBrandAssets({ ...brandAssets, business_card_website: v })}
+                            placeholder="www.washa.shop"
+                            dir="ltr"
+                        />
+                    </div>
+
+                    {/* Thank You Card Settings */}
+                    <div className="p-4 rounded-xl border border-theme-subtle bg-theme-faint space-y-4">
+                        <h4 className="font-bold text-sm text-theme mb-2">بطاقة شكر وتقدير (Thank You Card)</h4>
+                        <Field
+                            label="العنوان"
+                            value={brandAssets.thank_you_title}
+                            onChange={(v) => setBrandAssets({ ...brandAssets, thank_you_title: v })}
+                            placeholder="شكراً لثقتكم"
+                        />
+                        <div className="space-y-2">
+                            <label className="text-xs text-theme-subtle font-medium block">رسالة الشكر</label>
+                            <textarea
+                                value={brandAssets.thank_you_message}
+                                onChange={(e) => setBrandAssets({ ...brandAssets, thank_you_message: e.target.value })}
+                                className="w-full px-4 py-2.5 rounded-xl bg-theme-subtle border border-theme-soft text-theme-strong text-sm focus:border-gold focus:outline-none transition-colors min-h-[120px]"
+                                placeholder="الرسالة الترحيبية..."
+                            />
+                        </div>
+                        <Field
+                            label="حساب التواصل (Handle)"
+                            value={brandAssets.thank_you_handle}
+                            onChange={(v) => setBrandAssets({ ...brandAssets, thank_you_handle: v })}
+                            placeholder="@washha.sa"
+                            dir="ltr"
+                        />
+                    </div>
+                </div>
+
+                <button
+                    onClick={() => handleSave("brand_assets", brandAssets)}
+                    disabled={saving === "brand_assets"}
+                    className="mt-5 btn-gold w-full py-3 text-sm font-bold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                    {saving === "brand_assets" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                    حفظ نصوص البطاقات
                 </button>
             </SettingsCard>
         </div>

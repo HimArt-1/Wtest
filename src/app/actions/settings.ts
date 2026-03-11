@@ -54,6 +54,16 @@ export type SiteSettingsType = {
             step2_art_style?: string;
             step2_result_image?: string;
         };
+        brand_assets?: {
+            business_card_name?: string;
+            business_card_title?: string;
+            business_card_phone?: string;
+            business_card_email?: string;
+            business_card_website?: string;
+            thank_you_title?: string;
+            thank_you_message?: string;
+            thank_you_handle?: string;
+        };
 };
 
 // ═══════════════════════════════════════════════════════════
@@ -72,8 +82,20 @@ export async function getSiteSettings() {
             ai_simulation: { 
                 step1_image: "/images/design/heavy-tshirt-black-front.png", 
                 step1_color_name: "أسود كلاسيك", 
+                step1_pattern: "بدون نمط",
                 step2_prompt: "صمم لي ذئب بستايل سايبربانك مع ألوان نيون وخلفية مظلمة...", 
+                step2_art_style: "رسم رقمي (Digital Art)",
                 step2_result_image: "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=400&q=80" 
+            },
+            brand_assets: {
+                business_card_name: "حمزة آرت",
+                business_card_title: "المدير الإبداعي | Founder",
+                business_card_phone: "+966 53 223 5005",
+                business_card_email: "washaksa@hotmail.com",
+                business_card_website: "www.washa.shop",
+                thank_you_title: "شكراً لثقتكم",
+                thank_you_message: "نحن في \"وشّى\" نصنع الفن بحُب وإتقان، \nونتمنى أن تنال هذه القطعة الفنية إعجابك كما نالت شغفنا بصنعها.\n\nيسعدنا مشاركتك لإطلالتك معنا!",
+                thank_you_handle: "@washha.sa"
             },
         };
     }
@@ -95,8 +117,20 @@ export async function getSiteSettings() {
             ai_simulation: { 
                 step1_image: "/images/design/heavy-tshirt-black-front.png", 
                 step1_color_name: "أسود كلاسيك", 
+                step1_pattern: "بدون نمط",
                 step2_prompt: "صمم لي ذئب بستايل سايبربانك مع ألوان نيون وخلفية مظلمة...", 
+                step2_art_style: "رسم رقمي (Digital Art)",
                 step2_result_image: "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=400&q=80" 
+            },
+            brand_assets: {
+                business_card_name: "حمزة آرت",
+                business_card_title: "المدير الإبداعي | Founder",
+                business_card_phone: "+966 53 223 5005",
+                business_card_email: "washaksa@hotmail.com",
+                business_card_website: "www.washa.shop",
+                thank_you_title: "شكراً لثقتكم",
+                thank_you_message: "نحن في \"وشّى\" نصنع الفن بحُب وإتقان، \nونتمنى أن تنال هذه القطعة الفنية إعجابك كما نالت شغفنا بصنعها.\n\nيسعدنا مشاركتك لإطلالتك معنا!",
+                thank_you_handle: "@washha.sa"
             },
         };
     }
@@ -142,6 +176,16 @@ export async function getSiteSettings() {
             step2_art_style: aiSim.step2_art_style ?? "رسم رقمي (Digital Art)",
             step2_result_image: aiSim.step2_result_image ?? "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=400&q=80",
         },
+        brand_assets: {
+            business_card_name: settings.brand_assets?.business_card_name ?? "حمزة آرت",
+            business_card_title: settings.brand_assets?.business_card_title ?? "المدير الإبداعي | Founder",
+            business_card_phone: settings.brand_assets?.business_card_phone ?? "+966 53 223 5005",
+            business_card_email: settings.brand_assets?.business_card_email ?? "washaksa@hotmail.com",
+            business_card_website: settings.brand_assets?.business_card_website ?? "www.washa.shop",
+            thank_you_title: settings.brand_assets?.thank_you_title ?? "شكراً لثقتكم",
+            thank_you_message: settings.brand_assets?.thank_you_message ?? "نحن في \"وشّى\" نصنع الفن بحُب وإتقان، \nونتمنى أن تنال هذه القطعة الفنية إعجابك كما نالت شغفنا بصنعها.\n\nيسعدنا مشاركتك لإطلالتك معنا!",
+            thank_you_handle: settings.brand_assets?.thank_you_handle ?? "@washha.sa"
+        },
     };
     } catch (error) {
         // Return defaults if Supabase is not configured (development mode)
@@ -155,8 +199,20 @@ export async function getSiteSettings() {
             ai_simulation: { 
                 step1_image: "/images/design/heavy-tshirt-black-front.png", 
                 step1_color_name: "أسود كلاسيك", 
+                step1_pattern: "بدون نمط",
                 step2_prompt: "صمم لي ذئب بستايل سايبربانك مع ألوان نيون وخلفية مظلمة...", 
+                step2_art_style: "رسم رقمي (Digital Art)",
                 step2_result_image: "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=400&q=80" 
+            },
+            brand_assets: {
+                business_card_name: "حمزة آرت",
+                business_card_title: "المدير الإبداعي | Founder",
+                business_card_phone: "+966 53 223 5005",
+                business_card_email: "washaksa@hotmail.com",
+                business_card_website: "www.washa.shop",
+                thank_you_title: "شكراً لثقتكم",
+                thank_you_message: "نحن في \"وشّى\" نصنع الفن بحُب وإتقان، \nونتمنى أن تنال هذه القطعة الفنية إعجابك كما نالت شغفنا بصنعها.\n\nيسعدنا مشاركتك لإطلالتك معنا!",
+                thank_you_handle: "@washha.sa"
             },
         };
     }
