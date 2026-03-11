@@ -152,21 +152,21 @@ export default function BrandAssetsClient({ config }: { config: any }) {
                 whileHover={{ y: -10, boxShadow: "0 30px 60px -15px rgba(202,160,82,0.2)" }}
                 viewport={{ once: true, margin: "-100px" }}
                 transition={{ duration: 0.6 }}
-                className="relative w-full max-w-[320px] aspect-[1/1.4] bg-[#FDFBF7] dark:bg-[#1A1A1A] rounded-sm p-8 shadow-2xl border border-[#E5E0D8] dark:border-white/10 flex flex-col items-center text-center overflow-hidden"
+                className="relative w-full max-w-[320px] aspect-[1/1.4] bg-[#322014] rounded-sm p-8 shadow-2xl border border-white/10 flex flex-col items-center text-center overflow-hidden"
               >
                 {/* Paper Texture Overlay */}
-                <div className="absolute inset-0 opacity-[0.4] bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] pointer-events-none mix-blend-multiply dark:mix-blend-overlay dark:opacity-10" />
+                <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] pointer-events-none mix-blend-overlay" />
                 
                 <Logo size="sm" className="mb-8" />
                 
                 <div className="flex-1 flex flex-col justify-center">
-                  <h3 className="text-2xl font-serif text-[#111] dark:text-white mb-6">{config.thank_you_title}</h3>
-                  <div className="text-[#555] dark:text-gray-400 text-sm leading-8 mb-8 whitespace-pre-line">
+                  <h3 className="text-2xl font-serif text-white mb-6">{config.thank_you_title}</h3>
+                  <div className="text-white/70 text-sm leading-8 mb-8 whitespace-pre-line">
                     {config.thank_you_message}
                   </div>
                 </div>
 
-                <div className="w-full flex items-center justify-between mt-auto pt-6 border-t border-[#E5E0D8] dark:border-white/10">
+                <div className="w-full flex items-center justify-between mt-auto pt-6 border-t border-white/10">
                   <span className="text-gold font-bold tracking-widest text-xs">{config.thank_you_handle}</span>
                   <div className="w-8 h-8 rounded-full border border-gold flex items-center justify-center">
                     <span className="text-gold font-serif italic text-sm">W</span>
@@ -187,11 +187,11 @@ export default function BrandAssetsClient({ config }: { config: any }) {
                  initial={{ opacity: 0, scale: 0.95 }}
                  whileInView={{ opacity: 1, scale: 1 }}
                  viewport={{ once: true, margin: "-100px" }}
-                 className="relative w-full max-w-[450px] bg-theme-bg border border-theme-strong/10 rounded-2xl p-8 sm:p-10 shadow-xl overflow-hidden glass-card"
+                 className="relative w-full max-w-[450px] bg-[#322014] border border-white/10 rounded-2xl p-8 sm:p-10 shadow-xl overflow-hidden glass-card"
                >
-                 <div className="text-center mb-10 border-b border-theme-strong/10 pb-6">
-                   <h3 className="text-2xl font-bold tracking-wide text-theme-strong mb-2">تعليمات الغسيل والكي</h3>
-                   <p className="text-theme-subtle text-sm">للحفاظ على جودة القطعة والطباعة لأطول فترة ممكنة</p>
+                 <div className="text-center mb-10 border-b border-white/10 pb-6">
+                   <h3 className="text-2xl font-bold tracking-wide text-white mb-2">تعليمات الغسيل والكي</h3>
+                   <p className="text-white/70 text-sm">للحفاظ على جودة القطعة والطباعة لأطول فترة ممكنة</p>
                  </div>
 
                  <div className="space-y-6">
@@ -257,13 +257,13 @@ function SectionTitle({ title, subtitle, number, align = "left" }: { title: stri
 
 function CareItem({ icon: Icon, title, desc }: { icon: any, title: string, desc: string }) {
   return (
-    <div className="flex items-start gap-4 p-3 rounded-lg hover:bg-theme-strong/5 transition-colors border border-transparent hover:border-theme-strong/10">
-      <div className="w-10 h-10 rounded-full bg-theme-strong/5 flex items-center justify-center shrink-0">
-        <Icon className="w-5 h-5 text-theme-strong" />
+    <div className="flex items-start gap-4 p-3 rounded-lg hover:bg-white/5 transition-colors border border-transparent hover:border-white/10">
+      <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center shrink-0">
+        <Icon className="w-5 h-5 text-white" />
       </div>
       <div>
-        <h4 className="font-bold text-theme-strong text-sm sm:text-base mb-1">{title}</h4>
-        <p className="text-xs sm:text-sm text-theme-subtle">{desc}</p>
+        <h4 className="font-bold text-white text-sm sm:text-base mb-1">{title}</h4>
+        <p className="text-xs sm:text-sm text-white/70">{desc}</p>
       </div>
     </div>
   );
