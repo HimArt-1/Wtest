@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Package, Warehouse, BarChart3, AlertTriangle, XCircle } from "lucide-react";
 import { ProductsClient } from "../products/ProductsClient";
 import InventoryClient from "@/components/admin/erp/InventoryClient";
+import { SmartImportModal } from "@/components/admin/inventory/SmartImportModal";
 
 type TabId = "products" | "inventory";
 
@@ -39,6 +40,7 @@ export function ProductsInventoryClient({
     const router = useRouter();
     const searchParams = useSearchParams();
     const [tab, setTab] = useState<TabId>((activeTab as TabId) || "products");
+    const [showSmartImport, setShowSmartImport] = useState(false);
 
     useEffect(() => {
         const t = searchParams.get("tab") as TabId | null;
@@ -143,6 +145,19 @@ export function ProductsInventoryClient({
                 ))}
             </div>
 
+            {/* Smart Import Button Tracker */}
+            {(tab === "inventory" || tab === "products") && (
+                <div className="flex justify-end mb-2">
+                     <button
+                        onClick={() => setShowSmartImport(true)}
+                        className="px-6 py-2.5 bg-wusha-gold/10 text-wusha-gold border border-wusha-gold/20 rounded-xl text-sm font-bold hover:bg-yellow-500/20 transition-all flex items-center gap-2 shadow-sm"
+                    >
+                        <Package className="w-5 h-5" />
+                        الاستيراد الذكي (Excel/CSV)
+                    </button>
+                </div>
+            )}
+
             {/* ─── Tab Content ─── */}
             <AnimatePresence mode="wait">
                 {tab === "products" ? (
@@ -181,6 +196,13 @@ export function ProductsInventoryClient({
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {/* Smart Import Wizard Modal */}
+            <SmartImportModal 
+                isOpen={showSmartImport} 
+                onClose={() => setShowSmartImport(false)} 
+                onSuccess={() => { setShowSmartImport(false); router.refresh(); }} 
+            />
         </div>
     );
 }

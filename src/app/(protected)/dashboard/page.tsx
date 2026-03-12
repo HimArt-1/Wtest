@@ -1,13 +1,25 @@
-import { getAdminOverview, getAdminAnalytics, getAdminInventory } from "@/app/actions/admin";
+import { getAdminOverview } from "@/app/actions/admin";
+import { 
+    getDashboardMetrics, 
+    getRevenueByMonth, 
+    getTopSellingProducts, 
+    getLowStockAlerts 
+} from "@/app/actions/analytics";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { AdminQuickActions } from "@/components/admin/AdminQuickActions";
 import { DashboardClient } from "./DashboardClient";
 
 export default async function AdminDashboardPage() {
-    const [overview, analytics, inventory] = await Promise.all([
+    const currentYear = new Date().getFullYear();
+    
+    // Fetch overview for the KPI top cards and recent orders
+    // Plus the new deep analytics data
+    const [overview, metrics, monthlyRevenue, topProducts, lowStock] = await Promise.all([
         getAdminOverview(),
-        getAdminAnalytics("7d"),
-        getAdminInventory("low"),
+        getDashboardMetrics(),
+        getRevenueByMonth(currentYear),
+        getTopSellingProducts(5),
+        getLowStockAlerts(5)
     ]);
 
     const { stats, recentOrders, pendingApplications } = overview;
@@ -16,17 +28,16 @@ export default async function AdminDashboardPage() {
         <div className="space-y-8">
             <AdminHeader
                 title="لوحة المؤشرات"
-                subtitle="ملخص شامل لأداء المنصة — الإيرادات والطلبات والمخزون والعملاء."
+                subtitle="ملخص الشامل لأداء المنصة والمبيعات والمخزون والعملاء."
                 actions={<AdminQuickActions pendingCount={stats.pendingApplications} />}
             />
             <DashboardClient
-                stats={stats}
+                stats={{...stats, ...metrics}}
                 recentOrders={recentOrders}
                 pendingApplications={pendingApplications}
-                topProducts={analytics.topProducts.slice(0, 5)}
-                revenueByDay={analytics.revenueByDay}
-                lowStockProducts={inventory.products.slice(0, 5)}
-                lowStockCount={inventory.lowStockCount}
+                topProductsList={topProducts.data || []}
+                monthlyRevenue={monthlyRevenue}
+                lowStockList={lowStock.data || []}
             />
         </div>
     );

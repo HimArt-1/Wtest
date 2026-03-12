@@ -8,6 +8,10 @@ import {
 import Link from "next/link";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 
+import RevenueChart from "@/components/admin/analytics/RevenueChart";
+import TopProductsList from "@/components/admin/analytics/TopProductsList";
+import LowStockWidget from "@/components/admin/analytics/LowStockWidget";
+
 // ─── Types ──────────────────────────────────────────────
 
 interface DashboardProps {
@@ -15,14 +19,13 @@ interface DashboardProps {
         totalUsers: number; totalArtists: number; totalBuyers: number;
         totalOrders: number; totalRevenue: number; thisMonthRevenue: number;
         revenueGrowth: number; totalArtworks: number; totalProducts: number;
-        pendingApplications: number; totalSubscribers: number;
+        pendingApplications: number; totalSubscribers: number; averageOrderValue: number;
     };
     recentOrders: any[];
     pendingApplications: any[];
-    topProducts: { productId: string; title: string; quantity: number; revenue: number }[];
-    revenueByDay: { date: string; revenue: number; orders: number }[];
-    lowStockProducts: any[];
-    lowStockCount: number;
+    topProductsList: any[];
+    monthlyRevenue: any[];
+    lowStockList: any[];
 }
 
 // ─── Mini Sparkline (Pure CSS) ──────────────────────────
@@ -81,9 +84,10 @@ function KPICard({ title, value, subtitle, icon: Icon, color, href, growth, dela
 
 // ─── Main Dashboard ─────────────────────────────────────
 
-export function DashboardClient({ stats, recentOrders, pendingApplications, topProducts, revenueByDay, lowStockProducts, lowStockCount }: DashboardProps) {
-    const revenueChartData = revenueByDay.map((d) => d.revenue);
-    const ordersChartData = revenueByDay.map((d) => d.orders);
+export function DashboardClient({ stats, recentOrders, pendingApplications, topProductsList, monthlyRevenue, lowStockList }: DashboardProps) {
+    const revenueChartData = monthlyRevenue.map((d) => d.revenue);
+    const ordersChartData = monthlyRevenue.map((d) => d.orders);
+    const lowStockCount = lowStockList.length;
 
     return (
         <div className="space-y-6">
@@ -138,11 +142,16 @@ export function DashboardClient({ stats, recentOrders, pendingApplications, topP
                 ))}
             </div>
 
+            {/* ─── Main Analytics Row ─── */}
+            <div className="mb-6">
+                <RevenueChart data={monthlyRevenue} title="تحليل الإيرادات (شهرياً)" />
+            </div>
+
             {/* ─── 3-Column Grid ─── */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
                 {/* Recent Orders */}
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
-                    className="lg:col-span-2 rounded-2xl border border-theme-subtle bg-surface/50 backdrop-blur-sm overflow-hidden">
+                    className="lg:col-span-2 rounded-2xl border border-theme-subtle bg-surface/50 backdrop-blur-sm overflow-hidden flex flex-col h-full">
                     <div className="px-5 py-4 border-b border-theme-faint flex items-center justify-between">
                         <h3 className="text-sm font-bold text-theme-strong flex items-center gap-2">
                             <ShoppingCart className="w-4 h-4 text-gold" /> آخر الطلبات
@@ -151,7 +160,7 @@ export function DashboardClient({ stats, recentOrders, pendingApplications, topP
                             عرض الكل ←
                         </Link>
                     </div>
-                    <div className="overflow-x-auto">
+                    <div className="overflow-x-auto flex-1">
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="border-b border-theme-faint">
@@ -182,59 +191,13 @@ export function DashboardClient({ stats, recentOrders, pendingApplications, topP
                 </motion.div>
 
                 {/* Right Column: Top Products + Low Stock */}
-                <div className="space-y-5">
-                    {/* Top Products */}
-                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-                        className="rounded-2xl border border-theme-subtle bg-surface/50 backdrop-blur-sm overflow-hidden">
-                        <div className="px-5 py-4 border-b border-theme-faint flex items-center justify-between">
-                            <h3 className="text-sm font-bold text-theme-strong flex items-center gap-2">
-                                <Award className="w-4 h-4 text-gold" /> الأكثر مبيعاً
-                            </h3>
-                            <span className="text-[10px] text-theme-faint">آخر 7 أيام</span>
-                        </div>
-                        <div className="divide-y divide-theme-faint">
-                            {topProducts.length > 0 ? topProducts.map((p, i) => (
-                                <div key={p.productId} className="px-5 py-3 flex items-center gap-3 hover:bg-theme-faint transition-colors">
-                                    <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-black shrink-0 ${i === 0 ? "bg-gold/10 text-gold" : "bg-theme-subtle text-theme-faint"}`}>
-                                        {i + 1}
-                                    </span>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-xs font-medium text-theme-soft truncate">{p.title}</p>
-                                        <p className="text-[10px] text-theme-faint">{p.quantity} قطعة</p>
-                                    </div>
-                                    <span suppressHydrationWarning className="text-xs font-bold text-gold shrink-0">{p.revenue.toLocaleString()} ر.س</span>
-                                </div>
-                            )) : (
-                                <div className="px-5 py-8 text-center text-theme-faint text-xs">لا توجد مبيعات</div>
-                            )}
-                        </div>
-                    </motion.div>
-
-                    {/* Low Stock Alert */}
-                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}
-                        className={`rounded-2xl border overflow-hidden ${lowStockCount > 0 ? "border-amber-500/20 bg-amber-500/[0.02]" : "border-theme-subtle bg-surface/50"} backdrop-blur-sm`}>
-                        <div className="px-5 py-4 border-b border-theme-faint flex items-center justify-between">
-                            <h3 className="text-sm font-bold text-theme-strong flex items-center gap-2">
-                                <AlertTriangle className={`w-4 h-4 ${lowStockCount > 0 ? "text-amber-400" : "text-theme-faint"}`} />
-                                تنبيه المخزون
-                            </h3>
-                            <Link href="/dashboard/products-inventory?tab=inventory" className="text-xs text-gold hover:text-gold-light transition-colors font-medium">
-                                إدارة ←
-                            </Link>
-                        </div>
-                        <div className="divide-y divide-theme-faint">
-                            {lowStockProducts.length > 0 ? lowStockProducts.map((p: any) => (
-                                <div key={p.id} className="px-5 py-3 flex items-center justify-between hover:bg-theme-faint transition-colors">
-                                    <p className="text-xs text-theme-soft truncate flex-1">{p.title}</p>
-                                    <span className={`text-xs font-bold ${(p.stock_quantity || 0) <= 2 ? "text-red-400" : "text-amber-400"}`}>
-                                        {p.stock_quantity ?? 0} قطعة
-                                    </span>
-                                </div>
-                            )) : (
-                                <div className="px-5 py-6 text-center text-theme-faint text-xs">جميع المنتجات في مستوى آمن ✓</div>
-                            )}
-                        </div>
-                    </motion.div>
+                <div className="space-y-5 flex flex-col">
+                    <div className="h-[400px]">
+                        <TopProductsList products={topProductsList} />
+                    </div>
+                    <div className="h-[400px]">
+                        <LowStockWidget items={lowStockList} />
+                    </div>
                 </div>
             </div>
 

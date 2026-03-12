@@ -223,7 +223,7 @@ export async function confirmOrderPayment(
 
         const { data: order } = await supabase
             .from("orders")
-            .select("order_number, total, shipping_address, payment_status, buyer_id")
+            .select("order_number, total, shipping_address, payment_status, buyer_id, coupon_id")
             .eq("id", orderId)
             .single();
 
@@ -251,9 +251,15 @@ export async function confirmOrderPayment(
             return { success: false };
         }
 
+        // Deduct inventory
         await decrementStockForOrder(orderId);
 
-        const ord = order as { order_number: string; total: number; buyer_id?: string; shipping_address?: { name?: string } } | null;
+        // Increment coupon usages exactly once payment clears
+        if (order.coupon_id) {
+            await supabase.rpc("increment_coupon_uses_by_id" as never, { p_coupon_id: order.coupon_id } as never);
+        }
+
+        const ord = order as { order_number: string; total: number; buyer_id?: string; shipping_address?: { name?: string }; coupon_id?: string | null } | null;
         if (ord) {
             createAdminNotification({
                 type: "payment_received",

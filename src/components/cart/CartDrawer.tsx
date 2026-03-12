@@ -9,12 +9,16 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createCheckoutSession } from "@/app/actions/stripe";
 import { useState } from "react";
+import { validateDiscountCoupon } from "@/app/actions/discount-coupons";
 
 export function CartDrawer() {
-  const { items, isOpen, toggleCart, updateQuantity, removeItem, getCartTotal, getSubtotal } = useCartStore();
+  const { items, isOpen, toggleCart, updateQuantity, removeItem, getCartTotal, getSubtotal, coupon, applyCoupon, removeCoupon, getDiscountAmount } = useCartStore();
   const drawerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [promoCode, setPromoCode] = useState("");
+  const [promoError, setPromoError] = useState("");
+  const [isApplyingPromo, setIsApplyingPromo] = useState(false);
 
   // Handle escape key
   useEffect(() => {
@@ -46,6 +50,27 @@ export function CartDrawer() {
     };
   }, [isOpen, toggleCart]);
 
+  const handleApplyPromo = async () => {
+    if (!promoCode.trim()) return;
+    setIsApplyingPromo(true);
+    setPromoError("");
+
+    try {
+        const result = await validateDiscountCoupon(promoCode.trim());
+        if (result.error) {
+            setPromoError(result.error);
+        } else if (result.success && result.data) {
+            applyCoupon(result.data);
+            setPromoCode("");
+            setPromoError("");
+        }
+    } catch (err: any) {
+        setPromoError("حدث خطأ أثناء التحقق من الكود");
+    } finally {
+        setIsApplyingPromo(false);
+    }
+  };
+
   const handleCheckout = async () => {
     setIsCheckingOut(true);
     
@@ -60,7 +85,7 @@ export function CartDrawer() {
       custom_garment: item.customGarment,
     }));
 
-    const result = await createCheckoutSession(checkoutItems, "/checkout/success", "/cart");
+    const result = await createCheckoutSession(checkoutItems, "/checkout/success", "/cart", coupon?.id);
     
     setIsCheckingOut(false);
 
@@ -220,14 +245,74 @@ export function CartDrawer() {
             {/* Footer Summary */}
             {items.length > 0 && (
               <div className="p-6 border-t border-white/5 bg-[color-mix(in_srgb,var(--wusha-surface)_90%,transparent)] backdrop-blur-md">
+                
+                {/* Promo Code Input */}
+                <div className="mb-6">
+                    {coupon ? (
+                        <div className="flex items-center justify-between p-3 bg-gold/10 border border-gold/20 rounded-xl">
+                            <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 rounded-full bg-gold/20 flex items-center justify-center">
+                                    <ShoppingBag className="w-4 h-4 text-gold" />
+                                </div>
+                                <div>
+                                    <p className="text-gold font-bold text-sm uppercase">{coupon.code}</p>
+                                    <p className="text-gold/70 text-xs">تم تفعيل كود الخصم</p>
+                                </div>
+                            </div>
+                            <button 
+                                onClick={removeCoupon}
+                                className="text-theme-subtle hover:text-red-400 p-2 transition-colors"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="space-y-2">
+                            <div className="flex gap-2">
+                                <input 
+                                    type="text"
+                                    placeholder="لديك كود خصم؟"
+                                    value={promoCode}
+                                    onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleApplyPromo()}
+                                    className="flex-1 bg-theme-faint border border-theme-strong/10 rounded-xl px-4 text-sm text-theme focus:ring-1 focus:ring-gold outline-none transition-all uppercase"
+                                />
+                                <button
+                                    onClick={handleApplyPromo}
+                                    disabled={!promoCode.trim() || isApplyingPromo}
+                                    className="px-4 py-2.5 bg-theme-strong text-theme-bg rounded-xl text-sm font-bold hover:bg-theme-strong/90 transition-colors disabled:opacity-50 min-w-[80px]"
+                                >
+                                    {isApplyingPromo ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : "تطبيق"}
+                                </button>
+                            </div>
+                            {promoError && (
+                                <p className="text-red-400 text-xs font-medium px-1">{promoError}</p>
+                            )}
+                        </div>
+                    )}
+                </div>
+
                 <div className="space-y-3 mb-6">
                   <div className="flex justify-between text-theme-subtle text-sm">
                     <span>المجموع الفرعي</span>
                     <span className="font-mono">{getSubtotal()} ر.س</span>
                   </div>
+                  
+                  {coupon && (
+                      <div className="flex justify-between text-gold text-sm font-bold">
+                        <span>الخصم ({coupon.discount_type === 'percentage' ? `${coupon.discount_value}%` : `${coupon.discount_value} ر.س`})</span>
+                        <span className="font-mono">- {getDiscountAmount()} ر.س</span>
+                      </div>
+                  )}
+
                   <div className="flex justify-between text-theme-strong font-bold text-lg pt-3 border-t border-white/5">
                     <span>الإجمالي</span>
-                    <span className="text-gold font-black">{getCartTotal()} ر.س</span>
+                    <div className="text-left">
+                        {coupon && (
+                            <span className="block text-xs text-theme-subtle line-through mb-1">{getSubtotal()} ر.س</span>
+                        )}
+                        <span className="text-gold font-black">{getCartTotal()} ر.س</span>
+                    </div>
                   </div>
                 </div>
 
