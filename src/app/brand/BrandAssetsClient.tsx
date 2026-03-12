@@ -96,7 +96,7 @@ export default function BrandAssetsClient({ config }: { config: any }) {
               >
                 <div
                   id="business-card-back"
-                  className="w-full h-full rounded-xl shadow-2xl border border-white/5 overflow-hidden relative"
+                  className="w-full h-full rounded-xl shadow-2xl border border-gold/40 overflow-hidden relative"
                   style={{
                     background: "linear-gradient(135deg, #322014 0%, #1A110A 100%)",
                     boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(202, 160, 82, 0.1) inset"
@@ -144,7 +144,7 @@ export default function BrandAssetsClient({ config }: { config: any }) {
               >
                 <div
                   id="business-card-front"
-                  className="w-full h-full rounded-xl shadow-[0_30px_60px_rgba(0,0,0,0.6)] border border-white/10 overflow-hidden flex items-center justify-center relative"
+                  className="w-full h-full rounded-xl shadow-[0_30px_60px_rgba(0,0,0,0.6)] border border-gold/40 overflow-hidden flex items-center justify-center relative"
                   style={{
                     background: "linear-gradient(135deg, #3D2719 0%, #20140D 100%)",
                   }}
