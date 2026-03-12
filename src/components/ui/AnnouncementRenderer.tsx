@@ -47,7 +47,7 @@ function dismissSession(id: string) {
 const templateStyles: Record<string, string> = {
     gold: "bg-gradient-to-r from-[#5A3E2B] via-[#ceae7f] to-[#5A3E2B] text-theme",
     gradient: "bg-gradient-to-r from-purple-600 via-pink-500 to-orange-400 text-theme",
-    minimal: "bg-[#1a1a1a] border border-white/[0.1] text-theme-strong",
+    minimal: "bg-surface border border-theme-soft text-theme-strong",
     alert: "bg-red-950 border border-red-500/30 text-red-200",
     promo: "bg-gradient-to-r from-emerald-700 to-teal-600 text-theme",
     neon: "bg-blue-950/80 border border-blue-400/20 text-blue-100 backdrop-blur-md shadow-[0_0_30px_rgba(59,130,246,0.2)]",

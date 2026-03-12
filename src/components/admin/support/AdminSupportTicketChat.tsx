@@ -74,7 +74,7 @@ export function AdminSupportTicketChat({ ticket, initialMessages }: { ticket: Ti
     };
 
     return (
-        <div className="flex flex-col h-[calc(100vh-12rem)] min-h-[500px] bg-[#111] border border-theme-subtle rounded-3xl overflow-hidden relative shadow-xl">
+        <div className="flex flex-col h-[calc(100vh-12rem)] min-h-[500px] bg-theme-faint border border-theme-subtle rounded-3xl overflow-hidden relative shadow-xl">
             {/* Header */}
             <div className="p-4 sm:p-6 border-b border-theme-subtle bg-theme-faint flex flex-col sm:flex-row sm:items-center justify-between gap-4 z-10">
                 <div className="flex items-center gap-4">
@@ -109,7 +109,7 @@ export function AdminSupportTicketChat({ ticket, initialMessages }: { ticket: Ti
                             onClick={() => handleUpdateStatus(st.id as SupportTicketStatus)}
                             className={`px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold transition-all ${ticket.status === st.id
                                 ? statusObj.bg + " " + statusObj.color + " border cursor-default"
-                                : "bg-white/[0.05] text-theme-subtle hover:bg-white/10 hover:text-theme border border-transparent disabled:opacity-50"
+                                : "bg-theme-subtle text-theme-subtle hover:bg-theme-soft hover:text-theme border border-transparent disabled:opacity-50"
                                 }`}
                         >
                             {st.label}
@@ -160,7 +160,7 @@ export function AdminSupportTicketChat({ ticket, initialMessages }: { ticket: Ti
                                 <div className={clsx(
                                     "p-3.5 sm:p-4 rounded-2xl text-sm leading-relaxed",
                                     isAdmin
-                                        ? "bg-blue-500/10 border border-blue-500/20 text-blue-50 rounded-tr-sm"
+                                        ? "bg-blue-500/10 border border-blue-500/20 text-theme rounded-tr-sm"
                                         : "bg-theme-subtle border border-theme-soft text-theme-strong rounded-tl-sm"
                                 )}>
                                     <p className="whitespace-pre-wrap">{msg.message}</p>
@@ -176,7 +176,7 @@ export function AdminSupportTicketChat({ ticket, initialMessages }: { ticket: Ti
             </div>
 
             {/* Input Area */}
-            <div className="p-4 sm:p-6 border-t border-theme-subtle bg-[#0a0a0a]">
+            <div className="p-4 sm:p-6 border-t border-theme-subtle bg-theme-surface">
                 <form onSubmit={handleSubmit} className="relative flex items-center gap-3">
                     <div className="shrink-0 hidden sm:flex items-center justify-center w-10 h-10 rounded-full bg-white/[0.05] border border-theme-subtle">
                         <ShieldAlert className="w-5 h-5 text-theme-subtle" />

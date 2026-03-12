@@ -175,13 +175,13 @@ export function JoinCommunityModal({
                                                 required
                                                 className="w-full px-4 py-3 rounded-lg bg-theme-subtle border border-theme-soft focus:border-gold focus:ring-1 focus:ring-gold/30 outline-none transition-all text-theme-strong"
                                             >
-                                                <option value="" className="bg-[#111]">اختر تخصصك</option>
-                                                <option value="digital" className="bg-[#111]">فن رقمي</option>
-                                                <option value="photography" className="bg-[#111]">تصوير فوتوغرافي</option>
-                                                <option value="calligraphy" className="bg-[#111]">خط عربي</option>
-                                                <option value="traditional" className="bg-[#111]">فن تقليدي</option>
-                                                <option value="conceptual" className="bg-[#111]">فن مفاهيمي</option>
-                                                <option value="mixed" className="bg-[#111]">وسائط متعددة</option>
+                                                <option value="" className="bg-surface">اختر تخصصك</option>
+                                                <option value="digital" className="bg-surface">فن رقمي</option>
+                                                <option value="photography" className="bg-surface">تصوير فوتوغرافي</option>
+                                                <option value="calligraphy" className="bg-surface">خط عربي</option>
+                                                <option value="traditional" className="bg-surface">فن تقليدي</option>
+                                                <option value="conceptual" className="bg-surface">فن مفاهيمي</option>
+                                                <option value="mixed" className="bg-surface">وسائط متعددة</option>
                                             </select>
                                         </div>
 

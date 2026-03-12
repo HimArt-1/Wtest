@@ -131,7 +131,7 @@ export function SupportTicketChat({ ticket, initialMessages }: { ticket: any, in
             </div>
 
             {/* Input Area */}
-            <div className="p-4 sm:p-6 border-t border-theme-subtle bg-[#0a0a0a]">
+            <div className="p-4 sm:p-6 border-t border-theme-subtle bg-theme-surface">
                 {isClosed ? (
                     <div className="text-center p-4 bg-theme-faint rounded-xl border border-theme-subtle">
                         <p className="text-theme-subtle text-sm">هذه التذكرة مغلقة ولا يمكن الرد عليها.</p>
@@ -144,7 +144,7 @@ export function SupportTicketChat({ ticket, initialMessages }: { ticket: any, in
                             value={newMessage}
                             onChange={(e) => setNewMessage(e.target.value)}
                             placeholder="اكتب ردك هنا..."
-                            className="w-full bg-theme-subtle border border-theme-soft disabled:opacity-50 text-theme text-sm rounded-2xl pl-16 pr-4 py-4 focus:outline-none focus:border-gold/50 focus:bg-white/[0.05] transition-all"
+                            className="w-full bg-theme-subtle border border-theme-soft disabled:opacity-50 text-theme text-sm rounded-2xl pl-16 pr-4 py-4 focus:outline-none focus:border-gold/50 focus:bg-theme-soft transition-all"
                         />
                         <button
                             type="submit"

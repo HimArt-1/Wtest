@@ -143,14 +143,14 @@ export function SupportDashboardClient({ initialTickets }: { initialTickets: any
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="absolute inset-0 bg-[#080808]/90 backdrop-blur-xl"
+                            className="absolute inset-0 bg-black/80 backdrop-blur-xl"
                             onClick={() => !isSubmitting && setIsCreateModalOpen(false)}
                         />
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="relative bg-[#111] border border-theme-soft rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl"
+                            className="relative bg-surface border border-theme-soft rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl"
                         >
                             <div className="p-6 sm:p-8">
                                 <div className="flex items-center justify-between mb-6">

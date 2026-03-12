@@ -44,13 +44,13 @@ export function FloatingJoinButton() {
 
                             {/* Button */}
                             <div className="relative w-14 h-14 bg-gradient-to-br from-[#ceae7f] to-[#a07d3f] rounded-full flex items-center justify-center shadow-lg shadow-gold/20 group-hover:shadow-gold/40 transition-shadow duration-300">
-                                <UserPlus className="w-6 h-6 text-[#0a0a0a]" />
+                                <UserPlus className="w-6 h-6 text-black" />
                             </div>
 
                             {/* Tooltip */}
-                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 px-3 py-1.5 bg-[#1a1a1a] border border-theme-soft rounded-lg text-theme text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 px-3 py-1.5 bg-surface border border-theme-soft rounded-lg text-theme text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
                                 انضم معنا
-                                <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-4 border-transparent border-t-[#1a1a1a]" />
+                                <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-4 border-transparent border-t-surface" />
                             </div>
 
                             {/* Pulse ring */}

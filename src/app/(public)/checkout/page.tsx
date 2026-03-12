@@ -209,7 +209,7 @@ function CheckoutContent() {
     // ─── خطوة الدفع المدمج ────────────────────────────────────
     if (checkoutStep === "paying" && stripeClientSecret && pendingOrderNumber) {
         return (
-            <div className="min-h-screen pt-32 pb-20 bg-[#080808]">
+            <div className="min-h-screen pt-32 pb-20 bg-theme">
                 <div className="container-wusha max-w-2xl">
                     <button
                         onClick={() => { setCheckoutStep("address"); setError(null); }}
@@ -243,7 +243,7 @@ function CheckoutContent() {
 
     // ─── خطوة العنوان وطريقة الدفع ───────────────────────────
     return (
-        <div className="min-h-screen pt-32 pb-20 bg-[#080808]">
+        <div className="min-h-screen pt-32 pb-20 bg-theme">
             <div className="container-wusha">
                 <h1 className="text-3xl md:text-4xl font-bold mb-8">إتمام الطلب</h1>
 

@@ -163,13 +163,14 @@ export async function createOrder(
         };
     }
 
-    if (options?.couponId) {
-        // Increment coupon current_uses atomically via RPC
+    // الكوبون: يُحتسب فقط عند COD (مؤكد مباشرة)
+    // Stripe: يُحتسب في confirmOrderPayment عند اكتمال الدفع
+    if (isCod && options?.couponId) {
         await supabase.rpc("increment_coupon_uses_by_id" as never, { p_coupon_id: options.couponId } as never);
     }
 
-
-    // خصم المخزون عند التأكيد (COD مؤكد مباشرة، Stripe يخصم عند confirmOrderPayment)
+    // المخزون: يُنقص فقط عند COD (مؤكد مباشرة)
+    // Stripe: يُنقص في confirmOrderPayment عند اكتمال الدفع
     if (isCod) {
         await decrementStockForOrder(order.id);
     }
@@ -223,7 +224,7 @@ export async function confirmOrderPayment(
 
         const { data: order } = await supabase
             .from("orders")
-            .select("order_number, total, shipping_address, payment_status, buyer_id, coupon_id")
+            .select("order_number, total, shipping_address, payment_status, buyer_id, coupon_id, status")
             .eq("id", orderId)
             .single();
 
@@ -251,11 +252,15 @@ export async function confirmOrderPayment(
             return { success: false };
         }
 
-        // Deduct inventory
-        await decrementStockForOrder(orderId);
+        // المخزون: يُنقص فقط إذا كان الطلب Stripe (pending → confirmed)
+        // COD: المخزون نُقص مسبقاً عند إنشاء الطلب
+        const wasStripePending = (order as { status?: string }).status === "pending";
+        if (wasStripePending) {
+            await decrementStockForOrder(orderId);
+        }
 
-        // Increment coupon usages exactly once payment clears
-        if (order.coupon_id) {
+        // الكوبون: يُحتسب فقط إذا كان الطلب Stripe (COD يحتسبه عند إنشاء الطلب)
+        if (wasStripePending && order.coupon_id) {
             await supabase.rpc("increment_coupon_uses_by_id" as never, { p_coupon_id: order.coupon_id } as never);
         }
 

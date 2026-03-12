@@ -58,7 +58,7 @@ export function DesignOrderAdminChat({ orderId }: { orderId: string }) {
     };
 
     return (
-        <div className="rounded-2xl border border-theme-soft bg-[#0a0a0a] overflow-hidden flex flex-col h-[500px]">
+        <div className="rounded-2xl border border-theme-soft bg-theme-faint overflow-hidden flex flex-col h-[500px]">
             {/* Header */}
             <div className="p-4 bg-theme-subtle border-b border-theme-subtle flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-3">
@@ -105,7 +105,7 @@ export function DesignOrderAdminChat({ orderId }: { orderId: string }) {
                                     "p-3 rounded-2xl text-sm leading-relaxed",
                                     isAdmin
                                         ? "bg-blue-500/10 border border-blue-500/20 text-theme rounded-tr-sm"
-                                        : "bg-white/[0.05] border border-theme-soft text-theme-strong rounded-tl-sm"
+                                        : "bg-theme-subtle border border-theme-soft text-theme-strong rounded-tl-sm"
                                 )}>
                                     <p className="whitespace-pre-wrap">{msg.message}</p>
                                 </div>
@@ -120,7 +120,7 @@ export function DesignOrderAdminChat({ orderId }: { orderId: string }) {
             </div>
 
             {/* Input Area */}
-            <div className="p-3 bg-[#111] border-t border-theme-subtle shrink-0">
+            <div className="p-3 bg-theme-surface border-t border-theme-subtle shrink-0">
                 {error && (
                     <div className="mb-2 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] text-center">
                         {error}

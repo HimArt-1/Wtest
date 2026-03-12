@@ -119,7 +119,7 @@ export function DesignOrderChat({ orderId }: { orderId: string }) {
             </div>
 
             {/* Input Area */}
-            <div className="p-3 bg-[#0a0a0a] border-t border-theme-subtle shrink-0">
+            <div className="p-3 bg-theme-surface border-t border-theme-subtle shrink-0">
                 {error && (
                     <div className="mb-2 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] text-center">
                         {error}
