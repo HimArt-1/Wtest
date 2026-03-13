@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import {
     Search, Loader2, PackagePlus, Upload, ArrowUpDown, ArrowUp, ArrowDown,
     Package, AlertTriangle, XCircle, TrendingUp, DollarSign, Warehouse,
-    Plus, Minus, Check, X, SlidersHorizontal,
+    Plus, Check, X, SlidersHorizontal, Pencil,
 } from "lucide-react";
 import Image from "next/image";
 import { quickAdjustInventory, adjustInventory } from "@/app/actions/erp/inventory";
@@ -47,7 +47,7 @@ export default function InventoryClient({
 
     // Inline editing state
     const [editingId, setEditingId] = useState<string | null>(null);
-    const [editDelta, setEditDelta] = useState(0);
+    const [editNewQty, setEditNewQty] = useState(0); // absolute new quantity
     const [editSaving, setEditSaving] = useState(false);
 
     // Full adjust modal state
@@ -124,13 +124,13 @@ export default function InventoryClient({
     // ─── Inline Quick Adjust ─────────────────────────────
 
     const handleQuickSave = async (item: any) => {
-        if (editDelta === 0) { setEditingId(null); return; }
+        const delta = editNewQty - item.quantity;
+        if (delta === 0) { setEditingId(null); return; }
         setEditSaving(true);
-        const res = await quickAdjustInventory(item.sku_id, item.warehouse_id, editDelta);
+        const res = await quickAdjustInventory(item.sku_id, item.warehouse_id, delta);
         setEditSaving(false);
         if (res.error) alert(res.error);
         setEditingId(null);
-        setEditDelta(0);
         router.refresh();
     };
 
@@ -340,32 +340,30 @@ export default function InventoryClient({
                                         <td className="px-4 py-3.5 text-center">
                                             {isEditing ? (
                                                 <div className="flex items-center justify-center gap-1.5">
-                                                    <button onClick={() => setEditDelta(d => d - 1)}
-                                                        className="w-7 h-7 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 flex items-center justify-center">
-                                                        <Minus className="w-3.5 h-3.5" />
-                                                    </button>
-                                                    <input type="number" value={editDelta} onChange={(e) => setEditDelta(Number(e.target.value))}
-                                                        className="w-14 text-center text-sm font-bold bg-theme-subtle border border-theme-soft rounded-lg py-1 text-theme focus:outline-none focus:border-gold/30" />
-                                                    <button onClick={() => setEditDelta(d => d + 1)}
-                                                        className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 flex items-center justify-center">
-                                                        <Plus className="w-3.5 h-3.5" />
-                                                    </button>
+                                                    <span className="text-xs text-theme-faint font-mono">{item.quantity}→</span>
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        autoFocus
+                                                        value={editNewQty}
+                                                        onChange={(e) => setEditNewQty(Math.max(0, Number(e.target.value)))}
+                                                        onKeyDown={(e) => { if (e.key === "Enter") handleQuickSave(item); if (e.key === "Escape") setEditingId(null); }}
+                                                        className="w-16 text-center text-sm font-bold bg-theme-subtle border border-gold/30 rounded-lg py-1 text-gold focus:outline-none focus:ring-1 focus:ring-gold/30"
+                                                    />
                                                     <button onClick={() => handleQuickSave(item)} disabled={editSaving}
                                                         className="w-7 h-7 rounded-lg bg-gold/10 text-gold hover:bg-gold/20 flex items-center justify-center disabled:opacity-50">
                                                         {editSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
                                                     </button>
-                                                    <button onClick={() => { setEditingId(null); setEditDelta(0); }}
+                                                    <button onClick={() => setEditingId(null)}
                                                         className="w-7 h-7 rounded-lg text-theme-faint hover:bg-theme-subtle flex items-center justify-center">
                                                         <X className="w-3.5 h-3.5" />
                                                     </button>
                                                 </div>
                                             ) : (
-                                                <div className="flex items-center justify-center gap-1">
-                                                    <button onClick={() => { setEditingId(item.id); setEditDelta(0); }}
-                                                        className="p-1.5 rounded-lg text-theme-faint hover:text-gold hover:bg-gold/10 transition-all" title="تعديل سريع">
-                                                        <Plus className="w-4 h-4" />
-                                                    </button>
-                                                </div>
+                                                <button onClick={() => { setEditingId(item.id); setEditNewQty(item.quantity); }}
+                                                    className="p-1.5 rounded-lg text-theme-faint hover:text-gold hover:bg-gold/10 transition-all" title="تعديل الكمية">
+                                                    <Pencil className="w-4 h-4" />
+                                                </button>
                                             )}
                                         </td>
                                     </tr>

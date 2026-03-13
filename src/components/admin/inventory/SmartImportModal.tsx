@@ -17,9 +17,49 @@ type Step = "upload" | "mapping" | "preview" | "importing" | "success" | "error"
 interface MappedColumn {
     header: string;
     dbField: string | null;
-    isCustom?: boolean;       // Column added manually (not from CSV)
-    defaultValue?: string;    // Default value for custom columns
-    renamedHeader?: string;   // If the user renamed the original header
+    isCustom?: boolean;
+    defaultValue?: string;
+    renamedHeader?: string;
+}
+
+// ─── Smart Column Detector ────────────────────────────────────
+function autoMapHeader(header: string): string {
+    const h = header.toLowerCase().trim();
+
+    // Product title
+    if (h.includes("منتج") || h.includes("اسم المنتج") || h.includes("اسم") || h === "title" || h === "name" || h === "product" || h === "المنتج") return "title";
+
+    // Store
+    if (h.includes("متجر") || h.includes("محل") || h === "store" || h === "shop" || h === "brand") return "store";
+
+    // Price
+    if (h.includes("سعر") || h.includes("ثمن") || h.includes("price") || h.includes("cost") || h.includes("ريال") || h.includes("sar")) return "price";
+
+    // Type
+    if (h.includes("نوع") || h.includes("صنف") || h === "type" || h === "category" || h === "cat") return "type";
+
+    // Total / Grand sum
+    if (h.includes("مجموع") || h.includes("إجمالي") || h.includes("اجمالي") || h.includes("الكلي") || h === "total" || h === "sum" || h === "all") return "total";
+
+    // Sizes — exact + Arabic aliases
+    // XS
+    if (h === "xs" || h === "extra small" || h === "extra-small" || h === "صغير جداً" || h === "صغير جدا" || h === "صغيرجدا" || h === "xs مقاس") return "size_xs";
+    // S
+    if (h === "s" || h === "small" || h === "صغير" || h === "صغيرة" || h === "s مقاس") return "size_s";
+    // M
+    if (h === "m" || h === "medium" || h === "med" || h === "وسط" || h === "متوسط" || h === "وسيط" || h === "m مقاس") return "size_m";
+    // L
+    if (h === "l" || h === "large" || h === "كبير" || h === "كبيرة" || h === "l مقاس") return "size_l";
+    // XL
+    if (h === "xl" || h === "extra large" || h === "extra-large" || h === "xlarge" || h === "كبير جداً" || h === "كبير جدا" || h === "كبيرجدا" || h === "xl مقاس") return "size_xl";
+    // XXL
+    if (h === "xxl" || h === "2xl" || h === "2x" || h === "2xlarge" || h === "2x large" || h === "كبير جداً ٢" || h === "xxl مقاس") return "size_xxl";
+    // XXXL
+    if (h === "xxxl" || h === "3xl" || h === "3x" || h === "3xlarge" || h === "3x large" || h === "xxxl مقاس") return "size_xxxl";
+    // XXXXL
+    if (h === "xxxxl" || h === "4xl" || h === "4x" || h === "4xlarge" || h === "4x large" || h === "xxxxl مقاس") return "size_xxxxl";
+
+    return "ignore";
 }
 
 export function SmartImportModal({ isOpen, onClose, onSuccess }: SmartImportModalProps) {
@@ -30,7 +70,6 @@ export function SmartImportModal({ isOpen, onClose, onSuccess }: SmartImportModa
     const [mappedColumns, setMappedColumns] = useState<MappedColumn[]>([]);
     const [importResult, setImportResult] = useState<{ success: number; errors: number; log: string[] } | null>(null);
 
-    // Column editing state
     const [editingIndex, setEditingIndex] = useState<number | null>(null);
     const [editingName, setEditingName] = useState("");
     const [showAddColumn, setShowAddColumn] = useState(false);
@@ -38,22 +77,21 @@ export function SmartImportModal({ isOpen, onClose, onSuccess }: SmartImportModa
     const [newColField, setNewColField] = useState("ignore");
     const [newColDefault, setNewColDefault] = useState("");
 
-    // Valid mapping targets
     const dbFields = [
         { id: "ignore", label: "تجاهل هذا العمود" },
-        { id: "title", label: "اسم المنتج (المنتج)" },
-        { id: "type", label: "نوع المنتج (apparel/print/nft/etc)" },
+        { id: "title", label: "اسم المنتج" },
+        { id: "type", label: "نوع المنتج (apparel/print/...)" },
         { id: "price", label: "السعر الأساسي" },
         { id: "store", label: "اسم المتجر" },
-        { id: "size_xs", label: "مخزون مقاس (XS)" },
-        { id: "size_s", label: "مخزون مقاس (S)" },
-        { id: "size_m", label: "مخزون مقاس (M)" },
-        { id: "size_l", label: "مخزون مقاس (L)" },
-        { id: "size_xl", label: "مخزون مقاس (XL)" },
-        { id: "size_xxl", label: "مخزون مقاس (XXL)" },
-        { id: "size_xxxl", label: "مخزون مقاس (XXXL)" },
-        { id: "size_xxxxl", label: "مخزون مقاس (XXXXL)" },
-        { id: "total", label: "المجموع (مخزون عام كلي)" },
+        { id: "size_xs", label: "مخزون مقاس XS" },
+        { id: "size_s", label: "مخزون مقاس S" },
+        { id: "size_m", label: "مخزون مقاس M" },
+        { id: "size_l", label: "مخزون مقاس L" },
+        { id: "size_xl", label: "مخزون مقاس XL" },
+        { id: "size_xxl", label: "مخزون مقاس XXL" },
+        { id: "size_xxxl", label: "مخزون مقاس XXXL" },
+        { id: "size_xxxxl", label: "مخزون مقاس XXXXL" },
+        { id: "total", label: "المجموع الكلي" },
     ];
 
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -69,17 +107,13 @@ export function SmartImportModal({ isOpen, onClose, onSuccess }: SmartImportModa
         setShowAddColumn(false);
     };
 
-    const handleClose = () => {
-        reset();
-        onClose();
-    };
+    const handleClose = () => { reset(); onClose(); };
 
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
-
         setFileOptions(file);
-        
+
         Papa.parse(file, {
             header: true,
             skipEmptyLines: true,
@@ -88,26 +122,12 @@ export function SmartImportModal({ isOpen, onClose, onSuccess }: SmartImportModa
                 if (data.length > 0) {
                     const extractedHeaders = Object.keys(data[0]);
                     setHeaders(extractedHeaders);
-                    
-                    // Auto-mapping attempt
-                    const autoMapped = extractedHeaders.map(header => {
-                        let matchedDbField: string | null = "ignore";
-                        const hlower = header.toLowerCase();
-                        if (hlower.includes("منتج") || hlower.includes("title") || hlower.includes("name")) matchedDbField = "title";
-                        else if (hlower === "xs") matchedDbField = "size_xs";
-                        else if (hlower === "s") matchedDbField = "size_s";
-                        else if (hlower === "m") matchedDbField = "size_m";
-                        else if (hlower === "l") matchedDbField = "size_l";
-                        else if (hlower === "xl") matchedDbField = "size_xl";
-                        else if (hlower === "xxl") matchedDbField = "size_xxl";
-                        else if (hlower === "xxxl") matchedDbField = "size_xxxl";
-                        else if (hlower === "xxxxl") matchedDbField = "size_xxxxl";
-                        else if (hlower.includes("سعر") || hlower.includes("price")) matchedDbField = "price";
-                        else if (hlower.includes("مجموع") || hlower.includes("total")) matchedDbField = "total";
-                        
-                        return { header, dbField: matchedDbField };
-                    });
-                    
+
+                    const autoMapped = extractedHeaders.map(header => ({
+                        header,
+                        dbField: autoMapHeader(header),
+                    }));
+
                     setMappedColumns(autoMapped);
                     setParsedData(data);
                     setStep("mapping");
@@ -119,8 +139,6 @@ export function SmartImportModal({ isOpen, onClose, onSuccess }: SmartImportModa
             }
         });
     };
-
-    // ─── Column Editing Handlers ─────────────────────────
 
     const handleRenameStart = (index: number) => {
         setEditingIndex(index);
@@ -137,56 +155,41 @@ export function SmartImportModal({ isOpen, onClose, onSuccess }: SmartImportModa
     };
 
     const handleDeleteColumn = (index: number) => {
-        const updated = mappedColumns.filter((_, i) => i !== index);
-        setMappedColumns(updated);
+        setMappedColumns(mappedColumns.filter((_, i) => i !== index));
     };
 
     const handleAddColumn = () => {
         if (!newColName.trim()) return;
-        const newCol: MappedColumn = {
+        setMappedColumns([...mappedColumns, {
             header: newColName.trim(),
             dbField: newColField,
             isCustom: true,
             defaultValue: newColDefault.trim(),
-        };
-        setMappedColumns([...mappedColumns, newCol]);
-        setNewColName("");
-        setNewColField("ignore");
-        setNewColDefault("");
-        setShowAddColumn(false);
+        }]);
+        setNewColName(""); setNewColField("ignore"); setNewColDefault(""); setShowAddColumn(false);
     };
-
-    // ─── Import Executor ─────────────────────────────────
 
     const executeImport = async () => {
         setStep("importing");
-        
         try {
-            // Reconstruct data based on mappings
             const payload = parsedData.map(row => {
-                const constructedObj: any = {};
+                const obj: any = {};
                 mappedColumns.forEach(map => {
                     if (map.dbField && map.dbField !== "ignore") {
-                        if (map.isCustom) {
-                            constructedObj[map.dbField] = map.defaultValue || "";
-                        } else {
-                            constructedObj[map.dbField] = row[map.header];
-                        }
+                        obj[map.dbField] = map.isCustom ? (map.defaultValue || "") : row[map.header];
                     }
                 });
-                return constructedObj;
+                return obj;
             });
 
             const validPayload = payload.filter(p => !!p.title);
-
             if (validPayload.length === 0) {
                 setStep("error");
-                setImportResult({ success: 0, errors: payload.length, log: ["لم يتم العثور على حقل (المنتج) في المدخلات. إنه إلزامي."] });
+                setImportResult({ success: 0, errors: payload.length, log: ["لم يتم العثور على عمود (اسم المنتج). إنه إلزامي."] });
                 return;
             }
 
             const result = await processSmartImport(validPayload);
-            
             if (result.success) {
                 setImportResult({
                     success: result.insertedCount || validPayload.length,
@@ -198,7 +201,6 @@ export function SmartImportModal({ isOpen, onClose, onSuccess }: SmartImportModa
                 setStep("error");
                 setImportResult({ success: 0, errors: validPayload.length, log: [result.error || "توقف غير متوقع"] });
             }
-
         } catch (error: any) {
             setStep("error");
             setImportResult({ success: 0, errors: 1, log: [error.message] });
@@ -208,6 +210,9 @@ export function SmartImportModal({ isOpen, onClose, onSuccess }: SmartImportModa
     if (!isOpen) return null;
 
     const getDisplayName = (col: MappedColumn) => col.renamedHeader || col.header;
+
+    // Count auto-detected fields for user feedback
+    const detectedCount = mappedColumns.filter(c => !c.isCustom && c.dbField !== "ignore").length;
 
     return (
         <AnimatePresence>
@@ -227,7 +232,7 @@ export function SmartImportModal({ isOpen, onClose, onSuccess }: SmartImportModa
                     {/* Header */}
                     <div className="flex items-center justify-between p-6 border-b border-theme-faint bg-theme-bg">
                         <div>
-                            <h2 className="text-2xl font-black text-theme">الاستيراد الذكي</h2>
+                            <h2 className="text-2xl font-black text-theme">استيراد CSV — المنتجات</h2>
                             <p className="text-theme-subtle text-sm">استيراد منتجات ومقاسات بالجملة عبر جداول CSV</p>
                         </div>
                         <button onClick={handleClose} className="p-2 hover:bg-theme-faint rounded-full transition-colors text-theme-subtle">
@@ -237,28 +242,37 @@ export function SmartImportModal({ isOpen, onClose, onSuccess }: SmartImportModa
 
                     {/* Body */}
                     <div className="flex-1 overflow-y-auto p-6 scrollbar-wusha">
-                        
-                        {/* ────── STEP 1: UPLOAD ────── */}
+
+                        {/* STEP 1: UPLOAD */}
                         {step === "upload" && (
                             <div className="h-full flex flex-col items-center justify-center py-20">
-                                <FileSpreadsheet className="w-20 h-20 text-wusha-gold mb-6 opacity-50" />
+                                <FileSpreadsheet className="w-20 h-20 text-gold mb-6 opacity-50" />
                                 <h3 className="text-2xl font-bold text-theme mb-2">ارفع جدول المنتجات</h3>
                                 <p className="text-theme-subtle max-w-md text-center mb-8">
-                                    قم برفع ملف من نوع CSV يحتوي على قائمة المنتجات وتوزيع المقاسات. 
-                                    سيتم قراءة الرؤوس تلقائياً.
+                                    قم برفع ملف CSV يحتوي على قائمة المنتجات وتوزيع المقاسات.
+                                    سيتم كشف الأعمدة وربطها تلقائياً.
                                 </p>
-                                
-                                <input 
-                                    type="file" 
+                                <div className="mb-6 p-4 rounded-xl bg-gold/5 border border-gold/15 text-xs text-theme-subtle max-w-md w-full">
+                                    <p className="font-bold text-gold mb-2">أعمدة يتم كشفها تلقائياً:</p>
+                                    <div className="grid grid-cols-2 gap-1">
+                                        <span>• المنتج / title / name</span>
+                                        <span>• سعر / price</span>
+                                        <span>• S, M, L, XL, XXL...</span>
+                                        <span>• صغير، وسط، كبير...</span>
+                                        <span>• متجر / store</span>
+                                        <span>• مجموع / total</span>
+                                    </div>
+                                </div>
+                                <input
+                                    type="file"
                                     accept=".csv"
                                     ref={fileInputRef}
                                     onChange={handleFileUpload}
-                                    className="hidden" 
+                                    className="hidden"
                                 />
-                                
-                                <button 
+                                <button
                                     onClick={() => fileInputRef.current?.click()}
-                                    className="px-8 py-4 bg-wusha-gold text-wusha-black rounded-xl font-bold hover:bg-yellow-500 transition-colors flex items-center gap-3 shadow-[0_10px_30px_-10px_rgba(202,160,82,0.4)]"
+                                    className="px-8 py-4 bg-gold text-black rounded-xl font-bold hover:bg-gold/90 transition-colors flex items-center gap-3 shadow-[0_10px_30px_-10px_rgba(202,160,82,0.4)]"
                                 >
                                     <Upload className="w-5 h-5" />
                                     اختيار ملف CSV
@@ -266,26 +280,31 @@ export function SmartImportModal({ isOpen, onClose, onSuccess }: SmartImportModa
                             </div>
                         )}
 
-                        {/* ────── STEP 2: MAPPING ────── */}
+                        {/* STEP 2: MAPPING */}
                         {step === "mapping" && (
                             <div className="space-y-6">
-                                <div className="bg-wusha-gold/10 border border-wusha-gold/20 p-4 rounded-xl flex items-start gap-4 text-wusha-gold">
+                                <div className="bg-gold/10 border border-gold/20 p-4 rounded-xl flex items-start gap-4 text-gold">
                                     <AlertTriangle className="w-6 h-6 flex-shrink-0 mt-1" />
                                     <div>
                                         <h4 className="font-bold">مطابقة الأعمدة</h4>
                                         <p className="text-sm opacity-80 mt-1">
-                                            لقد وجدنا {mappedColumns.filter(c => !c.isCustom).length} أعمده في الجدول. 
-                                            يمكنك تعديل الاسم، حذف عمود، أو إضافة عمود جديد بقيمة افتراضية.
+                                            وجدنا <strong>{mappedColumns.filter(c => !c.isCustom).length}</strong> عمود في الجدول،
+                                            تم ربط <strong>{detectedCount}</strong> منها تلقائياً.
+                                            يمكنك تعديل الربط، حذف عمود، أو إضافة عمود بقيمة ثابتة.
                                         </p>
                                     </div>
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                     {mappedColumns.map((col, index) => (
-                                        <div key={index} className={`bg-theme-bg p-4 rounded-xl border ${col.isCustom ? 'border-gold/30 bg-gold/[0.03]' : 'border-theme-faint'} relative group`}>
-                                            
+                                        <div key={index} className={`bg-theme-bg p-4 rounded-xl border ${col.isCustom ? 'border-gold/30 bg-gold/[0.03]' : col.dbField !== 'ignore' ? 'border-gold/20' : 'border-theme-faint'} relative group`}>
+                                            {/* Auto-detected badge */}
+                                            {!col.isCustom && col.dbField !== "ignore" && (
+                                                <span className="absolute top-2 right-2 text-[9px] bg-gold/10 text-gold px-1.5 py-0.5 rounded-full font-bold">تم الكشف</span>
+                                            )}
+
                                             {/* Delete button */}
-                                            <button 
+                                            <button
                                                 onClick={() => handleDeleteColumn(index)}
                                                 className="absolute top-2 left-2 p-1.5 rounded-lg text-theme-faint hover:text-red-400 hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition-all"
                                                 title="حذف العمود"
@@ -293,11 +312,10 @@ export function SmartImportModal({ isOpen, onClose, onSuccess }: SmartImportModa
                                                 <Trash2 className="w-3.5 h-3.5" />
                                             </button>
 
-                                            {/* Column Name (with rename) */}
-                                            <p className="text-xs text-theme-subtle font-mono mb-1">
+                                            <p className="text-xs text-theme-subtle font-mono mb-1 mt-4">
                                                 {col.isCustom ? "عمود مُضاف يدوياً:" : "عمود الجدول:"}
                                             </p>
-                                            
+
                                             {editingIndex === index ? (
                                                 <div className="flex items-center gap-2 mb-3">
                                                     <input
@@ -334,23 +352,22 @@ export function SmartImportModal({ isOpen, onClose, onSuccess }: SmartImportModa
                                             {col.renamedHeader && !col.isCustom && (
                                                 <p className="text-[10px] text-theme-faint mb-2 font-mono">الأصلي: {col.header}</p>
                                             )}
-                                            
-                                            <p className="text-xs wusha-gold mb-1">يُسجل في قاعدة البيانات كـ:</p>
-                                            <select 
+
+                                            <p className="text-xs text-gold mb-1">يُسجل في قاعدة البيانات كـ:</p>
+                                            <select
                                                 value={col.dbField || "ignore"}
                                                 onChange={(e) => {
                                                     const newMappings = [...mappedColumns];
                                                     newMappings[index].dbField = e.target.value;
                                                     setMappedColumns(newMappings);
                                                 }}
-                                                className="w-full bg-theme-surface border border-theme-soft rounded-lg px-3 py-2 text-sm text-theme focus:ring-1 focus:ring-wusha-gold outline-none"
+                                                className="w-full bg-theme-surface border border-theme-soft rounded-lg px-3 py-2 text-sm text-theme focus:ring-1 focus:ring-gold outline-none"
                                             >
                                                 {dbFields.map(field => (
                                                     <option key={field.id} value={field.id}>{field.label}</option>
                                                 ))}
                                             </select>
 
-                                            {/* Default value for custom columns */}
                                             {col.isCustom && (
                                                 <div className="mt-3">
                                                     <p className="text-xs text-theme-subtle mb-1">القيمة الافتراضية:</p>
@@ -396,7 +413,7 @@ export function SmartImportModal({ isOpen, onClose, onSuccess }: SmartImportModa
                                                 <select
                                                     value={newColField}
                                                     onChange={(e) => setNewColField(e.target.value)}
-                                                    className="w-full bg-theme-surface border border-theme-soft rounded-lg px-3 py-2 text-sm text-theme focus:ring-1 focus:ring-wusha-gold outline-none"
+                                                    className="w-full bg-theme-surface border border-theme-soft rounded-lg px-3 py-2 text-sm text-theme focus:ring-1 focus:ring-gold outline-none"
                                                 >
                                                     {dbFields.map(field => (
                                                         <option key={field.id} value={field.id}>{field.label}</option>
@@ -433,11 +450,11 @@ export function SmartImportModal({ isOpen, onClose, onSuccess }: SmartImportModa
                             </div>
                         )}
 
-                        {/* ────── STEP 3: PREVIEW ────── */}
+                        {/* STEP 3: PREVIEW */}
                         {step === "preview" && (
                             <div className="space-y-6">
                                 <h3 className="text-xl font-bold text-theme mb-4">نظرة عامة على البيانات</h3>
-                                <p className="text-theme-subtle text-sm mb-4">يُرجى مراجعة أول 5 صفوف للتأكد من سلامة المطابقة قبل الاعتماد النهائي.</p>
+                                <p className="text-theme-subtle text-sm mb-4">يُرجى مراجعة أول 5 صفوف للتأكد من سلامة المطابقة قبل الاستيراد النهائي.</p>
 
                                 <div className="overflow-x-auto rounded-xl border border-theme-faint">
                                     <table className="w-full text-sm text-right">
@@ -458,7 +475,7 @@ export function SmartImportModal({ isOpen, onClose, onSuccess }: SmartImportModa
                                                 <tr key={rIdx} className="hover:bg-theme-faint/30">
                                                     {mappedColumns.filter(m => m.dbField !== "ignore").map(m => (
                                                         <td key={getDisplayName(m)} className="px-4 py-3 truncate max-w-[200px]" title={m.isCustom ? m.defaultValue : row[m.header]}>
-                                                            {m.isCustom 
+                                                            {m.isCustom
                                                                 ? <span className="text-gold/70 italic">{m.defaultValue || "—"}</span>
                                                                 : (row[m.header] || <span className="text-theme-faint italic">-</span>)
                                                             }
@@ -473,79 +490,115 @@ export function SmartImportModal({ isOpen, onClose, onSuccess }: SmartImportModa
                             </div>
                         )}
 
-                        {/* ────── IMPORTING ────── */}
+                        {/* IMPORTING */}
                         {step === "importing" && (
                             <div className="h-full flex flex-col items-center justify-center py-20 space-y-4">
-                                <Loader2 className="w-16 h-16 text-wusha-gold animate-spin" />
+                                <Loader2 className="w-16 h-16 text-gold animate-spin" />
                                 <h3 className="text-xl font-bold text-theme">جاري معالجة الاستيراد...</h3>
                                 <p className="text-theme-subtle">الرجاء عدم إغلاق هذه النافذة حتى الانتهاء.</p>
                             </div>
                         )}
 
-                        {/* ────── RESULTS (Success/Error) ────── */}
+                        {/* RESULTS */}
                         {(step === "success" || step === "error") && importResult && (
-                            <div className="h-full flex flex-col items-center justify-center py-10 space-y-6">
-                                {step === "success" ? (
-                                    <div className="w-24 h-24 bg-green-500/10 rounded-full flex items-center justify-center">
-                                        <CheckCircle className="w-12 h-12 text-green-500" />
-                                    </div>
-                                ) : (
-                                    <div className="w-24 h-24 bg-red-500/10 rounded-full flex items-center justify-center">
-                                        <AlertTriangle className="w-12 h-12 text-red-500" />
-                                    </div>
-                                )}
-                                
-                                <div className="text-center">
-                                    <h3 className="text-2xl font-black text-theme mb-2">
-                                        {step === "success" ? "تم الاستيراد بنجاح!" : "تنبيه: تم الاستيراد مع وجود أخطاء"}
-                                    </h3>
-                                    <div className="flex items-center justify-center gap-6 mt-4 opacity-80">
-                                        <div className="text-green-400 font-mono text-lg">{importResult.success} <span className="text-sm font-sans">ناجح</span></div>
-                                        <div className="text-red-400 font-mono text-lg">{importResult.errors} <span className="text-sm font-sans">أخطاء تجوهلت</span></div>
+                            <div className="flex flex-col items-center py-8 space-y-6 w-full">
+                                {/* Status icon + counts */}
+                                <div className="flex flex-col items-center gap-4">
+                                    {step === "success" ? (
+                                        <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center">
+                                            <CheckCircle className="w-10 h-10 text-green-500" />
+                                        </div>
+                                    ) : (
+                                        <div className="w-20 h-20 bg-amber-500/10 rounded-full flex items-center justify-center">
+                                            <AlertTriangle className="w-10 h-10 text-amber-400" />
+                                        </div>
+                                    )}
+                                    <div className="text-center">
+                                        <h3 className="text-xl font-black text-theme mb-2">
+                                            {step === "success" ? "تم الاستيراد بنجاح!" : "تم الاستيراد مع وجود بعض الأخطاء"}
+                                        </h3>
+                                        <div className="flex items-center justify-center gap-6 opacity-80">
+                                            <div className="text-green-400 font-mono text-lg">{importResult.success} <span className="text-sm font-sans">ناجح</span></div>
+                                            <div className="text-red-400 font-mono text-lg">{importResult.errors} <span className="text-sm font-sans">أخطاء</span></div>
+                                        </div>
                                     </div>
                                 </div>
 
+                                {/* Post-import summary table */}
+                                {parsedData.length > 0 && (
+                                    <div className="w-full space-y-2">
+                                        <p className="text-xs text-theme-subtle font-bold">جدول الاستيراد — ما تم رفعه:</p>
+                                        <div className="overflow-x-auto rounded-xl border border-theme-faint max-h-[280px] overflow-y-auto">
+                                            <table className="w-full text-xs text-right whitespace-nowrap">
+                                                <thead className="bg-theme-subtle text-theme-soft sticky top-0 z-10">
+                                                    <tr>
+                                                        <th className="px-3 py-2.5 font-bold">#</th>
+                                                        {mappedColumns.filter(m => m.dbField !== "ignore").map(m => (
+                                                            <th key={m.header} className="px-3 py-2.5 font-bold">
+                                                                {dbFields.find(d => d.id === m.dbField)?.label || m.dbField}
+                                                            </th>
+                                                        ))}
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-theme-faint">
+                                                    {parsedData.map((row, i) => (
+                                                        <tr key={i} className={`hover:bg-theme-faint/40 ${!row[mappedColumns.find(m => m.dbField === "title")?.header || ""] ? "opacity-50" : ""}`}>
+                                                            <td className="px-3 py-2 text-theme-faint font-mono">{i + 1}</td>
+                                                            {mappedColumns.filter(m => m.dbField !== "ignore").map(m => {
+                                                                const val = m.isCustom ? m.defaultValue : row[m.header];
+                                                                const isSize = m.dbField?.startsWith("size_");
+                                                                const isTitle = m.dbField === "title";
+                                                                return (
+                                                                    <td key={m.header} className={`px-3 py-2 ${isTitle ? "font-medium text-theme" : isSize ? "text-center font-mono text-gold" : "text-theme-subtle"}`}>
+                                                                        {val || <span className="text-theme-faint italic">—</span>}
+                                                                    </td>
+                                                                );
+                                                            })}
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Error log */}
                                 {importResult.log && importResult.log.length > 0 && (
-                                    <div className="w-full max-w-2xl bg-red-500/5 border border-red-500/20 rounded-xl p-4 mt-6 max-h-[150px] overflow-y-auto font-mono text-xs text-theme-subtle text-left dir-ltr">
+                                    <div className="w-full bg-red-500/5 border border-red-500/20 rounded-xl p-4 max-h-[120px] overflow-y-auto font-mono text-xs text-red-400 text-left dir-ltr">
                                         {importResult.log.map((log, i) => <div key={i}>{log}</div>)}
                                     </div>
                                 )}
 
-                                <button 
-                                    onClick={() => {
-                                        onSuccess();
-                                        onClose();
-                                    }}
-                                    className="btn-gold mt-6 px-10 py-3 rounded-full font-bold"
+                                <button
+                                    onClick={() => { onSuccess(); onClose(); }}
+                                    className="btn-gold px-10 py-3 rounded-full font-bold"
                                 >
                                     إغلاق وتحديث اللوحة
                                 </button>
                             </div>
                         )}
-                        
                     </div>
 
                     {/* Footer Nav */}
                     {(step === "mapping" || step === "preview") && (
                         <div className="p-6 border-t border-theme-faint bg-theme-bg flex justify-between">
-                            <button 
+                            <button
                                 onClick={() => setStep(step === "preview" ? "mapping" : "upload")}
                                 className="px-6 py-2.5 rounded-xl font-bold text-theme-subtle hover:bg-theme-faint transition-colors"
                             >
                                 رجوع
                             </button>
-
                             {step === "mapping" ? (
-                                <button 
+                                <button
                                     onClick={() => setStep("preview")}
                                     className="px-6 py-2.5 bg-theme-faint text-theme rounded-xl font-bold hover:bg-theme-soft transition-colors flex items-center gap-2"
                                 >
                                     مراجعة ومعاينة <ArrowLeft className="w-4 h-4" />
                                 </button>
                             ) : (
-                                <button 
+                                <button
                                     onClick={executeImport}
-                                    className="px-8 py-2.5 bg-wusha-gold text-wusha-black rounded-xl font-bold hover:bg-yellow-500 transition-colors shadow-lg shadow-wusha-gold/20"
+                                    className="px-8 py-2.5 bg-gold text-black rounded-xl font-bold hover:bg-gold/90 transition-colors shadow-lg shadow-gold/20"
                                 >
                                     تأكيد وبدء الاستيراد
                                 </button>
