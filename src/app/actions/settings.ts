@@ -201,6 +201,7 @@ export async function getSiteSettings() {
             step2_prompt: aiSim.step2_prompt ?? "صمم لي ذئب بستايل سايبربانك مع ألوان نيون وخلفية مظلمة...",
             step2_art_style: aiSim.step2_art_style ?? "رسم رقمي (Digital Art)",
             step2_result_image: aiSim.step2_result_image ?? "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=400&q=80",
+            step3_final_image: aiSim.step3_final_image ?? "",
         },
         brand_assets: {
             business_card_name: settings.brand_assets?.business_card_name ?? "هشام الزهراني",
