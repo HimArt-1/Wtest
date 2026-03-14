@@ -54,6 +54,7 @@ export type SiteSettingsType = {
             step2_prompt?: string;
             step2_art_style?: string;
             step2_result_image?: string;
+            step3_final_image?: string;
         };
         brand_assets?: {
             business_card_name?: string;

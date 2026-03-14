@@ -35,6 +35,7 @@ interface AISectionProps {
     step2_prompt?: string;
     step2_art_style?: string;
     step2_result_image?: string;
+    step3_final_image?: string;
   };
 }
 
@@ -49,6 +50,7 @@ export function AISection({ config }: AISectionProps) {
   const garmentPattern = config?.step1_pattern || "بدون نمط";
   const artStyle = config?.step2_art_style || "رسم رقمي (Digital Art)";
   const resultImage = config?.step2_result_image || "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=400&q=80";
+  const finalMockupImage = config?.step3_final_image || "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=800&q=80";
 
   // Auto-play logic with variable timing
   useEffect(() => {
@@ -336,34 +338,20 @@ export function AISection({ config }: AISectionProps) {
                     initial={{ scale: 1.05 }}
                     animate={{ scale: 1 }}
                     transition={{ duration: 4, ease: "easeOut" }}
-                    className="relative w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
+                    className="relative w-[85%] h-[85%] sm:w-80 sm:h-80 md:w-96 md:h-96 drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)] rounded-2xl overflow-hidden glass-card p-2 border-gold/20"
                   >
                     <motion.div
                       animate={{ y: [0, -5, 0] }}
                       transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                      className="w-full h-full relative"
+                      className="w-full h-full relative rounded-xl overflow-hidden"
                     >
                       <Image
-                        src={garmentImage}
-                        alt="Garment"
+                        src={finalMockupImage}
+                        alt="Final Design Mockup"
                         fill
-                        className="object-contain"
+                        className="object-cover"
                         priority
                       />
-                      {/* The Applied Design */}
-                      <motion.div 
-                         initial={{ opacity: 0, filter: "brightness(2)" }}
-                         animate={{ opacity: 0.9, filter: "brightness(1)" }}
-                         transition={{ delay: 0.4, duration: 1.2, ease: "easeOut" }}
-                         className="absolute top-[25%] left-1/2 -translate-x-1/2 w-[35%] aspect-[3/4] mix-blend-screen opacity-90"
-                      >
-                        <Image
-                          src={resultImage}
-                           alt="Design applied"
-                           fill
-                           className="object-cover rounded-md"
-                        />
-                      </motion.div>
                     </motion.div>
                   </motion.div>
                   
