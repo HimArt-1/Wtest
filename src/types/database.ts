@@ -203,8 +203,11 @@ export type SupportTicketPriority = "low" | "normal" | "high";
 
 export type SupportTicket = Timestamps & {
     id: string;
-    user_id: string;              // FK → profiles.id
+    user_id: string | null;       // FK → profiles.id (Null for guests)
+    name: string | null;          // For guests/contact form
+    email: string | null;         // For guests/contact form
     subject: string;
+    message: string | null;       // Initial message body from the form
     status: SupportTicketStatus;
     priority: SupportTicketPriority;
 }
@@ -666,7 +669,7 @@ export type Database = {
             };
             support_tickets: {
                 Row: SupportTicket;
-                Insert: Omit<SupportTicket, "id" | "created_at" | "updated_at" | "status" | "priority"> & { status?: SupportTicketStatus; priority?: SupportTicketPriority };
+                Insert: Omit<SupportTicket, "id" | "created_at" | "updated_at" | "status" | "priority"> & { status?: SupportTicketStatus; priority?: SupportTicketPriority; user_id?: string | null; name?: string | null; email?: string | null; message?: string | null };
                 Update: Partial<Omit<SupportTicket, "id" | "created_at">>;
                 Relationships: [
                     {

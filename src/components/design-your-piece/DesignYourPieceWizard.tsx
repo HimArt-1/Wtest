@@ -1248,15 +1248,20 @@ function StepSubmit({ state, onBack, onSend }: { state: WizardState; onBack: () 
                 <p className="text-theme-subtle max-w-md mx-auto">
                     تم إرسال تفاصيل طلبك لفريقنا. بيتواصل معاك موظفنا في أقرب وقت لتنفيذ التصميم.
                 </p>
-                <motion.div
+                <motion.button
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.5 }}
-                    className="mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-theme-subtle border border-theme-soft text-theme-subtle text-sm"
+                    onClick={() => {
+                        document.body.classList.add("reamaze-active");
+                        const reamazeWidget = document.querySelector("[data-reamaze-widget], [data-reamaze-lightbox]") as HTMLElement;
+                        if (reamazeWidget) reamazeWidget.click();
+                    }}
+                    className="mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-theme-subtle border border-theme-soft text-theme-subtle text-sm hover:text-gold hover:border-gold/30 hover:bg-gold/5 transition-all duration-300 cursor-pointer"
                 >
                     <MessageCircle className="w-4 h-4" />
-                    تقدر تتابع طلبك من نافذة الدردشة
-                </motion.div>
+                    تقدر تتابع طلبك من خلال المحادثة
+                </motion.button>
             </motion.div>
         );
     }

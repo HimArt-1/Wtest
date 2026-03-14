@@ -7,10 +7,12 @@ import { usePathname } from "next/navigation";
 export function FloatingChatButton() {
     const pathname = usePathname();
 
-    // Hide on dashboard and admin interfaces
-    const hidden = pathname?.startsWith("/dashboard");
+    // Show ONLY on specific high-conversion pages
+    const allowedPathPrefixes = ["/store", "/design", "/support"];
+    const isHome = pathname === "/";
+    const isAllowed = isHome || allowedPathPrefixes.some(prefix => pathname?.startsWith(prefix));
 
-    if (hidden) return null;
+    if (!isAllowed) return null;
 
     return (
         <motion.div
