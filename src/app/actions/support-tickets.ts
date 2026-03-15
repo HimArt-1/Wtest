@@ -1,17 +1,24 @@
 "use server";
 
-import { getSupabaseServerClient, getSupabaseAdminClient } from "@/lib/supabase";
 import { SupportTicketPriority, SupportTicketStatus } from "@/types/database";
 import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { createUserNotification } from "./user-notifications";
 import { createAdminNotification } from "./notifications";
+import { getSupabaseAdminClient } from "@/lib/supabase";
+import { getSupportTicketAccess, requireSupportAdmin } from "@/lib/support-ticket-access";
 
 export async function createSupportTicket(data: { subject: string; message: string; priority: SupportTicketPriority }) {
     const user = await currentUser();
     if (!user) return { success: false, error: "Unauthorized" };
 
-    const supabase = getSupabaseServerClient();
+    const subject = data.subject.trim();
+    const message = data.message.trim();
+    if (!subject || !message) {
+        return { success: false, error: "Subject and message are required" };
+    }
+
+    const supabase = getSupabaseAdminClient();
     const { data: profile } = await supabase.from("profiles").select("id").eq("clerk_id", user.id).single();
     if (!profile) return { success: false, error: "Profile not found" };
 
@@ -20,11 +27,11 @@ export async function createSupportTicket(data: { subject: string; message: stri
         .from("support_tickets")
         .insert({
             user_id: profile.id,
-            subject: data.subject,
+            subject,
             priority: data.priority,
             name: user.firstName || "مستخدم",
             email: user.emailAddresses?.[0]?.emailAddress || "",
-            message: data.message,
+            message,
         })
         .select("id")
         .single();
@@ -38,7 +45,7 @@ export async function createSupportTicket(data: { subject: string; message: stri
     const { error: msgError } = await supabase.from("support_messages").insert({
         ticket_id: ticket.id,
         sender_id: profile.id,
-        message: data.message,
+        message,
     });
 
     if (msgError) {
@@ -48,8 +55,10 @@ export async function createSupportTicket(data: { subject: string; message: stri
     // Notify admin about new support ticket
     await createAdminNotification({
         type: "system_alert",
+        category: "support",
+        severity: "warning",
         title: "تذكرة دعم جديدة 🎫",
-        message: `تذكرة جديدة من ${user.firstName || "مستخدم"}: ${data.subject}`,
+        message: `تذكرة جديدة من ${user.firstName || "مستخدم"}: ${subject}`,
         link: `/dashboard/support`,
     });
 
@@ -61,7 +70,7 @@ export async function getUserSupportTickets() {
     const user = await currentUser();
     if (!user) return [];
 
-    const supabase = getSupabaseServerClient();
+    const supabase = getSupabaseAdminClient();
     const { data: profile } = await supabase.from("profiles").select("id").eq("clerk_id", user.id).single();
     if (!profile) return [];
 
@@ -79,7 +88,8 @@ export async function getUserSupportTickets() {
 }
 
 export async function getSupportTicketDetails(ticketId: string) {
-    const supabase = getSupabaseAdminClient();
+    const { sb: supabase, access } = await getSupportTicketAccess(ticketId);
+    if (access === "none") return null;
 
     // Fetch Ticket + User Profile
     const { data: ticket, error: ticketError } = await supabase
@@ -97,6 +107,10 @@ export async function getSupportTicketDetails(ticketId: string) {
         .eq("ticket_id", ticketId)
         .order("created_at", { ascending: true });
 
+    if (messagesError) {
+        console.error("[getSupportTicketDetails] Messages error:", messagesError);
+    }
+
     return {
         ticket,
         messages: messages || []
@@ -104,20 +118,25 @@ export async function getSupportTicketDetails(ticketId: string) {
 }
 
 export async function createSupportMessage(ticketId: string, message: string) {
-    const user = await currentUser();
-    if (!user) return { success: false, error: "Unauthorized" };
+    const content = message.trim();
+    if (!content) return { success: false, error: "Message is required" };
 
-    const supabase = getSupabaseServerClient();
-    const { data: profile } = await supabase.from("profiles").select("id, role").eq("clerk_id", user.id).single();
-    if (!profile) return { success: false, error: "Profile not found" };
+    const { sb: supabase, ticket, access, profileId } = await getSupportTicketAccess(ticketId);
+    if (access === "none" || !ticket || !profileId) {
+        return { success: false, error: "Unauthorized" };
+    }
 
-    const isAdminReply = profile.role === "admin";
+    if (access === "owner" && (ticket.status === "closed" || ticket.status === "resolved")) {
+        return { success: false, error: "Ticket is closed" };
+    }
+
+    const isAdminReply = access === "admin";
 
     // Insert Message
     const { error } = await supabase.from("support_messages").insert({
         ticket_id: ticketId,
-        sender_id: profile.id,
-        message,
+        sender_id: profileId,
+        message: content,
         is_admin_reply: isAdminReply
     });
 
@@ -128,19 +147,17 @@ export async function createSupportMessage(ticketId: string, message: string) {
 
     // Update Ticket's updated_at timestamp & optionally status
     const updatePayload: any = { updated_at: new Date().toISOString() };
-    if (isAdminReply) updatePayload.status = "in_progress"; // automatic state change
+    if (isAdminReply && ticket.status === "open") updatePayload.status = "in_progress";
 
     await supabase.from("support_tickets").update(updatePayload).eq("id", ticketId);
 
     // Notifications
-    const { data: ticketBase } = await supabase.from("support_tickets").select("user_id, subject").eq("id", ticketId).single();
-
-    if (isAdminReply && ticketBase && ticketBase.user_id) {
+    if (isAdminReply && ticket.user_id) {
         await createUserNotification({
-            userId: ticketBase.user_id,
+            userId: ticket.user_id,
             type: "support_reply",
             title: "رد جديد من الدعم الفني",
-            message: `تم الرد على تذكرتك: ${ticketBase.subject}`,
+            message: `تم الرد على تذكرتك: ${ticket.subject}`,
             link: `/account/support/${ticketId}`
         });
     }
@@ -154,11 +171,8 @@ export async function createSupportMessage(ticketId: string, message: string) {
 // ─── ADMIN ACTIONS ─────────────────────────────────────────
 
 export async function adminGetSupportTickets() {
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-        return [];
-    }
     try {
-        const supabase = getSupabaseAdminClient();
+        const { sb: supabase } = await requireSupportAdmin();
         const { data, error } = await supabase
             .from("support_tickets")
             .select("*, profile:profiles!user_id(display_name, avatar_url)")
@@ -176,7 +190,7 @@ export async function adminGetSupportTickets() {
 }
 
 export async function adminUpdateSupportTicketStatus(ticketId: string, status: SupportTicketStatus) {
-    const supabase = getSupabaseAdminClient();
+    const { sb: supabase } = await requireSupportAdmin();
     const { error } = await supabase.from("support_tickets").update({
         status,
         updated_at: new Date().toISOString()

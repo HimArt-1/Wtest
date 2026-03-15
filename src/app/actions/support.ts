@@ -1,26 +1,24 @@
 "use server";
 
-import { createClient } from "@supabase/supabase-js";
 import { type SupportTicketStatus, type SupportTicketPriority } from "@/types/database";
-
-// Admin-level client used to insert tickets reliably
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const adminSupabase = createClient(supabaseUrl, supabaseServiceKey);
+import { currentUser } from "@clerk/nextjs/server";
+import { getSupabaseAdminClient } from "@/lib/supabase";
 
 interface GenerateTicketInput {
     name: string;
     email: string;
     subject: string;
     message: string;
-    user_id?: string | null;
 }
 
 export async function submitSupportTicket(data: GenerateTicketInput) {
     try {
-        const { name, email, subject, message, user_id } = data;
+        const name = data.name.trim();
+        const email = data.email.trim().toLowerCase();
+        const subject = data.subject.trim();
+        const message = data.message.trim();
 
-        if (!name.trim() || !email.trim() || !subject.trim() || !message.trim()) {
+        if (!name || !email || !subject || !message) {
             return { success: false, error: "جميع الحقول مطلوبة" };
         }
 
@@ -29,12 +27,26 @@ export async function submitSupportTicket(data: GenerateTicketInput) {
             return { success: false, error: "البريد الإلكتروني غير صحيح" };
         }
 
+        const adminSupabase = getSupabaseAdminClient();
+        const user = await currentUser();
+        let resolvedUserId: string | null = null;
+
+        if (user) {
+            const { data: profile } = await adminSupabase
+                .from("profiles")
+                .select("id")
+                .eq("clerk_id", user.id)
+                .single();
+
+            resolvedUserId = profile?.id ?? null;
+        }
+
         const ticketData = {
-            name: name.trim(),
-            email: email.trim().toLowerCase(),
-            subject: subject.trim(),
-            message: message.trim(),
-            user_id: user_id || null,
+            name,
+            email,
+            subject,
+            message,
+            user_id: resolvedUserId,
             status: "open" as SupportTicketStatus,
             priority: "normal" as SupportTicketPriority,
         };

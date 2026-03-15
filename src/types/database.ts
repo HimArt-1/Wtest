@@ -14,6 +14,8 @@ export type OrderStatus = "pending" | "confirmed" | "processing" | "shipped" | "
 export type PaymentStatus = "pending" | "paid" | "failed" | "refunded";
 export type ApplicationStatus = "pending" | "reviewing" | "accepted" | "rejected";
 export type ApparelSize = "XS" | "S" | "M" | "L" | "XL" | "XXL";
+export type PushSubscriptionScope = "user" | "admin";
+export type StoredPushSubscriptionScope = PushSubscriptionScope | "both";
 
 // ─── Base Types ──────────────────────────────────────────
 
@@ -168,10 +170,14 @@ export type OrderItem = {
 // ─── Admin Notifications ───────────────────────────────────
 
 export type AdminNotificationType = "order_new" | "application_new" | "payment_received" | "order_status" | "order_alert" | "system_alert" | "order_update";
+export type AdminNotificationCategory = "orders" | "payments" | "applications" | "support" | "design" | "system" | "security";
+export type AdminNotificationSeverity = "info" | "warning" | "critical";
 
 export type AdminNotification = {
     id: string;
     type: AdminNotificationType;
+    category: AdminNotificationCategory;
+    severity: AdminNotificationSeverity;
     title: string;
     message: string | null;
     link: string | null;
@@ -547,7 +553,7 @@ export type Database = {
             };
             applications: {
                 Row: Application;
-                Insert: Omit<Application, "id" | "created_at" | "updated_at" | "status" | "reviewer_id" | "reviewer_notes" | "portfolio_images" | "profile_id"> & { portfolio_images?: string[] };
+                Insert: Omit<Application, "id" | "created_at" | "updated_at" | "status" | "reviewer_id" | "reviewer_notes" | "portfolio_images" | "profile_id"> & { portfolio_images?: string[]; profile_id?: string | null };
                 Update: Partial<Omit<Application, "id" | "created_at">>;
                 Relationships: any[];
             };
@@ -631,7 +637,7 @@ export type Database = {
             };
             custom_design_orders: {
                 Row: CustomDesignOrder;
-                Insert: Omit<CustomDesignOrder, "id" | "created_at" | "updated_at" | "order_number" | "status" | "skip_results" | "is_sent_to_customer" | "result_design_url" | "result_mockup_url" | "result_pdf_url" | "final_price" | "admin_notes" | "assigned_to" | "modification_request" | "modification_design_url"> & {
+                Insert: Omit<CustomDesignOrder, "id" | "created_at" | "updated_at" | "order_number" | "tracker_token" | "status" | "skip_results" | "is_sent_to_customer" | "result_design_url" | "result_mockup_url" | "result_pdf_url" | "final_price" | "admin_notes" | "assigned_to" | "modification_request" | "modification_design_url"> & {
                     status?: CustomDesignOrderStatus;
                     skip_results?: boolean;
                     is_sent_to_customer?: boolean;
@@ -644,7 +650,7 @@ export type Database = {
                     modification_request?: string | null;
                     modification_design_url?: string | null;
                 };
-                Update: Partial<Omit<CustomDesignOrder, "id" | "created_at" | "order_number">>;
+                Update: Partial<Omit<CustomDesignOrder, "id" | "created_at" | "order_number" | "tracker_token">>;
                 Relationships: any[];
             };
             custom_design_settings: {
@@ -768,9 +774,9 @@ export type Database = {
                 Relationships: any[];
             };
             push_subscriptions: {
-                Row: { id: string; endpoint: string; p256dh: string; auth: string; user_id: string | null; created_at: string };
-                Insert: { endpoint: string; p256dh: string; auth: string; user_id?: string | null };
-                Update: Partial<{ endpoint: string; p256dh: string; auth: string; user_id: string | null }>;
+                Row: { id: string; endpoint: string; p256dh: string; auth: string; scope: StoredPushSubscriptionScope; user_id: string | null; user_agent: string | null; created_at: string };
+                Insert: { endpoint: string; p256dh: string; auth: string; scope?: StoredPushSubscriptionScope; user_id?: string | null; user_agent?: string | null };
+                Update: Partial<{ endpoint: string; p256dh: string; auth: string; scope: StoredPushSubscriptionScope; user_id: string | null; user_agent: string | null }>;
                 Relationships: any[];
             };
             site_settings: {
@@ -813,6 +819,7 @@ export type CustomDesignOrderStatus = "new" | "in_progress" | "awaiting_review" 
 export type CustomDesignOrder = {
     id: string;
     order_number: number;
+    tracker_token: string;
     user_id?: string | null;
     parent_order_id?: string | null;
 

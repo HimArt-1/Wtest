@@ -21,12 +21,65 @@ import type {
     GarmentStudioMockup,
 } from "@/types/database";
 import { sendAdminDesignOrderNotificationEmail } from "@/lib/email";
+import { getDesignOrderAccess } from "@/lib/design-order-access";
 
 
 function getSmartStoreSb() {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) {
+        throw new Error("SUPABASE_SERVICE_ROLE_KEY is not configured");
+    }
     return createClient<Database>(url, key, { auth: { persistSession: false } });
+}
+
+async function requireSmartStoreAdmin() {
+    const user = await currentUser();
+    if (!user) {
+        throw new Error("Unauthorized");
+    }
+
+    const sb = getSmartStoreSb();
+    const { data: profile } = await sb
+        .from("profiles")
+        .select("id, role")
+        .eq("clerk_id", user.id)
+        .single();
+
+    if (!profile || profile.role !== "admin") {
+        throw new Error("Forbidden");
+    }
+
+    return { sb, profile, user };
+}
+
+async function getCurrentProfileId() {
+    const user = await currentUser();
+    if (!user) return null;
+
+    const sb = getSmartStoreSb();
+    const { data: profile } = await sb
+        .from("profiles")
+        .select("id")
+        .eq("clerk_id", user.id)
+        .single();
+
+    return profile?.id ?? null;
+}
+
+function sanitizePublicDesignOrder(order: CustomDesignOrder): CustomDesignOrder {
+    return {
+        ...order,
+        tracker_token: "",
+        user_id: null,
+        parent_order_id: null,
+        customer_name: null,
+        customer_email: null,
+        customer_phone: null,
+        ai_prompt: "",
+        admin_notes: null,
+        assigned_to: null,
+    };
 }
 
 // ─── Public Reads ────────────────────────────────────────
@@ -107,7 +160,7 @@ export async function getStudioItems(): Promise<CustomDesignStudioItem[]> {
 // ─── Admin: Get All (including inactive) ─────────────────
 
 export async function getAllGarments(): Promise<CustomDesignGarment[]> {
-    const sb = getSmartStoreSb();
+    const { sb } = await requireSmartStoreAdmin();
     const { data } = await sb
         .from("custom_design_garments")
         .select("*")
@@ -116,7 +169,7 @@ export async function getAllGarments(): Promise<CustomDesignGarment[]> {
 }
 
 export async function getAllColors(garmentId?: string): Promise<CustomDesignColor[]> {
-    const sb = getSmartStoreSb();
+    const { sb } = await requireSmartStoreAdmin();
     let query = sb.from("custom_design_colors").select("*");
     if (garmentId) query = query.eq("garment_id", garmentId);
     const { data } = await query.order("sort_order");
@@ -124,7 +177,7 @@ export async function getAllColors(garmentId?: string): Promise<CustomDesignColo
 }
 
 export async function getAllSizes(garmentId?: string): Promise<CustomDesignSize[]> {
-    const sb = getSmartStoreSb();
+    const { sb } = await requireSmartStoreAdmin();
     let query = sb.from("custom_design_sizes").select("*");
     if (garmentId) query = query.eq("garment_id", garmentId);
     const { data } = await query.order("name");
@@ -132,25 +185,25 @@ export async function getAllSizes(garmentId?: string): Promise<CustomDesignSize[
 }
 
 export async function getAllStyles(): Promise<CustomDesignStyle[]> {
-    const sb = getSmartStoreSb();
+    const { sb } = await requireSmartStoreAdmin();
     const { data } = await sb.from("custom_design_styles").select("*").order("sort_order");
     return (data as CustomDesignStyle[]) ?? [];
 }
 
 export async function getAllArtStyles(): Promise<CustomDesignArtStyle[]> {
-    const sb = getSmartStoreSb();
+    const { sb } = await requireSmartStoreAdmin();
     const { data } = await sb.from("custom_design_art_styles").select("*").order("sort_order");
     return (data as CustomDesignArtStyle[]) ?? [];
 }
 
 export async function getAllColorPackages(): Promise<CustomDesignColorPackage[]> {
-    const sb = getSmartStoreSb();
+    const { sb } = await requireSmartStoreAdmin();
     const { data } = await sb.from("custom_design_color_packages").select("*").order("sort_order");
     return (data as CustomDesignColorPackage[]) ?? [];
 }
 
 export async function getAllStudioItems(): Promise<CustomDesignStudioItem[]> {
-    const sb = getSmartStoreSb();
+    const { sb } = await requireSmartStoreAdmin();
     const { data } = await sb.from("custom_design_studio_items").select("*").order("sort_order");
     return (data as CustomDesignStudioItem[]) ?? [];
 }
@@ -158,7 +211,7 @@ export async function getAllStudioItems(): Promise<CustomDesignStudioItem[]> {
 // ─── Admin: Upsert ───────────────────────────────────────
 
 export async function upsertGarment(formData: FormData) {
-    const sb = getSmartStoreSb();
+    const { sb } = await requireSmartStoreAdmin();
     const id = formData.get("id") as string | null;
     const payload = {
         name: formData.get("name") as string,
@@ -187,7 +240,7 @@ export async function upsertGarment(formData: FormData) {
 }
 
 export async function upsertColor(formData: FormData) {
-    const sb = getSmartStoreSb();
+    const { sb } = await requireSmartStoreAdmin();
     const id = formData.get("id") as string | null;
     const payload = {
         garment_id: formData.get("garment_id") as string,
@@ -209,7 +262,7 @@ export async function upsertColor(formData: FormData) {
 }
 
 export async function upsertSize(formData: FormData) {
-    const sb = getSmartStoreSb();
+    const { sb } = await requireSmartStoreAdmin();
     const id = formData.get("id") as string | null;
     const payload = {
         garment_id: formData.get("garment_id") as string,
@@ -231,7 +284,7 @@ export async function upsertSize(formData: FormData) {
 }
 
 export async function upsertStyle(formData: FormData) {
-    const sb = getSmartStoreSb();
+    const { sb } = await requireSmartStoreAdmin();
     const id = formData.get("id") as string | null;
     const payload = {
         name: formData.get("name") as string,
@@ -252,7 +305,7 @@ export async function upsertStyle(formData: FormData) {
 }
 
 export async function upsertArtStyle(formData: FormData) {
-    const sb = getSmartStoreSb();
+    const { sb } = await requireSmartStoreAdmin();
     const id = formData.get("id") as string | null;
     const payload = {
         name: formData.get("name") as string,
@@ -273,7 +326,7 @@ export async function upsertArtStyle(formData: FormData) {
 }
 
 export async function upsertColorPackage(formData: FormData) {
-    const sb = getSmartStoreSb();
+    const { sb } = await requireSmartStoreAdmin();
     const id = formData.get("id") as string | null;
     const colorsRaw = formData.get("colors") as string;
     const payload = {
@@ -295,7 +348,7 @@ export async function upsertColorPackage(formData: FormData) {
 }
 
 export async function upsertStudioItem(formData: FormData) {
-    const sb = getSmartStoreSb();
+    const { sb } = await requireSmartStoreAdmin();
     const id = formData.get("id") as string | null;
     const payload = {
         name: formData.get("name") as string,
@@ -321,49 +374,49 @@ export async function upsertStudioItem(formData: FormData) {
 // ─── Admin: Delete ───────────────────────────────────────
 
 export async function deleteGarment(id: string) {
-    const sb = getSmartStoreSb();
+    const { sb } = await requireSmartStoreAdmin();
     const { error } = await sb.from("custom_design_garments").delete().eq("id", id);
     if (error) return { error: error.message };
     return { success: true };
 }
 
 export async function deleteColor(id: string) {
-    const sb = getSmartStoreSb();
+    const { sb } = await requireSmartStoreAdmin();
     const { error } = await sb.from("custom_design_colors").delete().eq("id", id);
     if (error) return { error: error.message };
     return { success: true };
 }
 
 export async function deleteSize(id: string) {
-    const sb = getSmartStoreSb();
+    const { sb } = await requireSmartStoreAdmin();
     const { error } = await sb.from("custom_design_sizes").delete().eq("id", id);
     if (error) return { error: error.message };
     return { success: true };
 }
 
 export async function deleteStyle(id: string) {
-    const sb = getSmartStoreSb();
+    const { sb } = await requireSmartStoreAdmin();
     const { error } = await sb.from("custom_design_styles").delete().eq("id", id);
     if (error) return { error: error.message };
     return { success: true };
 }
 
 export async function deleteArtStyle(id: string) {
-    const sb = getSmartStoreSb();
+    const { sb } = await requireSmartStoreAdmin();
     const { error } = await sb.from("custom_design_art_styles").delete().eq("id", id);
     if (error) return { error: error.message };
     return { success: true };
 }
 
 export async function deleteColorPackage(id: string) {
-    const sb = getSmartStoreSb();
+    const { sb } = await requireSmartStoreAdmin();
     const { error } = await sb.from("custom_design_color_packages").delete().eq("id", id);
     if (error) return { error: error.message };
     return { success: true };
 }
 
 export async function deleteStudioItem(id: string) {
-    const sb = getSmartStoreSb();
+    const { sb } = await requireSmartStoreAdmin();
     const { error } = await sb.from("custom_design_studio_items").delete().eq("id", id);
     if (error) return { error: error.message };
     return { success: true };
@@ -397,7 +450,7 @@ export async function getStudioMockupForGarment(
 }
 
 export async function upsertGarmentStudioMockup(formData: FormData) {
-    const sb = getSmartStoreSb();
+    const { sb } = await requireSmartStoreAdmin();
     const id = formData.get("id") as string | null;
     const payload = {
         garment_id: formData.get("garment_id") as string,
@@ -424,7 +477,7 @@ export async function upsertGarmentStudioMockup(formData: FormData) {
 }
 
 export async function deleteGarmentStudioMockup(id: string) {
-    const sb = getSmartStoreSb();
+    const { sb } = await requireSmartStoreAdmin();
     const { error } = await sb.from("garment_studio_mockups").delete().eq("id", id);
     if (error) return { error: error.message };
     return { success: true };
@@ -469,7 +522,7 @@ Requirements:
 }
 
 export async function updateDesignPromptTemplate(template: string) {
-    const sb = getSmartStoreSb();
+    const { sb } = await requireSmartStoreAdmin();
     const { error } = await sb
         .from("custom_design_settings")
         .update({ ai_prompt_template: template })
@@ -597,7 +650,7 @@ export async function submitDesignOrder(orderData: {
     const { data, error } = await sb
         .from("custom_design_orders")
         .insert(payload)
-        .select("id, order_number")
+        .select("id, order_number, tracker_token")
         .single();
 
     if (error || !data) return { error: error?.message || "فشل إنشاء الطلب" };
@@ -605,6 +658,8 @@ export async function submitDesignOrder(orderData: {
     // Notify all admins about the new design order via in-app notification
     await createAdminNotification({
         type: "order_alert",
+        category: "design",
+        severity: "info",
         title: "طلب تصميم جديد 🎨",
         message: `طلب تصميم جديد #${data.order_number} — ${orderData.garment_name} (${orderData.color_name}) من ${finalCustomerName || "عميل"}`,
         link: "/dashboard/design-orders",
@@ -622,13 +677,18 @@ export async function submitDesignOrder(orderData: {
         data.id
     ).catch(err => console.error("Failed to send design order email async", err));
 
-    return { success: true, orderId: data.id, orderNumber: data.order_number };
+    return {
+        success: true,
+        orderId: data.id,
+        orderNumber: data.order_number,
+        trackerToken: data.tracker_token,
+    };
 }
 
 // ─── Admin: Get Design Orders ───────────────────────────
 
 export async function getDesignOrders(page = 1, status: CustomDesignOrderStatus | "all" = "all") {
-    const sb = getSmartStoreSb();
+    const { sb } = await requireSmartStoreAdmin();
     const perPage = 20;
     const from = (page - 1) * perPage;
     const to = from + perPage - 1;
@@ -652,7 +712,7 @@ export async function getDesignOrders(page = 1, status: CustomDesignOrderStatus 
 // ─── Admin: Get Single Order ────────────────────────────
 
 export async function getDesignOrder(id: string): Promise<CustomDesignOrder | null> {
-    const sb = getSmartStoreSb();
+    const { sb } = await requireSmartStoreAdmin();
     const { data } = await sb.from("custom_design_orders").select("*").eq("id", id).single();
     return (data as CustomDesignOrder) ?? null;
 }
@@ -660,7 +720,7 @@ export async function getDesignOrder(id: string): Promise<CustomDesignOrder | nu
 // ─── Admin: Update Status ───────────────────────────────
 
 export async function updateDesignOrderStatus(id: string, status: CustomDesignOrderStatus) {
-    const sb = getSmartStoreSb();
+    const { sb } = await requireSmartStoreAdmin();
     const { error, data: order } = await sb.from("custom_design_orders")
         .update({ status })
         .eq("id", id)
@@ -685,7 +745,7 @@ export async function updateDesignOrderStatus(id: string, status: CustomDesignOr
 // ─── Admin: Upload Results ──────────────────────────────
 
 export async function uploadDesignResult(id: string, field: "result_design_url" | "result_mockup_url" | "result_pdf_url" | "modification_design_url", url: string) {
-    const sb = getSmartStoreSb();
+    const { sb } = await requireSmartStoreAdmin();
     const { error } = await sb.from("custom_design_orders").update({ [field]: url }).eq("id", id);
     if (error) return { error: error.message };
     return { success: true };
@@ -694,7 +754,7 @@ export async function uploadDesignResult(id: string, field: "result_design_url" 
 // ─── Admin: Skip Results ────────────────────────────────
 
 export async function skipDesignResults(id: string) {
-    const sb = getSmartStoreSb();
+    const { sb } = await requireSmartStoreAdmin();
     const { error } = await sb.from("custom_design_orders").update({ skip_results: true, status: "completed" }).eq("id", id);
     if (error) return { error: error.message };
     return { success: true };
@@ -703,7 +763,7 @@ export async function skipDesignResults(id: string) {
 // ─── Admin: Update Notes ────────────────────────────────
 
 export async function updateDesignOrderNotes(id: string, notes: string) {
-    const sb = getSmartStoreSb();
+    const { sb } = await requireSmartStoreAdmin();
     const { error } = await sb.from("custom_design_orders").update({ admin_notes: notes }).eq("id", id);
     if (error) return { error: error.message };
     return { success: true };
@@ -712,7 +772,7 @@ export async function updateDesignOrderNotes(id: string, notes: string) {
 // ─── Admin: Send to Customer Cart ───────────────────────
 
 export async function sendDesignOrderToCustomer(id: string, finalPrice: number) {
-    const sb = getSmartStoreSb();
+    const { sb } = await requireSmartStoreAdmin();
 
     // Update the database to lock in the final price and mark it as sent
     const { error, data: order } = await sb.from("custom_design_orders")
@@ -745,34 +805,35 @@ export async function sendDesignOrderToCustomer(id: string, finalPrice: number) 
 //  Public Order Actions — تتبع الطلب
 // ═══════════════════════════════════════════════════════════
 
-export async function getDesignOrderPublic(id: string): Promise<CustomDesignOrder | null> {
-    const sb = getSmartStoreSb();
-    const { data } = await sb.from("custom_design_orders").select("*").eq("id", id).single();
-    return (data as CustomDesignOrder) ?? null;
+export async function getDesignOrderPublic(id: string, trackerToken?: string | null): Promise<CustomDesignOrder | null> {
+    const { order } = await getDesignOrderAccess(id, trackerToken);
+    return order ? sanitizePublicDesignOrder(order) : null;
 }
 
 export async function getUserDesignOrders(): Promise<CustomDesignOrder[]> {
-    const user = await currentUser();
-    if (!user) return [];
+    const profileId = await getCurrentProfileId();
+    if (!profileId) return [];
 
     const sb = getSmartStoreSb();
-    const { data: profile } = await sb.from("profiles").select("id").eq("clerk_id", user.id).single();
-    if (!profile) return [];
 
     const { data } = await sb.from("custom_design_orders")
         .select("*")
-        .eq("user_id", profile.id)
+        .eq("user_id", profileId)
         .order("created_at", { ascending: false });
 
     return (data as CustomDesignOrder[]) ?? [];
 }
 
 export async function approveDesignOrder(id: string) {
+    const profileId = await getCurrentProfileId();
+    if (!profileId) return { error: "يجب تسجيل الدخول" };
+
     const sb = getSmartStoreSb();
     const { error, data: order } = await sb
         .from("custom_design_orders")
         .update({ status: "completed" })
         .eq("id", id)
+        .eq("user_id", profileId)
         .in("status", ["awaiting_review"])
         .select("user_id, order_number")
         .single();
@@ -783,6 +844,8 @@ export async function approveDesignOrder(id: string) {
             title: "تأكيد تصميم مخصص ✅",
             message: `قام العميل للتو بمراجعة وتأكيد التصميم للطلب #${order.order_number}.`,
             type: "system_alert",
+            category: "design",
+            severity: "info",
             link: "/dashboard/smart-store",
         });
     }
@@ -791,7 +854,7 @@ export async function approveDesignOrder(id: string) {
 }
 
 export async function rejectDesignOrder(id: string, reason: string) {
-    const sb = getSmartStoreSb();
+    const { sb } = await requireSmartStoreAdmin();
     const text = (reason || "").trim();
     if (!text) return { error: "يجب ذكر سبب الرفض" };
 
@@ -805,11 +868,15 @@ export async function rejectDesignOrder(id: string, reason: string) {
 }
 
 export async function cancelDesignOrderByCustomer(id: string) {
+    const profileId = await getCurrentProfileId();
+    if (!profileId) return { error: "يجب تسجيل الدخول" };
+
     const sb = getSmartStoreSb();
     const { error, data: order } = await sb
         .from("custom_design_orders")
         .update({ status: "cancelled" })
         .eq("id", id)
+        .eq("user_id", profileId)
         .in("status", ["new", "in_progress", "awaiting_review"])
         .select("user_id, order_number")
         .single();
@@ -820,6 +887,8 @@ export async function cancelDesignOrderByCustomer(id: string) {
             title: "إلغاء تصميم مخصص ❌",
             message: `قام العميل بإلغاء طلب التصميم المخصص #${order.order_number}.`,
             type: "order_alert",
+            category: "design",
+            severity: "warning",
             link: "/dashboard/smart-store",
         });
     }
@@ -830,6 +899,9 @@ export async function cancelDesignOrderByCustomer(id: string) {
 // ─── طلب تعديل التصميم (من العميل) ───────────────────────
 
 export async function submitModificationRequest(orderId: string, requestText: string) {
+    const profileId = await getCurrentProfileId();
+    if (!profileId) return { error: "يجب تسجيل الدخول" };
+
     const sb = getSmartStoreSb();
     const text = (requestText || "").trim();
     if (!text) return { error: "يرجى كتابة تفاصيل التعديل المطلوب" };
@@ -841,15 +913,23 @@ export async function submitModificationRequest(orderId: string, requestText: st
             modification_request: text,
         })
         .eq("id", orderId)
+        .eq("user_id", profileId)
         .in("status", ["awaiting_review"]);
     if (error) return { error: error.message };
 
-    const { data: order } = await sb.from("custom_design_orders").select("order_number").eq("id", orderId).single();
+    const { data: order } = await sb
+        .from("custom_design_orders")
+        .select("order_number")
+        .eq("id", orderId)
+        .eq("user_id", profileId)
+        .single();
     if (order) {
         await createAdminNotification({
             title: "طلب تعديل التصميم ✏️",
             message: `العميل طلب تعديلاً على الطلب #${order.order_number}. راجع طلب التعديل.`,
             type: "order_alert",
+            category: "design",
+            severity: "warning",
             link: "/dashboard/design-orders",
         });
     }
@@ -883,6 +963,9 @@ export async function getGarmentPricing(garmentName: string) {
 // ─── Confirm: Save Placement + Price ─────────────────────
 
 export async function confirmDesignOrder(id: string, position?: string | null, size?: string | null, price?: number | null) {
+    const profileId = await getCurrentProfileId();
+    if (!profileId) return { error: "يجب تسجيل الدخول" };
+
     const sb = getSmartStoreSb();
     const updateData: Partial<CustomDesignOrder> = { status: "completed" };
     if (position) updateData.print_position = position;
@@ -892,15 +975,24 @@ export async function confirmDesignOrder(id: string, position?: string | null, s
     const { error } = await sb
         .from("custom_design_orders")
         .update(updateData)
-        .eq("id", id);
+        .eq("id", id)
+        .eq("user_id", profileId)
+        .in("status", ["awaiting_review"]);
     if (error) return { error: error.message };
 
-    const { data: order } = await sb.from("custom_design_orders").select("order_number").eq("id", id).single();
+    const { data: order } = await sb
+        .from("custom_design_orders")
+        .select("order_number")
+        .eq("id", id)
+        .eq("user_id", profileId)
+        .single();
     if (order) {
         await createAdminNotification({
             title: "تأكيد تصميم مخصّص للسلة 🛒",
             message: `قام العميل للتو بمراجعة وتأكيد التصميم للطلب #${order.order_number} وأضافه للسلة.`,
             type: "system_alert",
+            category: "design",
+            severity: "info",
             link: "/dashboard/smart-store",
         });
     }
@@ -923,12 +1015,16 @@ export async function submitAdditionalDesignOrder(
         custom_colors?: string[];
     }
 ) {
+    const profileId = await getCurrentProfileId();
+    if (!profileId) return { error: "يجب تسجيل الدخول" };
+
     const sb = getSmartStoreSb();
 
     const { data: parent, error: fetchErr } = await sb
         .from("custom_design_orders")
         .select("*")
         .eq("id", parentOrderId)
+        .eq("user_id", profileId)
         .single();
 
     if (fetchErr || !parent) return { error: "الطلب الأساسي غير موجود" };
@@ -989,25 +1085,32 @@ export async function submitAdditionalDesignOrder(
     const { data: inserted, error } = await sb
         .from("custom_design_orders")
         .insert(payload)
-        .select("id, order_number")
+        .select("id, order_number, tracker_token")
         .single();
 
     if (error || !inserted) return { error: error?.message || "فشل إنشاء الطلب الإضافي" };
 
     await createAdminNotification({
         type: "order_alert",
+        category: "design",
+        severity: "info",
         title: "تصميم إضافي على الطلب 🎨",
         message: `طلب تصميم إضافي #${inserted.order_number} — ${p.garment_name} (موقع: ${data.print_position}) مرتبط بالطلب #${p.order_number}`,
         link: "/dashboard/design-orders",
     });
 
-    return { success: true, orderId: inserted.id, orderNumber: inserted.order_number };
+    return {
+        success: true,
+        orderId: inserted.id,
+        orderNumber: inserted.order_number,
+        trackerToken: inserted.tracker_token,
+    };
 }
 
 // ─── Assign Design Order to Admin ────────────────────────
 
 export async function assignDesignOrder(orderId: string, adminProfileId: string | null) {
-    const sb = getSmartStoreSb();
+    const { sb } = await requireSmartStoreAdmin();
     const { error } = await sb
         .from("custom_design_orders")
         .update({ assigned_to: adminProfileId })
@@ -1019,7 +1122,7 @@ export async function assignDesignOrder(orderId: string, adminProfileId: string 
 // ─── Design Order Stats ──────────────────────────────────
 
 export async function getDesignOrderStats() {
-    const sb = getSmartStoreSb();
+    const { sb } = await requireSmartStoreAdmin();
 
     const [newRes, inProgRes, awaitRes, modRes, compRes, cancelRes, revenueRes] = await Promise.all([
         sb.from("custom_design_orders").select("id", { count: "exact", head: true }).eq("status", "new"),
@@ -1047,7 +1150,7 @@ export async function getDesignOrderStats() {
 // ─── Get Admin List ──────────────────────────────────────
 
 export async function getAdminList() {
-    const sb = getSmartStoreSb();
+    const { sb } = await requireSmartStoreAdmin();
     const { data } = await sb
         .from("profiles")
         .select("id, display_name, avatar_url")

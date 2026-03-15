@@ -2,12 +2,10 @@
 
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
 
 export function VisitLogger() {
     const lastPath = useRef<string | null>(null);
     const pathname = usePathname();
-    const { user } = useUser();
 
     useEffect(() => {
         if (typeof window === "undefined" || !pathname) return;
@@ -29,12 +27,10 @@ export function VisitLogger() {
                 path: pathname,
                 fullUrl: window.location.href,
                 referrer: document.referrer || null,
-                userAgent: navigator.userAgent,
                 sessionId: sid,
-                clerkId: user?.id || null,
             }),
         }).catch(() => {});
-    }, [pathname, user?.id]);
+    }, [pathname]);
 
     return null;
 }

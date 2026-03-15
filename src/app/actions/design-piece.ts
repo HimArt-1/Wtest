@@ -7,14 +7,14 @@
 "use server";
 
 import { currentUser } from "@clerk/nextjs/server";
-import { createClient } from "@supabase/supabase-js";
+import { getSupabaseAdminClient } from "@/lib/supabase";
 
 function getSupabase() {
-    return createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        { auth: { persistSession: false } }
-    );
+    try {
+        return getSupabaseAdminClient();
+    } catch {
+        return null;
+    }
 }
 
 const ALLOWED_ROLES = ["admin", "wushsha", "subscriber"];
@@ -35,6 +35,10 @@ export async function canAccessDesignPiece(): Promise<{
     }
 
     const supabase = getSupabase();
+    if (!supabase) {
+        return { allowed: false, reason: "guest_needs_approval" };
+    }
+
     const { data: profile } = await supabase
         .from("profiles")
         .select("id, role")

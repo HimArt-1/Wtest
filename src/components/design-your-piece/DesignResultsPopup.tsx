@@ -234,8 +234,8 @@ export function DesignResultsPopup({
                                 order={{ ...order, status: "completed" } as CustomDesignOrder}
                                 mainPosition={position}
                                 onBack={() => { setShowAdditionalWizard(false); setAdditionalError(null); }}
-                                onSuccess={(newOrderId) => {
-                                    storeOrderId(newOrderId);
+                                onSuccess={({ orderId, trackerToken }) => {
+                                    storeOrderId(orderId, trackerToken);
                                     onConfirm();
                                 }}
                                 onError={(msg) => setAdditionalError(msg)}

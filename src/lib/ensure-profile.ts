@@ -4,13 +4,14 @@
 // ═══════════════════════════════════════════════════════════
 
 import { currentUser } from "@clerk/nextjs/server";
-import { createClient } from "@supabase/supabase-js";
+import { getSupabaseAdminClient } from "@/lib/supabase";
 
 function getAdminSupabase() {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    if (!url || !key) return null;
-    return createClient(url, key, { auth: { persistSession: false } });
+    try {
+        return getSupabaseAdminClient();
+    } catch {
+        return null;
+    }
 }
 
 export type EnsuredProfile = {
@@ -70,6 +71,9 @@ export async function ensureProfile(): Promise<EnsuredProfile | null> {
                 username,
                 role: "subscriber",
                 avatar_url: user.imageUrl || null,
+                bio: null,
+                cover_url: null,
+                website: null,
             })
             .select("id, clerk_id, display_name, username, role, avatar_url, bio, wushsha_level, is_verified")
             .single();

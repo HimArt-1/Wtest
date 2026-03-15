@@ -2,20 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import type { DesignOrderMessage } from "@/types/database";
-import { getSupabaseAdminClient, getSupabaseServerClient } from "@/lib/supabase";
+import { getDesignOrderAccess } from "@/lib/design-order-access";
 
 /**
  * Fetch all messages for a specific design order.
- * Safe to be called publicly because RLS allows anyone to read messages.
  */
-export async function getDesignOrderMessages(orderId: string) {
-    // Attempt with service role first for admin context, but fallback to public
-    let sb;
-    try {
-        sb = getSupabaseAdminClient();
-    } catch (e) {
-        console.warn("Falling back to public client for message fetch due to service role init error");
-        sb = getSupabaseServerClient();
+export async function getDesignOrderMessages(orderId: string, trackerToken?: string | null) {
+    const { sb, order } = await getDesignOrderAccess(orderId, trackerToken);
+    if (!order) {
+        return [];
     }
 
     const { data, error } = await sb
@@ -26,17 +21,6 @@ export async function getDesignOrderMessages(orderId: string) {
 
     if (error) {
         console.error(`Error fetching order messages for ${orderId}:`, error);
-        // Retry with public client if service role failed or errored out
-        if (sb !== getSupabaseServerClient()) {
-            const publicSb = getSupabaseServerClient();
-            const { data: publicData, error: publicError } = await publicSb
-                .from("design_order_messages")
-                .select("*")
-                .eq("order_id", orderId)
-                .order("created_at", { ascending: true });
-
-            if (!publicError) return (publicData as DesignOrderMessage[]) || [];
-        }
         return [];
     }
 
@@ -44,14 +28,16 @@ export async function getDesignOrderMessages(orderId: string) {
 }
 
 /**
- * Customer sends a message about their anonymous/guest design order.
+ * Customer sends a message about their design order.
  */
-export async function customerSendOrderMessage(orderId: string, message: string) {
+export async function customerSendOrderMessage(orderId: string, message: string, trackerToken?: string | null) {
     if (!message.trim()) return { success: false, error: "الرسالة فارغة" };
 
-    const sb = getSupabaseServerClient();
+    const { sb, access } = await getDesignOrderAccess(orderId, trackerToken);
+    if (access !== "owner" && access !== "token") {
+        return { success: false, error: "غير مصرح لك بهذه المحادثة" };
+    }
 
-    // RLS policy: Anyone can insert as long as is_admin_reply = false
     const { error } = await sb
         .from("design_order_messages")
         .insert({
@@ -76,7 +62,10 @@ export async function customerSendOrderMessage(orderId: string, message: string)
 export async function adminSendOrderMessage(orderId: string, message: string) {
     if (!message.trim()) return { success: false, error: "الرسالة فارغة" };
 
-    const sb = getSupabaseAdminClient();
+    const { sb, access } = await getDesignOrderAccess(orderId);
+    if (access !== "admin") {
+        return { success: false, error: "صلاحيات غير كافية" };
+    }
 
     const { error } = await sb
         .from("design_order_messages")

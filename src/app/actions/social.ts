@@ -9,26 +9,57 @@ import { getSupabaseAdminClient } from "@/lib/supabase";
 import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 
-// ─── متابعة الفنان ───────────────────────────────────────
-
-export async function followArtist(artistId: string) {
+async function getCurrentProfile() {
     const user = await currentUser();
-    if (!user) return { success: false, error: "يجب تسجيل الدخول" };
+    if (!user) return null;
 
     const supabase = getSupabaseAdminClient();
     const { data } = await supabase
         .from("profiles")
         .select("id")
         .eq("clerk_id", user.id)
-        .single();
-    const profile = data as { id: string } | null;
+        .maybeSingle();
 
-    if (!profile) return { success: false, error: "الملف الشخصي غير موجود" };
-    if (profile.id === artistId) return { success: false, error: "لا يمكن متابعة نفسك" };
+    return (data as { id: string } | null) ?? null;
+}
 
+async function getFollowableArtist(artistId: string) {
+    const supabase = getSupabaseAdminClient();
+    const { data } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("id", artistId)
+        .eq("role", "wushsha")
+        .maybeSingle();
+
+    return (data as { id: string } | null) ?? null;
+}
+
+async function productExists(productId: string) {
+    const supabase = getSupabaseAdminClient();
+    const { data } = await supabase
+        .from("products")
+        .select("id")
+        .eq("id", productId)
+        .maybeSingle();
+
+    return !!data;
+}
+
+// ─── متابعة الفنان ───────────────────────────────────────
+
+export async function followArtist(artistId: string) {
+    const profile = await getCurrentProfile();
+    if (!profile) return { success: false, error: "يجب تسجيل الدخول" };
+
+    const artist = await getFollowableArtist(artistId.trim());
+    if (!artist) return { success: false, error: "الفنان غير موجود" };
+    if (profile.id === artist.id) return { success: false, error: "لا يمكن متابعة نفسك" };
+
+    const supabase = getSupabaseAdminClient();
     const { error } = await supabase
         .from("artist_follows")
-        .insert({ follower_id: profile.id, artist_id: artistId });
+        .insert({ follower_id: profile.id, artist_id: artist.id });
 
     if (error) {
         if (error.code === "23505") return { success: true };
@@ -40,24 +71,15 @@ export async function followArtist(artistId: string) {
 }
 
 export async function unfollowArtist(artistId: string) {
-    const user = await currentUser();
-    if (!user) return { success: false, error: "يجب تسجيل الدخول" };
-
-    const supabase = getSupabaseAdminClient();
-    const { data } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("clerk_id", user.id)
-        .single();
-    const profile = data as { id: string } | null;
-
+    const profile = await getCurrentProfile();
     if (!profile) return { success: false, error: "الملف الشخصي غير موجود" };
 
+    const supabase = getSupabaseAdminClient();
     const { error: deleteError } = await supabase
         .from("artist_follows")
         .delete()
         .eq("follower_id", profile.id)
-        .eq("artist_id", artistId);
+        .eq("artist_id", artistId.trim());
 
     if (deleteError) return { success: false, error: deleteError.message };
     revalidatePath("/artists/[username]", "page");
@@ -65,24 +87,15 @@ export async function unfollowArtist(artistId: string) {
 }
 
 export async function isFollowingArtist(artistId: string): Promise<boolean> {
-    const user = await currentUser();
-    if (!user) return false;
-
-    const supabase = getSupabaseAdminClient();
-    const { data } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("clerk_id", user.id)
-        .single();
-    const profile = data as { id: string } | null;
-
+    const profile = await getCurrentProfile();
     if (!profile) return false;
 
+    const supabase = getSupabaseAdminClient();
     const { data: followRow } = await supabase
         .from("artist_follows")
         .select("id")
         .eq("follower_id", profile.id)
-        .eq("artist_id", artistId)
+        .eq("artist_id", artistId.trim())
         .maybeSingle();
 
     return !!followRow;
@@ -100,22 +113,14 @@ export async function getArtistFollowersCount(artistId: string): Promise<number>
 // ─── محفوظات المنتج (Wishlist) ────────────────────────────
 
 export async function addToWishlist(productId: string) {
-    const user = await currentUser();
-    if (!user) return { success: false, error: "يجب تسجيل الدخول" };
+    const profile = await getCurrentProfile();
+    if (!profile) return { success: false, error: "الملف الشخصي غير موجود" };
+    if (!(await productExists(productId.trim()))) return { success: false, error: "المنتج غير موجود" };
 
     const supabase = getSupabaseAdminClient();
-    const { data } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("clerk_id", user.id)
-        .single();
-    const profile = data as { id: string } | null;
-
-    if (!profile) return { success: false, error: "الملف الشخصي غير موجود" };
-
     const { error } = await supabase
         .from("product_wishlist")
-        .insert({ user_id: profile.id, product_id: productId });
+        .insert({ user_id: profile.id, product_id: productId.trim() });
 
     if (error) {
         if (error.code === "23505") return { success: true };
@@ -128,24 +133,15 @@ export async function addToWishlist(productId: string) {
 }
 
 export async function removeFromWishlist(productId: string) {
-    const user = await currentUser();
-    if (!user) return { success: false, error: "يجب تسجيل الدخول" };
-
-    const supabase = getSupabaseAdminClient();
-    const { data } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("clerk_id", user.id)
-        .single();
-    const profile = data as { id: string } | null;
-
+    const profile = await getCurrentProfile();
     if (!profile) return { success: false, error: "الملف الشخصي غير موجود" };
 
+    const supabase = getSupabaseAdminClient();
     const { error: deleteError } = await supabase
         .from("product_wishlist")
         .delete()
         .eq("user_id", profile.id)
-        .eq("product_id", productId);
+        .eq("product_id", productId.trim());
 
     if (deleteError) return { success: false, error: deleteError.message };
     revalidatePath("/products/[id]", "page");
@@ -154,43 +150,25 @@ export async function removeFromWishlist(productId: string) {
 }
 
 export async function isInWishlist(productId: string): Promise<boolean> {
-    const user = await currentUser();
-    if (!user) return false;
-
-    const supabase = getSupabaseAdminClient();
-    const { data } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("clerk_id", user.id)
-        .single();
-    const profile = data as { id: string } | null;
-
+    const profile = await getCurrentProfile();
     if (!profile) return false;
 
+    const supabase = getSupabaseAdminClient();
     const { data: wishlistRow } = await supabase
         .from("product_wishlist")
         .select("id")
         .eq("user_id", profile.id)
-        .eq("product_id", productId)
+        .eq("product_id", productId.trim())
         .maybeSingle();
 
     return !!wishlistRow;
 }
 
 export async function getWishlistProducts() {
-    const user = await currentUser();
-    if (!user) return { data: [], count: 0 };
-
-    const supabase = getSupabaseAdminClient();
-    const { data } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("clerk_id", user.id)
-        .single();
-    const profile = data as { id: string } | null;
-
+    const profile = await getCurrentProfile();
     if (!profile) return { data: [], count: 0 };
 
+    const supabase = getSupabaseAdminClient();
     const { data: wishlistItems } = await supabase
         .from("product_wishlist")
         .select("product_id")
@@ -211,19 +189,10 @@ export async function getWishlistProducts() {
 }
 
 export async function getWishlistProductIds(): Promise<string[]> {
-    const user = await currentUser();
-    if (!user) return [];
-
-    const supabase = getSupabaseAdminClient();
-    const { data } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("clerk_id", user.id)
-        .single();
-    const profile = data as { id: string } | null;
-
+    const profile = await getCurrentProfile();
     if (!profile) return [];
 
+    const supabase = getSupabaseAdminClient();
     const { data: wishlistData } = await supabase
         .from("product_wishlist")
         .select("product_id")
@@ -235,22 +204,14 @@ export async function getWishlistProductIds(): Promise<string[]> {
 // ─── إعجاب بالمنتج ───────────────────────────────────────
 
 export async function likeProduct(productId: string) {
-    const user = await currentUser();
-    if (!user) return { success: false, error: "يجب تسجيل الدخول" };
+    const profile = await getCurrentProfile();
+    if (!profile) return { success: false, error: "الملف الشخصي غير موجود" };
+    if (!(await productExists(productId.trim()))) return { success: false, error: "المنتج غير موجود" };
 
     const supabase = getSupabaseAdminClient();
-    const { data } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("clerk_id", user.id)
-        .single();
-    const profile = data as { id: string } | null;
-
-    if (!profile) return { success: false, error: "الملف الشخصي غير موجود" };
-
     const { error } = await supabase
         .from("product_likes")
-        .insert({ user_id: profile.id, product_id: productId });
+        .insert({ user_id: profile.id, product_id: productId.trim() });
 
     if (error) {
         if (error.code === "23505") return { success: true };
@@ -262,24 +223,15 @@ export async function likeProduct(productId: string) {
 }
 
 export async function unlikeProduct(productId: string) {
-    const user = await currentUser();
-    if (!user) return { success: false, error: "يجب تسجيل الدخول" };
-
-    const supabase = getSupabaseAdminClient();
-    const { data } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("clerk_id", user.id)
-        .single();
-    const profile = data as { id: string } | null;
-
+    const profile = await getCurrentProfile();
     if (!profile) return { success: false, error: "الملف الشخصي غير موجود" };
 
+    const supabase = getSupabaseAdminClient();
     const { error: deleteError } = await supabase
         .from("product_likes")
         .delete()
         .eq("user_id", profile.id)
-        .eq("product_id", productId);
+        .eq("product_id", productId.trim());
 
     if (deleteError) return { success: false, error: deleteError.message };
     revalidatePath("/products/[id]", "page");
@@ -287,24 +239,15 @@ export async function unlikeProduct(productId: string) {
 }
 
 export async function isProductLiked(productId: string): Promise<boolean> {
-    const user = await currentUser();
-    if (!user) return false;
-
-    const supabase = getSupabaseAdminClient();
-    const { data } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("clerk_id", user.id)
-        .single();
-    const profile = data as { id: string } | null;
-
+    const profile = await getCurrentProfile();
     if (!profile) return false;
 
+    const supabase = getSupabaseAdminClient();
     const { data: likeRow } = await supabase
         .from("product_likes")
         .select("id")
         .eq("user_id", profile.id)
-        .eq("product_id", productId)
+        .eq("product_id", productId.trim())
         .maybeSingle();
 
     return !!likeRow;

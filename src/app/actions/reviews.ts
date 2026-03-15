@@ -3,6 +3,8 @@
 import { createClient } from "@supabase/supabase-js";
 import { currentUser } from "@clerk/nextjs/server";
 
+const MAX_REVIEW_COMMENT_LENGTH = 1000;
+
 function getAdminClient() {
     return createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -13,8 +15,39 @@ function getAdminClient() {
 
 async function getProfileId(clerkId: string) {
     const supabase = getAdminClient();
-    const { data } = await supabase.from("profiles").select("id").eq("clerk_id", clerkId).single();
+    const { data } = await supabase.from("profiles").select("id").eq("clerk_id", clerkId).maybeSingle();
     return data?.id;
+}
+
+async function getProductReviewTarget(productId: string) {
+    const supabase = getAdminClient();
+    const { data } = await supabase
+        .from("products")
+        .select("id, artist_id")
+        .eq("id", productId)
+        .maybeSingle();
+
+    return data as { id: string; artist_id: string } | null;
+}
+
+async function getArtworkReviewTarget(artworkId: string) {
+    const supabase = getAdminClient();
+    const { data } = await supabase
+        .from("artworks")
+        .select("id, artist_id, status")
+        .eq("id", artworkId)
+        .maybeSingle();
+
+    return data as { id: string; artist_id: string; status: string } | null;
+}
+
+function normalizeReviewComment(comment?: string) {
+    const normalized = comment?.trim() || null;
+    if (!normalized) return { value: null, error: null };
+    if (normalized.length > MAX_REVIEW_COMMENT_LENGTH) {
+        return { value: null, error: `التعليق يجب أن لا يتجاوز ${MAX_REVIEW_COMMENT_LENGTH} حرف` };
+    }
+    return { value: normalized, error: null };
 }
 
 type ReviewWithUser = { id: string; rating: number; comment: string | null; created_at: string; user: { display_name: string; avatar_url: string | null } };
@@ -44,11 +77,18 @@ export async function submitProductReview(productId: string, rating: number, com
     const profileId = await getProfileId(user.id);
     if (!profileId) return { success: false, error: "لم يتم العثور على الملف الشخصي" };
 
+    const target = await getProductReviewTarget(productId.trim());
+    if (!target) return { success: false, error: "المنتج غير موجود" };
+    if (target.artist_id === profileId) return { success: false, error: "لا يمكنك تقييم منتجك" };
+
+    const normalizedComment = normalizeReviewComment(comment);
+    if (normalizedComment.error) return { success: false, error: normalizedComment.error };
+
     const supabase = getAdminClient();
     const { error } = await supabase
         .from("product_reviews")
         .upsert(
-            { product_id: productId, user_id: profileId, rating, comment: comment?.trim() || null },
+            { product_id: target.id, user_id: profileId, rating, comment: normalizedComment.value },
             { onConflict: "product_id,user_id" }
         );
 
@@ -96,11 +136,20 @@ export async function submitArtworkReview(artworkId: string, rating: number, com
     const profileId = await getProfileId(user.id);
     if (!profileId) return { success: false, error: "لم يتم العثور على الملف الشخصي" };
 
+    const target = await getArtworkReviewTarget(artworkId.trim());
+    if (!target || target.status !== "published") {
+        return { success: false, error: "العمل الفني غير متاح للتقييم" };
+    }
+    if (target.artist_id === profileId) return { success: false, error: "لا يمكنك تقييم عملك الفني" };
+
+    const normalizedComment = normalizeReviewComment(comment);
+    if (normalizedComment.error) return { success: false, error: normalizedComment.error };
+
     const supabase = getAdminClient();
     const { error } = await supabase
         .from("artwork_reviews")
         .upsert(
-            { artwork_id: artworkId, user_id: profileId, rating, comment: comment?.trim() || null },
+            { artwork_id: target.id, user_id: profileId, rating, comment: normalizedComment.value },
             { onConflict: "artwork_id,user_id" }
         );
 
@@ -122,7 +171,7 @@ export async function getUserProductReview(productId: string) {
         .select("id, rating, comment")
         .eq("product_id", productId)
         .eq("user_id", profileId)
-        .single();
+        .maybeSingle();
     return data as { id: string; rating: number; comment: string | null } | null;
 }
 
@@ -137,6 +186,6 @@ export async function getUserArtworkReview(artworkId: string) {
         .select("id, rating, comment")
         .eq("artwork_id", artworkId)
         .eq("user_id", profileId)
-        .single();
+        .maybeSingle();
     return data as { id: string; rating: number; comment: string | null } | null;
 }

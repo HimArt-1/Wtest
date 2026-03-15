@@ -7,11 +7,27 @@ import { revalidatePath } from "next/cache";
 
 // Raw client for user_notifications (bypasses typed schema to avoid postgrest-js never-type issue)
 function getRawClient() {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!url || !key) {
+        throw new Error("SUPABASE_SERVICE_ROLE_KEY is not configured");
+    }
+
     return createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        url,
+        key,
         { auth: { persistSession: false } }
     );
+}
+
+async function getCurrentProfileId() {
+    const user = await currentUser();
+    if (!user) return null;
+
+    const supabase = getRawClient();
+    const { data: profile } = await supabase.from("profiles").select("id").eq("clerk_id", user.id).single();
+    return profile?.id ?? null;
 }
 
 export async function createUserNotification(data: {
@@ -41,19 +57,15 @@ export async function createUserNotification(data: {
 }
 
 export async function getUserNotifications(limit = 20) {
-    const user = await currentUser();
-    if (!user) return [];
+    const profileId = await getCurrentProfileId();
+    if (!profileId) return [];
 
     const supabase = getRawClient();
-
-    // Resolve profile ID from clerk ID
-    const { data: profile } = await supabase.from("profiles").select("id").eq("clerk_id", user.id).single();
-    if (!profile) return [];
 
     const { data, error } = await supabase
         .from("user_notifications")
         .select("*")
-        .eq("user_id", profile.id)
+        .eq("user_id", profileId)
         .order("created_at", { ascending: false })
         .limit(limit);
 
@@ -66,18 +78,15 @@ export async function getUserNotifications(limit = 20) {
 }
 
 export async function getUnreadUserNotificationsCount() {
-    const user = await currentUser();
-    if (!user) return 0;
+    const profileId = await getCurrentProfileId();
+    if (!profileId) return 0;
 
     const supabase = getRawClient();
-
-    const { data: profile } = await supabase.from("profiles").select("id").eq("clerk_id", user.id).single();
-    if (!profile) return 0;
 
     const { count, error } = await supabase
         .from("user_notifications")
         .select("*", { count: "exact", head: true })
-        .eq("user_id", profile.id)
+        .eq("user_id", profileId)
         .eq("is_read", false);
 
     if (error) {
@@ -89,11 +98,15 @@ export async function getUnreadUserNotificationsCount() {
 }
 
 export async function markUserNotificationRead(id: string) {
-    const user = await currentUser();
-    if (!user) return { success: false };
+    const profileId = await getCurrentProfileId();
+    if (!profileId) return { success: false };
 
     const raw = getRawClient();
-    const { error } = await raw.from("user_notifications").update({ is_read: true }).eq("id", id);
+    const { error } = await raw
+        .from("user_notifications")
+        .update({ is_read: true })
+        .eq("id", id)
+        .eq("user_id", profileId);
     if (error) return { success: false, error: error.message };
 
     revalidatePath("/", "layout");
@@ -101,18 +114,15 @@ export async function markUserNotificationRead(id: string) {
 }
 
 export async function markAllUserNotificationsRead() {
-    const user = await currentUser();
-    if (!user) return { success: false };
+    const profileId = await getCurrentProfileId();
+    if (!profileId) return { success: false };
 
     const supabase = getRawClient();
-
-    const { data: profile } = await supabase.from("profiles").select("id").eq("clerk_id", user.id).single();
-    if (!profile) return { success: false };
 
     const { error } = await supabase
         .from("user_notifications")
         .update({ is_read: true })
-        .eq("user_id", profile.id)
+        .eq("user_id", profileId)
         .eq("is_read", false);
 
     if (error) return { success: false, error: error.message };

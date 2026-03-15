@@ -9,10 +9,11 @@ export const metadata: Metadata = {
 export default async function DesignTrackerPage({
     searchParams,
 }: {
-    searchParams: Promise<{ order?: string }>;
+    searchParams: Promise<{ order?: string; token?: string }>;
 }) {
     const params = await searchParams;
     const orderId = params.order;
+    const trackerToken = params.token;
 
     if (!orderId) {
         return (
@@ -41,7 +42,7 @@ export default async function DesignTrackerPage({
                     <p className="text-theme-subtle text-sm">تابع حالة طلبك وتواصل مع فريق التصميم</p>
                 </div>
 
-                <DesignTrackerClient orderId={orderId} />
+                <DesignTrackerClient orderId={orderId} trackerToken={trackerToken} />
             </div>
         </div>
     );

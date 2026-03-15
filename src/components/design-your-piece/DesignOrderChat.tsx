@@ -9,7 +9,7 @@ import { getDesignOrderMessages, customerSendOrderMessage } from "@/app/actions/
 import type { DesignOrderMessage } from "@/types/database";
 import clsx from "clsx";
 
-export function DesignOrderChat({ orderId }: { orderId: string }) {
+export function DesignOrderChat({ orderId, trackerToken }: { orderId: string; trackerToken?: string | null }) {
     const [messages, setMessages] = useState<DesignOrderMessage[]>([]);
     const [newMessage, setNewMessage] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -24,7 +24,7 @@ export function DesignOrderChat({ orderId }: { orderId: string }) {
     };
 
     const fetchMessages = async () => {
-        const data = await getDesignOrderMessages(orderId);
+        const data = await getDesignOrderMessages(orderId, trackerToken);
         setMessages(data);
         setLoading(false);
     };
@@ -34,7 +34,7 @@ export function DesignOrderChat({ orderId }: { orderId: string }) {
         fetchMessages();
         const interval = setInterval(fetchMessages, 10000); // Poll every 10s
         return () => clearInterval(interval);
-    }, [orderId]);
+    }, [orderId, trackerToken]);
 
     useEffect(() => {
         scrollToBottom();
@@ -46,7 +46,7 @@ export function DesignOrderChat({ orderId }: { orderId: string }) {
 
         setIsSubmitting(true);
         setError(null);
-        const res = await customerSendOrderMessage(orderId, newMessage);
+        const res = await customerSendOrderMessage(orderId, newMessage, trackerToken);
         if (res.success) {
             setNewMessage("");
             await fetchMessages();

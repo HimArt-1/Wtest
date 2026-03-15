@@ -1,12 +1,32 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
-    Bell, AlertTriangle, ShoppingCart, UserPlus, Package, Clock, CheckCircle,
+    AlertTriangle,
+    CheckCircle,
+    CreditCard,
+    FileText,
+    Palette,
+    ShieldAlert,
+    ShoppingCart,
+    UserPlus,
 } from "lucide-react";
+import {
+    ADMIN_NOTIFICATION_CATEGORIES,
+    ADMIN_NOTIFICATION_SEVERITIES,
+    getAdminNotificationCategoryLabel,
+    getAdminNotificationSeverityLabel,
+} from "@/lib/admin-notification-meta";
+import { cn } from "@/lib/utils";
+import type {
+    AdminNotification,
+    AdminNotificationCategory,
+    AdminNotificationSeverity,
+} from "@/types/database";
 
 interface NotificationsAdminClientProps {
-    notifications: any[];
+    notifications: AdminNotification[];
     alerts: {
         lowStock: number;
         pendingOrders: number;
@@ -25,107 +45,351 @@ function timeAgo(dateStr: string): string {
     return d.toLocaleDateString("ar-SA", { month: "short", day: "numeric" });
 }
 
+function getNotificationIcon(notification: AdminNotification) {
+    switch (notification.category) {
+        case "payments":
+            return CreditCard;
+        case "applications":
+            return FileText;
+        case "design":
+            return Palette;
+        case "support":
+        case "security":
+            return ShieldAlert;
+        case "orders":
+            return ShoppingCart;
+        case "system":
+        default:
+            return ShieldAlert;
+    }
+}
+
+function getSeverityClasses(severity: AdminNotificationSeverity) {
+    switch (severity) {
+        case "critical":
+            return {
+                badge: "border-rose-500/20 bg-rose-500/10 text-rose-300",
+                accent: "border-r-rose-400",
+                icon: "border-rose-500/15 bg-rose-500/10 text-rose-300",
+            };
+        case "warning":
+            return {
+                badge: "border-amber-500/20 bg-amber-500/10 text-amber-300",
+                accent: "border-r-amber-400",
+                icon: "border-amber-500/15 bg-amber-500/10 text-amber-300",
+            };
+        case "info":
+        default:
+            return {
+                badge: "border-sky-500/20 bg-sky-500/10 text-sky-300",
+                accent: "border-r-sky-400",
+                icon: "border-sky-500/15 bg-sky-500/10 text-sky-300",
+            };
+    }
+}
+
+function getCategoryClasses(category: AdminNotificationCategory) {
+    switch (category) {
+        case "payments":
+            return "border-emerald-500/15 bg-emerald-500/10 text-emerald-300";
+        case "applications":
+            return "border-violet-500/15 bg-violet-500/10 text-violet-300";
+        case "support":
+            return "border-orange-500/15 bg-orange-500/10 text-orange-300";
+        case "design":
+            return "border-fuchsia-500/15 bg-fuchsia-500/10 text-fuchsia-300";
+        case "security":
+            return "border-rose-500/15 bg-rose-500/10 text-rose-300";
+        case "system":
+            return "border-slate-500/15 bg-slate-500/10 text-slate-300";
+        case "orders":
+        default:
+            return "border-gold/15 bg-gold/10 text-gold";
+    }
+}
+
+function FilterChip(props: {
+    active: boolean;
+    label: string;
+    count?: number;
+    onClick: () => void;
+}) {
+    const { active, label, count, onClick } = props;
+
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            className={cn(
+                "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs transition-colors",
+                active
+                    ? "border-gold/30 bg-gold/10 text-gold"
+                    : "border-theme-soft bg-theme-subtle text-theme-subtle hover:border-gold/20 hover:text-theme"
+            )}
+        >
+            <span>{label}</span>
+            {typeof count === "number" && (
+                <span className={cn(
+                    "rounded-full px-1.5 py-0.5 text-[10px]",
+                    active ? "bg-gold/15 text-gold" : "bg-theme-faint text-theme-faint"
+                )}>
+                    {count}
+                </span>
+            )}
+        </button>
+    );
+}
+
 export function NotificationsAdminClient({ notifications, alerts }: NotificationsAdminClientProps) {
+    const [categoryFilter, setCategoryFilter] = useState<AdminNotificationCategory | "all">("all");
+    const [severityFilter, setSeverityFilter] = useState<AdminNotificationSeverity | "all">("all");
+    const [readFilter, setReadFilter] = useState<"all" | "unread">("all");
+
+    const categoryCounts = {
+        orders: 0,
+        payments: 0,
+        applications: 0,
+        support: 0,
+        design: 0,
+        system: 0,
+        security: 0,
+    } satisfies Record<AdminNotificationCategory, number>;
+
+    const severityCounts = {
+        critical: 0,
+        warning: 0,
+        info: 0,
+    } satisfies Record<AdminNotificationSeverity, number>;
+
+    let unreadCount = 0;
+
+    for (const notification of notifications) {
+        categoryCounts[notification.category] += 1;
+        severityCounts[notification.severity] += 1;
+        if (!notification.is_read) unreadCount += 1;
+    }
+
+    const filteredNotifications = notifications.filter((notification) => {
+        if (categoryFilter !== "all" && notification.category !== categoryFilter) return false;
+        if (severityFilter !== "all" && notification.severity !== severityFilter) return false;
+        if (readFilter === "unread" && notification.is_read) return false;
+        return true;
+    });
+
     return (
         <div className="space-y-6">
-            {/* ─── Smart Alert Cards ─── */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {/* Low Stock */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <motion.div
-                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0 }}
-                    className={`p-5 rounded-2xl border backdrop-blur-sm ${alerts.lowStock > 0
-                        ? "bg-amber-500/5 border-amber-500/20"
-                        : "bg-theme-faint border-theme-subtle"}`}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0 }}
+                    className={cn(
+                        "rounded-2xl border p-5 backdrop-blur-sm",
+                        alerts.lowStock > 0 ? "border-amber-500/20 bg-amber-500/5" : "border-theme-subtle bg-theme-faint"
+                    )}
                 >
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${alerts.lowStock > 0 ? "bg-amber-500/10" : "bg-theme-subtle"}`}>
-                            <AlertTriangle className={`w-5 h-5 ${alerts.lowStock > 0 ? "text-amber-400" : "text-theme-faint"}`} />
+                    <div className="mb-2 flex items-center gap-3">
+                        <div className={cn(
+                            "flex h-10 w-10 items-center justify-center rounded-xl",
+                            alerts.lowStock > 0 ? "bg-amber-500/10" : "bg-theme-subtle"
+                        )}>
+                            <AlertTriangle className={cn("h-5 w-5", alerts.lowStock > 0 ? "text-amber-400" : "text-theme-faint")} />
                         </div>
                         <div>
                             <p className="text-sm font-bold text-theme-strong">مخزون منخفض</p>
                             <p className="text-[10px] text-theme-faint">منتجات بكمية ≤ 5</p>
                         </div>
                     </div>
-                    <p className={`text-3xl font-black ${alerts.lowStock > 0 ? "text-amber-400" : "text-theme-faint"}`}>
+                    <p className={cn("text-3xl font-black", alerts.lowStock > 0 ? "text-amber-400" : "text-theme-faint")}>
                         {alerts.lowStock}
                     </p>
                 </motion.div>
 
-                {/* Pending Orders */}
                 <motion.div
-                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-                    className={`p-5 rounded-2xl border backdrop-blur-sm ${alerts.pendingOrders > 0
-                        ? "bg-blue-500/5 border-blue-500/20"
-                        : "bg-theme-faint border-theme-subtle"}`}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className={cn(
+                        "rounded-2xl border p-5 backdrop-blur-sm",
+                        alerts.pendingOrders > 0 ? "border-blue-500/20 bg-blue-500/5" : "border-theme-subtle bg-theme-faint"
+                    )}
                 >
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${alerts.pendingOrders > 0 ? "bg-blue-500/10" : "bg-theme-subtle"}`}>
-                            <ShoppingCart className={`w-5 h-5 ${alerts.pendingOrders > 0 ? "text-blue-400" : "text-theme-faint"}`} />
+                    <div className="mb-2 flex items-center gap-3">
+                        <div className={cn(
+                            "flex h-10 w-10 items-center justify-center rounded-xl",
+                            alerts.pendingOrders > 0 ? "bg-blue-500/10" : "bg-theme-subtle"
+                        )}>
+                            <ShoppingCart className={cn("h-5 w-5", alerts.pendingOrders > 0 ? "text-blue-400" : "text-theme-faint")} />
                         </div>
                         <div>
                             <p className="text-sm font-bold text-theme-strong">طلبات معلقة</p>
                             <p className="text-[10px] text-theme-faint">بانتظار المعالجة</p>
                         </div>
                     </div>
-                    <p className={`text-3xl font-black ${alerts.pendingOrders > 0 ? "text-blue-400" : "text-theme-faint"}`}>
+                    <p className={cn("text-3xl font-black", alerts.pendingOrders > 0 ? "text-blue-400" : "text-theme-faint")}>
                         {alerts.pendingOrders}
                     </p>
                 </motion.div>
 
-                {/* New Users */}
                 <motion.div
-                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-                    className={`p-5 rounded-2xl border backdrop-blur-sm ${alerts.newUsersToday > 0
-                        ? "bg-emerald-500/5 border-emerald-500/20"
-                        : "bg-theme-faint border-theme-subtle"}`}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className={cn(
+                        "rounded-2xl border p-5 backdrop-blur-sm",
+                        alerts.newUsersToday > 0 ? "border-emerald-500/20 bg-emerald-500/5" : "border-theme-subtle bg-theme-faint"
+                    )}
                 >
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${alerts.newUsersToday > 0 ? "bg-emerald-500/10" : "bg-theme-subtle"}`}>
-                            <UserPlus className={`w-5 h-5 ${alerts.newUsersToday > 0 ? "text-emerald-400" : "text-theme-faint"}`} />
+                    <div className="mb-2 flex items-center gap-3">
+                        <div className={cn(
+                            "flex h-10 w-10 items-center justify-center rounded-xl",
+                            alerts.newUsersToday > 0 ? "bg-emerald-500/10" : "bg-theme-subtle"
+                        )}>
+                            <UserPlus className={cn("h-5 w-5", alerts.newUsersToday > 0 ? "text-emerald-400" : "text-theme-faint")} />
                         </div>
                         <div>
                             <p className="text-sm font-bold text-theme-strong">مستخدمون جدد</p>
                             <p className="text-[10px] text-theme-faint">انضموا اليوم</p>
                         </div>
                     </div>
-                    <p className={`text-3xl font-black ${alerts.newUsersToday > 0 ? "text-emerald-400" : "text-theme-faint"}`}>
+                    <p className={cn("text-3xl font-black", alerts.newUsersToday > 0 ? "text-emerald-400" : "text-theme-faint")}>
                         {alerts.newUsersToday}
                     </p>
                 </motion.div>
             </div>
 
-            {/* ─── Notifications List ─── */}
-            <div className="rounded-2xl border border-theme-subtle bg-surface/50 backdrop-blur-sm overflow-hidden">
-                <div className="px-5 py-4 border-b border-theme-subtle flex items-center gap-2">
-                    <Bell className="w-4 h-4 text-gold" />
-                    <h3 className="text-sm font-bold text-theme-strong">سجل الإشعارات</h3>
-                    <span className="text-xs text-theme-faint mr-auto">{notifications.length} إشعار</span>
+            <div className="overflow-hidden rounded-2xl border border-theme-subtle bg-surface/50 backdrop-blur-sm">
+                <div className="space-y-4 border-b border-theme-subtle px-5 py-4">
+                    <div className="flex flex-wrap items-center gap-3">
+                        <div className="flex items-center gap-2">
+                            <ShieldAlert className="h-4 w-4 text-gold" />
+                            <h3 className="text-sm font-bold text-theme-strong">سجل تنبيهات الإدارة</h3>
+                        </div>
+                        <span className="mr-auto text-xs text-theme-faint">
+                            {filteredNotifications.length} من {notifications.length} إشعار
+                        </span>
+                        <span className="inline-flex items-center rounded-full border border-theme-soft bg-theme-subtle px-2.5 py-1 text-[11px] text-theme-subtle">
+                            غير المقروء: {unreadCount}
+                        </span>
+                    </div>
+
+                    <div className="space-y-2">
+                        <div className="flex flex-wrap gap-2">
+                            <FilterChip
+                                active={categoryFilter === "all"}
+                                label="كل التصنيفات"
+                                count={notifications.length}
+                                onClick={() => setCategoryFilter("all")}
+                            />
+                            {ADMIN_NOTIFICATION_CATEGORIES.map((category) => (
+                                <FilterChip
+                                    key={category}
+                                    active={categoryFilter === category}
+                                    label={getAdminNotificationCategoryLabel(category)}
+                                    count={categoryCounts[category]}
+                                    onClick={() => setCategoryFilter(category)}
+                                />
+                            ))}
+                        </div>
+
+                        <div className="flex flex-wrap gap-2">
+                            <FilterChip
+                                active={severityFilter === "all"}
+                                label="كل المستويات"
+                                count={notifications.length}
+                                onClick={() => setSeverityFilter("all")}
+                            />
+                            {ADMIN_NOTIFICATION_SEVERITIES.map((severity) => (
+                                <FilterChip
+                                    key={severity}
+                                    active={severityFilter === severity}
+                                    label={getAdminNotificationSeverityLabel(severity)}
+                                    count={severityCounts[severity]}
+                                    onClick={() => setSeverityFilter(severity)}
+                                />
+                            ))}
+                            <FilterChip
+                                active={readFilter === "all"}
+                                label="الكل"
+                                count={notifications.length}
+                                onClick={() => setReadFilter("all")}
+                            />
+                            <FilterChip
+                                active={readFilter === "unread"}
+                                label="غير المقروء"
+                                count={unreadCount}
+                                onClick={() => setReadFilter("unread")}
+                            />
+                        </div>
+                    </div>
                 </div>
-                {notifications.length === 0 ? (
+
+                {filteredNotifications.length === 0 ? (
                     <div className="p-16 text-center text-theme-faint">
-                        <CheckCircle className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                        <p className="text-sm">لا توجد إشعارات</p>
+                        <CheckCircle className="mx-auto mb-3 h-12 w-12 opacity-30" />
+                        <p className="text-sm">لا توجد إشعارات تطابق الفلاتر الحالية</p>
                     </div>
                 ) : (
-                    <div className="divide-y divide-theme-faint max-h-[500px] overflow-y-auto styled-scrollbar">
-                        {notifications.map((n: any, i: number) => (
-                            <motion.div
-                                key={n.id}
-                                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02 }}
-                                className={`flex items-center gap-4 px-5 py-3.5 hover:bg-theme-faint transition-colors ${!n.read ? "bg-gold/[0.02]" : ""}`}
-                            >
-                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${!n.read ? "bg-gold/10" : "bg-theme-subtle"}`}>
-                                    <Bell className={`w-3.5 h-3.5 ${!n.read ? "text-gold" : "text-theme-faint"}`} />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className={`text-sm truncate ${!n.read ? "text-theme-strong font-medium" : "text-theme-subtle"}`}>
-                                        {n.title || n.message || "إشعار"}
-                                    </p>
-                                    {n.body && <p className="text-xs text-theme-faint truncate mt-0.5">{n.body}</p>}
-                                </div>
-                                <span className="text-[10px] text-theme-faint shrink-0">{timeAgo(n.created_at)}</span>
-                            </motion.div>
-                        ))}
+                    <div className="styled-scrollbar max-h-[560px] divide-y divide-theme-faint overflow-y-auto">
+                        {filteredNotifications.map((notification, index) => {
+                            const Icon = getNotificationIcon(notification);
+                            const severity = getSeverityClasses(notification.severity);
+                            return (
+                                <motion.div
+                                    key={notification.id}
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ delay: index * 0.02 }}
+                                    className={cn(
+                                        "border-r-2 px-5 py-4 transition-colors hover:bg-theme-faint",
+                                        severity.accent,
+                                        !notification.is_read && "bg-gold/[0.02]"
+                                    )}
+                                >
+                                    <div className="flex items-start gap-4">
+                                        <div className={cn(
+                                            "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border",
+                                            notification.is_read ? "border-theme-soft bg-theme-subtle text-theme-subtle" : severity.icon
+                                        )}>
+                                            <Icon className="h-4 w-4" />
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <p className={cn(
+                                                    "truncate text-sm",
+                                                    notification.is_read ? "text-theme-subtle" : "font-medium text-theme-strong"
+                                                )}>
+                                                    {notification.title || notification.message || "تنبيه"}
+                                                </p>
+                                                {!notification.is_read && <span className="h-1.5 w-1.5 rounded-full bg-gold" />}
+                                            </div>
+                                            {notification.message && (
+                                                <p className="mt-1 text-xs leading-6 text-theme-faint">
+                                                    {notification.message}
+                                                </p>
+                                            )}
+                                            <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                                                <span className={cn(
+                                                    "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium",
+                                                    getCategoryClasses(notification.category)
+                                                )}>
+                                                    {getAdminNotificationCategoryLabel(notification.category)}
+                                                </span>
+                                                <span className={cn(
+                                                    "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium",
+                                                    severity.badge
+                                                )}>
+                                                    {getAdminNotificationSeverityLabel(notification.severity)}
+                                                </span>
+                                                <span className="text-[10px] text-theme-faint">
+                                                    {timeAgo(notification.created_at)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            );
+                        })}
                     </div>
                 )}
             </div>

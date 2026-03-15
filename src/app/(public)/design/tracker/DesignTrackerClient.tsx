@@ -10,6 +10,7 @@ import {
 import { getDesignOrderPublic } from "@/app/actions/smart-store";
 import { getDesignOrderMessages, customerSendOrderMessage } from "@/app/actions/design-order-chat";
 import type { CustomDesignOrder, DesignOrderMessage } from "@/types/database";
+import { getStoredOrderToken } from "@/components/design-your-piece/OrderTracker";
 
 const statusConfig: Record<string, { label: string; color: string; bg: string; icon: any }> = {
     new: { label: "مستلم", color: "text-blue-400", bg: "bg-blue-400/10", icon: Package },
@@ -21,7 +22,7 @@ const statusConfig: Record<string, { label: string; color: string; bg: string; i
 
 const progressSteps = ["new", "in_progress", "awaiting_review", "completed"];
 
-export default function DesignTrackerClient({ orderId }: { orderId: string }) {
+export default function DesignTrackerClient({ orderId, trackerToken }: { orderId: string; trackerToken?: string | null }) {
     const [order, setOrder] = useState<CustomDesignOrder | null>(null);
     const [messages, setMessages] = useState<DesignOrderMessage[]>([]);
     const [newMsg, setNewMsg] = useState("");
@@ -29,13 +30,14 @@ export default function DesignTrackerClient({ orderId }: { orderId: string }) {
     const [loading, setLoading] = useState(true);
     const [notFound, setNotFound] = useState(false);
     const chatEndRef = useRef<HTMLDivElement>(null);
+    const effectiveToken = trackerToken ?? getStoredOrderToken(orderId);
 
     useEffect(() => {
         async function load() {
             setLoading(true);
             const [orderData, msgs] = await Promise.all([
-                getDesignOrderPublic(orderId),
-                getDesignOrderMessages(orderId),
+                getDesignOrderPublic(orderId, effectiveToken),
+                getDesignOrderMessages(orderId, effectiveToken),
             ]);
             if (!orderData) {
                 setNotFound(true);
@@ -46,7 +48,7 @@ export default function DesignTrackerClient({ orderId }: { orderId: string }) {
             setLoading(false);
         }
         load();
-    }, [orderId]);
+    }, [orderId, effectiveToken]);
 
     useEffect(() => {
         chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -56,10 +58,10 @@ export default function DesignTrackerClient({ orderId }: { orderId: string }) {
         e.preventDefault();
         if (!newMsg.trim() || sending) return;
         setSending(true);
-        const res = await customerSendOrderMessage(orderId, newMsg);
+        const res = await customerSendOrderMessage(orderId, newMsg, effectiveToken);
         if (res.success) {
             setNewMsg("");
-            const msgs = await getDesignOrderMessages(orderId);
+            const msgs = await getDesignOrderMessages(orderId, effectiveToken);
             setMessages(msgs);
         }
         setSending(false);

@@ -11,7 +11,7 @@ import { getPublicVisibility } from "@/app/actions/settings";
 import { OnboardingBanner } from "@/components/account/OnboardingBanner";
 import { PushSubscribeButton } from "@/components/notifications/PushSubscribeButton";
 import { AccountDashboardClient } from "@/components/account/AccountDashboardClient";
-import { getSupabaseServerClient } from "@/lib/supabase";
+import { getSupabaseAdminClient } from "@/lib/supabase";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -28,10 +28,10 @@ export default async function AccountPage() {
         getPublicVisibility(),
     ]);
 
-    const supabase = getSupabaseServerClient();
+    const supabase = getSupabaseAdminClient();
     const { count: ordersCount } = await supabase
         .from("orders")
-        .select("*", { count: "exact", head: true })
+        .select("id", { count: "exact", head: true })
         .eq("buyer_id", profile?.id || "");
 
     let applicationStatus: string | null = null;
@@ -39,7 +39,7 @@ export default async function AccountPage() {
         const { data: app } = await supabase
             .from("applications")
             .select("status")
-            .eq("email", user.emailAddresses?.[0]?.emailAddress || "")
+            .eq("email", (user.emailAddresses?.[0]?.emailAddress || "").trim().toLowerCase())
             .order("created_at", { ascending: false })
             .limit(1)
             .maybeSingle();

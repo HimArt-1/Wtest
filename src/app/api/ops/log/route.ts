@@ -1,17 +1,40 @@
 // وشّى | WASHA — تسجيل الأخطاء لمركز الدعم الفني
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@supabase/supabase-js";
+
+function getSupabaseClient() {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) return null;
+    return createClient(url, key, { auth: { persistSession: false } });
+}
+
+async function getAuthenticatedProfileId() {
+    const { userId } = await auth();
+    if (!userId) return null;
+
+    const supabase = getSupabaseClient();
+    if (!supabase) return null;
+
+    const { data: profile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("clerk_id", userId)
+        .single();
+
+    return profile?.id ?? null;
+}
 
 export async function POST(req: NextRequest) {
     try {
-        const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-        if (!url || !key) {
+        const supabase = getSupabaseClient();
+        if (!supabase) {
             return NextResponse.json({ ok: false }, { status: 500 });
         }
 
         const body = await req.json().catch(() => ({}));
-        const { type = "error", source, message, stack, metadata, userId } = body;
+        const { type = "error", source, message, stack, metadata } = body;
 
         if (!message || typeof message !== "string") {
             return NextResponse.json({ ok: false }, { status: 400 });
@@ -19,15 +42,19 @@ export async function POST(req: NextRequest) {
 
         const validTypes = ["error", "warning", "info", "security"];
         const logType = validTypes.includes(type) ? type : "error";
+        const userId = await getAuthenticatedProfileId();
+        const safeMetadata =
+            typeof metadata === "object" && metadata !== null && !Array.isArray(metadata)
+                ? metadata
+                : {};
 
-        const supabase = createClient(url, key, { auth: { persistSession: false } });
         await supabase.from("system_logs").insert({
             type: logType,
             source: typeof source === "string" ? source.slice(0, 200) : null,
             message: message.slice(0, 2000),
             stack: typeof stack === "string" ? stack.slice(0, 5000) : null,
-            metadata: typeof metadata === "object" && metadata !== null ? metadata : {},
-            user_id: userId || null,
+            metadata: safeMetadata,
+            user_id: userId,
         });
 
         return NextResponse.json({ ok: true });

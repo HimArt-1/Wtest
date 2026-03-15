@@ -29,16 +29,47 @@ import { DesignResultsPopup } from "./DesignResultsPopup";
 
 // ─── localStorage Keys ──────────────────────────────────
 
-const STORAGE_KEY = "wusha_design_order_id";
+const STORAGE_KEY = "wusha_design_order_access";
 
-export function getStoredOrderId(): string | null {
+type StoredDesignOrderAccess = {
+    id: string;
+    token: string | null;
+};
+
+export function getStoredOrderAccess(): StoredDesignOrderAccess | null {
     if (typeof window === "undefined") return null;
-    return localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+
+    try {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed.id === "string") {
+            return {
+                id: parsed.id,
+                token: typeof parsed.token === "string" ? parsed.token : null,
+            };
+        }
+    } catch {
+        return { id: raw, token: null };
+    }
+
+    return null;
 }
 
-export function storeOrderId(id: string) {
+export function getStoredOrderId(): string | null {
+    return getStoredOrderAccess()?.id ?? null;
+}
+
+export function getStoredOrderToken(orderId?: string): string | null {
+    const access = getStoredOrderAccess();
+    if (!access) return null;
+    if (orderId && access.id !== orderId) return null;
+    return access.token;
+}
+
+export function storeOrderId(id: string, token?: string | null) {
     if (typeof window === "undefined") return;
-    localStorage.setItem(STORAGE_KEY, id);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ id, token: token ?? null }));
 }
 
 export function clearOrderId() {
@@ -119,14 +150,15 @@ function getPrice(pricing: any, position: PrintPosition, size: PrintSize): numbe
 
 // ─── Main Component ─────────────────────────────────────
 
-export function OrderTracker({ orderId }: { orderId: string }) {
+export function OrderTracker({ orderId, trackerToken }: { orderId: string; trackerToken?: string | null }) {
     const [order, setOrder] = useState<CustomDesignOrder | null>(null);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
     const [showResultsPopup, setShowResultsPopup] = useState(false);
 
     const fetchOrder = useCallback(async () => {
-        const data = await getDesignOrderPublic(orderId);
+        const token = trackerToken ?? getStoredOrderToken(orderId);
+        const data = await getDesignOrderPublic(orderId, token);
         setOrder(data);
         setLoading(false);
 
@@ -134,7 +166,7 @@ export function OrderTracker({ orderId }: { orderId: string }) {
         if (data && data.status === "awaiting_review" && !showResultsPopup) {
             setShowResultsPopup(true);
         }
-    }, [orderId, showResultsPopup]);
+    }, [orderId, showResultsPopup, trackerToken]);
 
     useEffect(() => {
         fetchOrder();
@@ -303,7 +335,7 @@ export function OrderTracker({ orderId }: { orderId: string }) {
             {/* Embedded Order Chat */}
             {!isTerminal && (
                 <div className="mt-8">
-                    <DesignOrderChat orderId={order.id} />
+                    <DesignOrderChat orderId={order.id} trackerToken={trackerToken ?? getStoredOrderToken(order.id)} />
                 </div>
             )}
         </div>

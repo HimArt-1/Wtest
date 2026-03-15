@@ -3,9 +3,16 @@ import { createClient } from "@supabase/supabase-js";
 import { NotificationsAdminClient } from "./NotificationsAdminClient";
 
 function getAdminSb() {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!url || !key) {
+        throw new Error("SUPABASE_SERVICE_ROLE_KEY is not configured");
+    }
+
     return createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        url,
+        key,
         { auth: { persistSession: false } }
     );
 }
@@ -13,9 +20,9 @@ function getAdminSb() {
 export default async function NotificationsAdminPage() {
     const supabase = getAdminSb();
 
-    // Fetch notifications
+    // Fetch admin notifications
     const { data: notifications } = await supabase
-        .from("notifications")
+        .from("admin_notifications")
         .select("*")
         .order("created_at", { ascending: false })
         .limit(100);
@@ -41,8 +48,8 @@ export default async function NotificationsAdminPage() {
     return (
         <div className="space-y-6">
             <AdminHeader
-                title="الإشعارات والتنبيهات"
-                subtitle="متابعة التنبيهات الذكية وإشعارات النظام."
+                title="تنبيهات الإدارة"
+                subtitle="قناة داخلية منفصلة لمتابعة الطلبات والمدفوعات والتنبيهات التشغيلية."
             />
             <NotificationsAdminClient
                 notifications={notifications || []}

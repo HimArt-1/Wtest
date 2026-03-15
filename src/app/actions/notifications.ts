@@ -2,7 +2,13 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { currentUser } from "@clerk/nextjs/server";
-import type { AdminNotificationType, AdminNotification } from "@/types/database";
+import type {
+    AdminNotification,
+    AdminNotificationCategory,
+    AdminNotificationSeverity,
+    AdminNotificationType,
+} from "@/types/database";
+import { getDefaultAdminNotificationMeta } from "@/lib/admin-notification-meta";
 
 // NOTE: "use server" files can only export async functions.
 // Import createUserNotification from "./user-notifications" directly.
@@ -10,9 +16,16 @@ import type { AdminNotificationType, AdminNotification } from "@/types/database"
 
 // Raw client (bypasses typed schema to avoid postgrest-js never-type issue)
 function getNotificationsClient() {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!url || !key) {
+        throw new Error("SUPABASE_SERVICE_ROLE_KEY is not configured");
+    }
+
     return createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        url,
+        key,
         { auth: { persistSession: false } }
     );
 }
@@ -24,16 +37,25 @@ export async function createAdminNotification(data: {
     message?: string;
     link?: string;
     metadata?: Record<string, unknown>;
+    category?: AdminNotificationCategory;
+    severity?: AdminNotificationSeverity;
 }) {
     const supabase = getNotificationsClient();
+    const defaults = getDefaultAdminNotificationMeta(data.type);
     const { error } = await supabase.from("admin_notifications").insert({
         type: data.type,
+        category: data.category ?? defaults.category,
+        severity: data.severity ?? defaults.severity,
         title: data.title,
         message: data.message ?? null,
         link: data.link ?? null,
         metadata: data.metadata ?? {},
     });
-    if (error) console.error("[createAdminNotification]", error);
+    if (error) {
+        console.error("[createAdminNotification]", error);
+        return { success: false as const, error: error.message };
+    }
+    return { success: true as const };
 }
 
 async function requireAdmin() {

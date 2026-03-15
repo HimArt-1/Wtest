@@ -5,7 +5,6 @@ import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Search,
-    Bell,
     Command,
     ExternalLink,
     LayoutDashboard,
@@ -16,12 +15,17 @@ import {
     Palette,
     Settings,
     Sparkles,
-    Check,
+    CreditCard,
+    ShieldAlert,
     CheckCheck,
 } from "lucide-react";
 import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import {
+    getAdminNotificationCategoryLabel,
+    getAdminNotificationSeverityLabel,
+} from "@/lib/admin-notification-meta";
 import {
     getAdminNotifications,
     getUnreadNotificationsCount,
@@ -29,6 +33,7 @@ import {
     markAllNotificationsRead,
 } from "@/app/actions/notifications";
 import type { AdminNotification } from "@/types/database";
+import { PushSubscribeButton } from "@/components/notifications/PushSubscribeButton";
 
 const COMMAND_ITEMS = [
     { href: "/dashboard", label: "نظرة عامة", icon: LayoutDashboard },
@@ -43,6 +48,56 @@ const COMMAND_ITEMS = [
     { href: "/studio", label: "الاستوديو", icon: Sparkles },
 ];
 
+function getAdminNotificationIcon(notification: AdminNotification) {
+    switch (notification.category) {
+        case "payments":
+            return CreditCard;
+        case "applications":
+            return FileText;
+        case "design":
+            return Palette;
+        case "support":
+        case "security":
+            return ShieldAlert;
+        case "orders":
+            return ShoppingCart;
+        default:
+            return Package;
+    }
+}
+
+function getSeverityBadgeClasses(notification: AdminNotification) {
+    switch (notification.severity) {
+        case "critical":
+            return "border-rose-500/20 bg-rose-500/10 text-rose-300";
+        case "warning":
+            return "border-amber-500/20 bg-amber-500/10 text-amber-300";
+        case "info":
+        default:
+            return "border-sky-500/20 bg-sky-500/10 text-sky-300";
+    }
+}
+
+function getCategoryBadgeClasses(notification: AdminNotification) {
+    switch (notification.category) {
+        case "payments":
+            return "border-emerald-500/15 bg-emerald-500/10 text-emerald-300";
+        case "applications":
+            return "border-violet-500/15 bg-violet-500/10 text-violet-300";
+        case "support":
+            return "border-orange-500/15 bg-orange-500/10 text-orange-300";
+        case "design":
+            return "border-fuchsia-500/15 bg-fuchsia-500/10 text-fuchsia-300";
+        case "security":
+            return "border-rose-500/15 bg-rose-500/10 text-rose-300";
+        case "system":
+            return "border-slate-500/15 bg-slate-500/10 text-slate-300";
+        case "orders":
+        default:
+            return "border-gold/15 bg-gold/10 text-gold";
+    }
+}
+
 export function AdminTopBar() {
     const router = useRouter();
     const pathname = usePathname();
@@ -51,6 +106,11 @@ export function AdminTopBar() {
     const [notificationsOpen, setNotificationsOpen] = useState(false);
     const [notifications, setNotifications] = useState<AdminNotification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
+    const notificationSummary = { critical: 0, warning: 0, info: 0 };
+
+    for (const notification of notifications) {
+        notificationSummary[notification.severity] += 1;
+    }
 
     const fetchNotifications = useCallback(async () => {
         const [list, count] = await Promise.all([
@@ -124,10 +184,10 @@ export function AdminTopBar() {
                         <ThemeToggle />
                         <button
                             onClick={() => setNotificationsOpen(!notificationsOpen)}
-                            className="relative p-2.5 rounded-xl hover:bg-theme-subtle text-theme-subtle hover:text-theme transition-colors"
-                            aria-label="الإشعارات"
+                            className="relative p-2.5 rounded-xl border border-amber-500/15 bg-amber-500/5 text-amber-300 hover:bg-amber-500/10 hover:border-amber-500/25 transition-colors"
+                            aria-label="تنبيهات الإدارة"
                         >
-                            <Bell className="w-5 h-5" />
+                            <ShieldAlert className="w-5 h-5" />
                             {unreadCount > 0 && (
                                 <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full bg-gold text-[#0a0a0a] text-[10px] font-bold flex items-center justify-center px-1">
                                     {unreadCount > 99 ? "99+" : unreadCount}
@@ -232,8 +292,32 @@ export function AdminTopBar() {
                         className="fixed left-3 right-3 top-16 sm:left-auto sm:right-6 sm:w-[400px] z-50 rounded-2xl border border-theme-soft bg-[var(--wusha-surface)]/95 backdrop-blur-2xl shadow-2xl overflow-hidden"
                         >
                             <div className="flex items-center justify-between px-4 py-3 border-b border-theme-subtle">
-                                <h3 className="font-bold text-theme">الإشعارات</h3>
+                                <div className="flex items-start gap-3">
+                                    <div className="w-9 h-9 rounded-xl border border-amber-500/15 bg-amber-500/10 text-amber-300 flex items-center justify-center">
+                                        <ShieldAlert className="w-4 h-4" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <div>
+                                            <h3 className="font-bold text-theme">تنبيهات الإدارة</h3>
+                                            <p className="text-[11px] text-theme-faint">قناة داخلية منفصلة للطلبات والمدفوعات والدعم</p>
+                                        </div>
+                                        {notifications.length > 0 && (
+                                            <div className="flex flex-wrap items-center gap-1.5">
+                                                <span className="inline-flex items-center rounded-full border border-rose-500/15 bg-rose-500/10 px-2 py-0.5 text-[10px] font-medium text-rose-300">
+                                                    {notificationSummary.critical} حرج
+                                                </span>
+                                                <span className="inline-flex items-center rounded-full border border-amber-500/15 bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-300">
+                                                    {notificationSummary.warning} تحذير
+                                                </span>
+                                                <span className="inline-flex items-center rounded-full border border-sky-500/15 bg-sky-500/10 px-2 py-0.5 text-[10px] font-medium text-sky-300">
+                                                    {notificationSummary.info} معلومة
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                                 <div className="flex items-center gap-2">
+                                    <PushSubscribeButton scope="admin" variant="admin" />
                                     {unreadCount > 0 && (
                                         <button
                                             onClick={async () => {
@@ -256,35 +340,54 @@ export function AdminTopBar() {
                             </div>
                             <div className="max-h-[360px] overflow-y-auto">
                                 {notifications.length > 0 ? (
-                                    notifications.map((n) => (
-                                        <Link
-                                            key={n.id}
-                                            href={n.link || "#"}
-                                            onClick={async () => {
-                                                if (!n.is_read) {
-                                                    await markNotificationRead(n.id);
-                                                    fetchNotifications();
-                                                }
-                                                setNotificationsOpen(false);
-                                            }}
-                                            className={`flex items-start gap-3 px-4 py-3 border-b border-theme-faint hover:bg-theme-subtle transition-colors ${!n.is_read ? "bg-gold/5" : ""
-                                                }`}
-                                        >
-                                            <div className={`mt-0.5 w-2 h-2 rounded-full shrink-0 ${!n.is_read ? "bg-gold" : "bg-transparent"}`} />
-                                            <div className="flex-1 min-w-0">
-                                                <p className="font-medium text-theme text-sm">{n.title}</p>
-                                                {n.message && <p className="text-xs text-theme-subtle mt-0.5">{n.message}</p>}
-                                                <p className="text-[10px] text-theme-faint mt-1" dir="ltr">
-                                                    {new Date(n.created_at).toLocaleString("ar-SA", {
-                                                        month: "short",
-                                                        day: "numeric",
-                                                        hour: "2-digit",
-                                                        minute: "2-digit",
-                                                    })}
-                                                </p>
-                                            </div>
-                                        </Link>
-                                    ))
+                                    notifications.map((n) => {
+                                        const Icon = getAdminNotificationIcon(n);
+                                        return (
+                                            <Link
+                                                key={n.id}
+                                                href={n.link || "#"}
+                                                onClick={async () => {
+                                                    if (!n.is_read) {
+                                                        await markNotificationRead(n.id);
+                                                        fetchNotifications();
+                                                    }
+                                                    setNotificationsOpen(false);
+                                                }}
+                                                className={`flex items-start gap-3 px-4 py-3 border-b border-theme-faint hover:bg-theme-subtle transition-colors ${!n.is_read ? "bg-gold/5" : ""
+                                                    }`}
+                                            >
+                                                <div className={`w-10 h-10 rounded-xl shrink-0 border flex items-center justify-center ${!n.is_read
+                                                    ? "border-amber-500/15 bg-amber-500/10 text-amber-300"
+                                                    : "border-theme-soft bg-theme-subtle text-theme-subtle"
+                                                    }`}>
+                                                    <Icon className="w-4 h-4" />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="font-medium text-theme text-sm">{n.title}</p>
+                                                        {!n.is_read && <span className="w-1.5 h-1.5 rounded-full bg-gold shrink-0" />}
+                                                    </div>
+                                                    {n.message && <p className="text-xs text-theme-subtle mt-0.5">{n.message}</p>}
+                                                    <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                                                        <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium ${getCategoryBadgeClasses(n)}`}>
+                                                            {getAdminNotificationCategoryLabel(n.category)}
+                                                        </span>
+                                                        <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium ${getSeverityBadgeClasses(n)}`}>
+                                                            {getAdminNotificationSeverityLabel(n.severity)}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-[10px] text-theme-faint mt-1" dir="ltr">
+                                                        {new Date(n.created_at).toLocaleString("ar-SA", {
+                                                            month: "short",
+                                                            day: "numeric",
+                                                            hour: "2-digit",
+                                                            minute: "2-digit",
+                                                        })}
+                                                    </p>
+                                                </div>
+                                            </Link>
+                                        );
+                                    })
                                 ) : (
                                     <div className="text-center py-16 text-theme-subtle text-sm">
                                         لا توجد إشعارات

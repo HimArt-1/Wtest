@@ -115,7 +115,7 @@ interface Props {
 
 // ─── Main Wizard ────────────────────────────────────────
 
-import { OrderTracker, getStoredOrderId, storeOrderId, clearOrderId } from "./OrderTracker";
+import { OrderTracker, getStoredOrderAccess, storeOrderId, clearOrderId } from "./OrderTracker";
 import { getDesignOrderPublic } from "@/app/actions/smart-store";
 
 export function DesignYourPieceWizard({ garments, styles, artStyles, colorPackages, studioItems, garmentStudioMockups }: Props) {
@@ -132,11 +132,11 @@ export function DesignYourPieceWizard({ garments, styles, artStyles, colorPackag
 
     // Check for existing active order on mount
     useEffect(() => {
-        const storedId = getStoredOrderId();
-        if (!storedId) { setCheckingOrder(false); return; }
-        getDesignOrderPublic(storedId).then((order) => {
+        const storedAccess = getStoredOrderAccess();
+        if (!storedAccess) { setCheckingOrder(false); return; }
+        getDesignOrderPublic(storedAccess.id, storedAccess.token).then((order) => {
             if (order && !['completed', 'cancelled'].includes(order.status)) {
-                setActiveOrderId(storedId);
+                setActiveOrderId(storedAccess.id);
             } else {
                 clearOrderId();
             }
@@ -297,7 +297,7 @@ export function DesignYourPieceWizard({ garments, styles, artStyles, colorPackag
             if (result.error) {
                 console.error("Order creation error:", result.error);
             } else if (result.orderId) {
-                storeOrderId(result.orderId);
+                storeOrderId(result.orderId, result.trackerToken);
                 orderNumber = result.orderNumber;
                 setActiveOrderId(result.orderId);
             }
@@ -390,7 +390,7 @@ export function DesignYourPieceWizard({ garments, styles, artStyles, colorPackag
     }
 
     if (activeOrderId) {
-        return <OrderTracker orderId={activeOrderId} />;
+        return <OrderTracker orderId={activeOrderId} trackerToken={getStoredOrderAccess()?.token} />;
     }
 
     return (

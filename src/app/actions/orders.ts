@@ -5,15 +5,14 @@
 
 "use server";
 
-import { createClient } from "@supabase/supabase-js";
 import { currentUser } from "@clerk/nextjs/server";
 import { sendOrderConfirmationEmail, sendAdminOrderNotificationEmail, type OrderEmailItem } from "@/lib/email";
-import { sendPushToAll } from "@/lib/push";
+import { sendPushToAdmins } from "@/lib/push";
 import { checkStockAvailability, decrementStockForOrder } from "@/lib/inventory";
 import { createAdminNotification } from "@/app/actions/notifications";
 import { createUserNotification } from "@/app/actions/user-notifications";
-
 import { getSupabaseAdminClient } from "@/lib/supabase";
+import { runIdempotentDispatch } from "@/lib/idempotent-dispatch";
 
 interface OrderItemInput {
     product_id: string | null;
@@ -38,6 +37,373 @@ interface ShippingAddressInput {
 
 const SHIPPING_COST = 30;
 const TAX_RATE = 0.15;
+
+function buildOrderDispatchMetadata(
+    orderId: string,
+    orderNumber: string,
+    total: number,
+    extra?: Record<string, unknown>
+) {
+    return {
+        order_id: orderId,
+        order_number: orderNumber,
+        total,
+        ...(extra || {}),
+    };
+}
+
+function getShippingContactName(shippingAddress: unknown) {
+    if (!shippingAddress || typeof shippingAddress !== "object") {
+        return null;
+    }
+
+    const rawName = (shippingAddress as Record<string, unknown>).name;
+    return typeof rawName === "string" && rawName.trim() ? rawName.trim() : null;
+}
+
+function buildOrderEmailItems(items: OrderItemInput[]) {
+    return items.map((item) => ({
+        title: item.custom_title || "منتج",
+        quantity: item.quantity,
+        size: item.size,
+        unit_price: item.unit_price,
+    }));
+}
+
+function assertSuccessfulDispatch(
+    result: { success?: boolean; error?: string } | undefined,
+    label: string
+) {
+    if (result?.success === false) {
+        throw new Error(result.error || label);
+    }
+}
+
+function logDispatchFailures(scope: string, results: PromiseSettledResult<unknown>[]) {
+    for (const result of results) {
+        if (result.status === "rejected") {
+            console.error(`[${scope}]`, result.reason);
+        }
+    }
+}
+
+async function dispatchOrderCreatedSideEffects(params: {
+    orderId: string;
+    orderNumber: string;
+    total: number;
+    buyerId: string;
+    isCod: boolean;
+    customerEmail?: string | null;
+    customerName?: string | null;
+    emailItems: OrderEmailItem[];
+}) {
+    const { orderId, orderNumber, total, buyerId, isCod, customerEmail, customerName, emailItems } = params;
+    const metadata = buildOrderDispatchMetadata(orderId, orderNumber, total);
+
+    const sideEffects = [
+        runIdempotentDispatch(
+            {
+                dispatchKey: `order:${orderId}:admin_notification:new_order`,
+                eventType: "order_created",
+                channel: "admin_notification",
+                resourceType: "order",
+                resourceId: orderId,
+                metadata,
+            },
+            async () => {
+                const result = await createAdminNotification({
+                    type: "order_new",
+                    category: "orders",
+                    severity: "info",
+                    title: "طلب جديد",
+                    message: `طلب #${orderNumber} — ${total.toLocaleString()} ر.س`,
+                    link: "/dashboard/orders",
+                    metadata,
+                });
+                assertSuccessfulDispatch(result, "Failed to create admin order notification");
+            }
+        ),
+        runIdempotentDispatch(
+            {
+                dispatchKey: `order:${orderId}:user_notification:created`,
+                eventType: "order_created",
+                channel: "user_notification",
+                resourceType: "order",
+                resourceId: orderId,
+                metadata,
+            },
+            async () => {
+                const result = await createUserNotification({
+                    userId: buyerId,
+                    type: "order_update",
+                    title: "تم استلام طلبك ✓",
+                    message: `طلبك #${orderNumber} تم تسجيله بنجاح — ${total.toLocaleString()} ر.س`,
+                    link: `/account/orders?order=${orderId}`,
+                    metadata,
+                });
+                assertSuccessfulDispatch(result, "Failed to create buyer order notification");
+            }
+        ),
+        runIdempotentDispatch(
+            {
+                dispatchKey: `order:${orderId}:admin_email:new_order`,
+                eventType: "order_created",
+                channel: "email_admin",
+                resourceType: "order",
+                resourceId: orderId,
+                metadata,
+            },
+            async () => {
+                const result = await sendAdminOrderNotificationEmail(orderNumber, total, "new_order");
+                assertSuccessfulDispatch(result, "Failed to send admin order email");
+            }
+        ),
+        runIdempotentDispatch(
+            {
+                dispatchKey: `order:${orderId}:admin_push:new_order`,
+                eventType: "order_created",
+                channel: "push_admin",
+                resourceType: "order",
+                resourceId: orderId,
+                metadata,
+            },
+            async () => {
+                await sendPushToAdmins(
+                    "طلب جديد",
+                    `طلب #${orderNumber} — ${total.toLocaleString()} ر.س`,
+                    "/dashboard/orders"
+                );
+            }
+        ),
+    ];
+
+    if (isCod && customerEmail) {
+        sideEffects.push(
+            runIdempotentDispatch(
+                {
+                    dispatchKey: `order:${orderId}:customer_email:created`,
+                    eventType: "order_created",
+                    channel: "email_customer",
+                    resourceType: "order",
+                    resourceId: orderId,
+                    metadata,
+                },
+                async () => {
+                    const result = await sendOrderConfirmationEmail(
+                        customerEmail,
+                        customerName || "عميل",
+                        orderNumber,
+                        total,
+                        emailItems
+                    );
+                    assertSuccessfulDispatch(result, "Failed to send customer order confirmation email");
+                }
+            )
+        );
+    }
+
+    const results = await Promise.allSettled(sideEffects);
+    logDispatchFailures("dispatchOrderCreatedSideEffects", results);
+}
+
+async function finalizeOrderPaymentState(orderId: string, metadata: Record<string, unknown>) {
+    await runIdempotentDispatch(
+        {
+            dispatchKey: `order:${orderId}:payment_finalize`,
+            eventType: "order_payment_finalize",
+            channel: "order_state",
+            resourceType: "order",
+            resourceId: orderId,
+            metadata,
+        },
+        async () => {
+            const supabase = getSupabaseAdminClient();
+            const { data: currentOrder, error: currentOrderError } = await supabase
+                .from("orders")
+                .select("payment_status, status, coupon_id")
+                .eq("id", orderId)
+                .single();
+
+            if (currentOrderError || !currentOrder) {
+                throw new Error("Order not found during payment finalization");
+            }
+
+            if (currentOrder.payment_status !== "paid") {
+                const { error: updateError } = await supabase
+                    .from("orders")
+                    .update({
+                        payment_status: "paid",
+                        status: "confirmed",
+                        updated_at: new Date().toISOString(),
+                    })
+                    .eq("id", orderId);
+
+                if (updateError) {
+                    throw new Error(updateError.message);
+                }
+            }
+
+            const wasStripePending = currentOrder.status === "pending";
+            if (wasStripePending) {
+                await decrementStockForOrder(orderId);
+            }
+
+            if (wasStripePending && currentOrder.coupon_id) {
+                const { error: couponError } = await supabase.rpc(
+                    "increment_coupon_uses_by_id" as never,
+                    { p_coupon_id: currentOrder.coupon_id } as never
+                );
+
+                if (couponError) {
+                    throw new Error(couponError.message);
+                }
+            }
+        }
+    );
+}
+
+async function fetchOrderEmailItems(orderId: string) {
+    const supabase = getSupabaseAdminClient();
+    const { data: orderItems, error } = await supabase
+        .from("order_items")
+        .select("quantity, size, unit_price, custom_title, product:products(title)")
+        .eq("order_id", orderId);
+
+    if (error) {
+        throw new Error(error.message);
+    }
+
+    return (orderItems || []).map((item: any) => ({
+        title: item.product?.title || item.custom_title || "منتج",
+        quantity: item.quantity,
+        size: item.size,
+        unit_price: item.unit_price,
+    })) as OrderEmailItem[];
+}
+
+async function dispatchOrderPaymentSideEffects(params: {
+    orderId: string;
+    orderNumber: string;
+    total: number;
+    buyerId?: string | null;
+    customerEmail?: string | null;
+    customerName?: string | null;
+    webhookEventId?: string;
+}) {
+    const { orderId, orderNumber, total, buyerId, customerEmail, customerName, webhookEventId } = params;
+    const metadata = buildOrderDispatchMetadata(orderId, orderNumber, total, webhookEventId ? { webhook_event_id: webhookEventId } : undefined);
+
+    const sideEffects = [
+        runIdempotentDispatch(
+            {
+                dispatchKey: `order:${orderId}:admin_notification:payment_received`,
+                eventType: "order_payment_received",
+                channel: "admin_notification",
+                resourceType: "order",
+                resourceId: orderId,
+                metadata,
+            },
+            async () => {
+                const result = await createAdminNotification({
+                    type: "payment_received",
+                    category: "payments",
+                    severity: "info",
+                    title: "تم استلام الدفع",
+                    message: `طلب #${orderNumber} — ${total.toLocaleString()} ر.س`,
+                    link: "/dashboard/orders",
+                    metadata,
+                });
+                assertSuccessfulDispatch(result, "Failed to create payment admin notification");
+            }
+        ),
+        runIdempotentDispatch(
+            {
+                dispatchKey: `order:${orderId}:admin_email:payment_received`,
+                eventType: "order_payment_received",
+                channel: "email_admin",
+                resourceType: "order",
+                resourceId: orderId,
+                metadata,
+            },
+            async () => {
+                const result = await sendAdminOrderNotificationEmail(orderNumber, total, "payment_received");
+                assertSuccessfulDispatch(result, "Failed to send payment admin email");
+            }
+        ),
+        runIdempotentDispatch(
+            {
+                dispatchKey: `order:${orderId}:admin_push:payment_received`,
+                eventType: "order_payment_received",
+                channel: "push_admin",
+                resourceType: "order",
+                resourceId: orderId,
+                metadata,
+            },
+            async () => {
+                await sendPushToAdmins(
+                    "تم استلام الدفع",
+                    `طلب #${orderNumber} — ${total.toLocaleString()} ر.س`,
+                    "/dashboard/orders"
+                );
+            }
+        ),
+    ];
+
+    if (buyerId) {
+        sideEffects.push(
+            runIdempotentDispatch(
+                {
+                    dispatchKey: `order:${orderId}:user_notification:payment_received`,
+                    eventType: "order_payment_received",
+                    channel: "user_notification",
+                    resourceType: "order",
+                    resourceId: orderId,
+                    metadata,
+                },
+                async () => {
+                    const result = await createUserNotification({
+                        userId: buyerId,
+                        type: "order_update",
+                        title: "تم استلام الدفع ✓",
+                        message: `تم تأكيد الدفع لطلبك #${orderNumber} — ${total.toLocaleString()} ر.س`,
+                        link: `/account/orders?order=${orderId}`,
+                        metadata,
+                    });
+                    assertSuccessfulDispatch(result, "Failed to create payment buyer notification");
+                }
+            )
+        );
+    }
+
+    if (customerEmail) {
+        sideEffects.push(
+            runIdempotentDispatch(
+                {
+                    dispatchKey: `order:${orderId}:customer_email:payment_received`,
+                    eventType: "order_payment_received",
+                    channel: "email_customer",
+                    resourceType: "order",
+                    resourceId: orderId,
+                    metadata,
+                },
+                async () => {
+                    const emailItems = await fetchOrderEmailItems(orderId);
+                    const result = await sendOrderConfirmationEmail(
+                        customerEmail,
+                        customerName || "عميل",
+                        orderNumber,
+                        total,
+                        emailItems
+                    );
+                    assertSuccessfulDispatch(result, "Failed to send payment customer email");
+                }
+            )
+        );
+    }
+
+    const results = await Promise.allSettled(sideEffects);
+    logDispatchFailures("dispatchOrderPaymentSideEffects", results);
+}
 
 export async function createOrder(
     items: OrderItemInput[],
@@ -175,41 +541,16 @@ export async function createOrder(
         await decrementStockForOrder(order.id);
     }
 
-    if (isCod) {
-        const email = user.emailAddresses?.[0]?.emailAddress;
-        const name = shippingAddress.name || user.firstName || "عميل";
-        if (email) {
-            const emailItems: OrderEmailItem[] = items.map(i => ({
-                title: i.custom_title || `منتج`,
-                quantity: i.quantity,
-                size: i.size,
-                unit_price: i.unit_price,
-            }));
-            sendOrderConfirmationEmail(email, name, order.order_number, total, emailItems).catch(console.error);
-        }
-    }
-
-    createAdminNotification({
-        type: "order_new",
-        title: "طلب جديد",
-        message: `طلب #${order.order_number} — ${total.toLocaleString()} ر.س`,
-        link: `/dashboard/orders`,
-        metadata: { order_id: order.id, order_number: order.order_number, total },
-    }).catch(() => { });
-
-    // إشعار للمشتري بتأكيد الطلب
-    createUserNotification({
-        userId: buyerId,
-        type: "order_update",
-        title: "تم استلام طلبك ✓",
-        message: `طلبك #${order.order_number} تم تسجيله بنجاح — ${total.toLocaleString()} ر.س`,
-        link: `/account/orders?order=${order.id}`,
-        metadata: { order_id: order.id, order_number: order.order_number, total },
-    }).catch(() => { });
-
-    sendAdminOrderNotificationEmail(order.order_number, total, "new_order").catch(console.error);
-
-    sendPushToAll("طلب جديد", `طلب #${order.order_number} — ${total.toLocaleString()} ر.س`, "/dashboard/orders").catch(() => { });
+    await dispatchOrderCreatedSideEffects({
+        orderId: order.id,
+        orderNumber: order.order_number,
+        total,
+        buyerId,
+        isCod,
+        customerEmail: user.emailAddresses?.[0]?.emailAddress,
+        customerName: shippingAddress.name || user.firstName || "عميل",
+        emailItems: buildOrderEmailItems(items),
+    });
 
     return {
         success: true,
@@ -223,7 +564,7 @@ export async function createOrder(
 
 export async function confirmOrderPayment(
     orderId: string,
-    options?: { customerEmail?: string }
+    options?: { customerEmail?: string; webhookEventId?: string }
 ) {
     try {
         const supabase = getSupabaseAdminClient();
@@ -239,74 +580,25 @@ export async function confirmOrderPayment(
             return { success: false };
         }
 
-        if (order.payment_status === "paid") {
-            console.log("[confirmOrderPayment] Order already paid:", orderId);
-            return { success: true };
-        }
+        await finalizeOrderPaymentState(
+            orderId,
+            buildOrderDispatchMetadata(
+                orderId,
+                order.order_number,
+                order.total,
+                options?.webhookEventId ? { webhook_event_id: options.webhookEventId } : undefined
+            )
+        );
 
-        const { error } = await supabase
-            .from("orders")
-            .update({
-                payment_status: "paid",
-                status: "confirmed",
-                updated_at: new Date().toISOString(),
-            })
-            .eq("id", orderId);
-
-        if (error) {
-            console.error("[confirmOrderPayment]", error);
-            return { success: false };
-        }
-
-        // المخزون: يُنقص فقط إذا كان الطلب Stripe (pending → confirmed)
-        // COD: المخزون نُقص مسبقاً عند إنشاء الطلب
-        const wasStripePending = (order as { status?: string }).status === "pending";
-        if (wasStripePending) {
-            await decrementStockForOrder(orderId);
-        }
-
-        // الكوبون: يُحتسب فقط إذا كان الطلب Stripe (COD يحتسبه عند إنشاء الطلب)
-        if (wasStripePending && order.coupon_id) {
-            await supabase.rpc("increment_coupon_uses_by_id" as never, { p_coupon_id: order.coupon_id } as never);
-        }
-
-        const ord = order as { order_number: string; total: number; buyer_id?: string; shipping_address?: { name?: string }; coupon_id?: string | null } | null;
-        if (ord) {
-            createAdminNotification({
-                type: "payment_received",
-                title: "تم استلام الدفع",
-                message: `طلب #${ord.order_number} — ${ord.total.toLocaleString()} ر.س`,
-                link: "/dashboard/orders",
-                metadata: { order_id: orderId },
-            }).catch(() => { });
-            if (ord.buyer_id) {
-                createUserNotification({
-                    userId: ord.buyer_id,
-                    type: "order_update",
-                    title: "تم استلام الدفع ✓",
-                    message: `تم تأكيد الدفع لطلبك #${ord.order_number} — ${ord.total.toLocaleString()} ر.س`,
-                    link: `/account/orders?order=${orderId}`,
-                }).catch(() => { });
-            }
-            sendAdminOrderNotificationEmail(ord.order_number, ord.total, "payment_received").catch(console.error);
-            sendPushToAll("تم استلام الدفع", `طلب #${ord.order_number} — ${ord.total.toLocaleString()} ر.س`, "/dashboard/orders").catch(() => { });
-        }
-        const email = options?.customerEmail;
-        if (ord && email) {
-            const name = ord.shipping_address?.name || "عميل";
-            // Fetch order items to include in email
-            const { data: orderItems } = await supabase
-                .from("order_items")
-                .select("quantity, size, unit_price, custom_title, product:products(title)")
-                .eq("order_id", orderId);
-            const emailItems: OrderEmailItem[] = (orderItems || []).map((i: any) => ({
-                title: i.product?.title || i.custom_title || "منتج",
-                quantity: i.quantity,
-                size: i.size,
-                unit_price: i.unit_price,
-            }));
-            sendOrderConfirmationEmail(email, name, ord.order_number, ord.total, emailItems).catch(console.error);
-        }
+        await dispatchOrderPaymentSideEffects({
+            orderId,
+            orderNumber: order.order_number,
+            total: order.total,
+            buyerId: order.buyer_id,
+            customerEmail: options?.customerEmail,
+            customerName: getShippingContactName(order.shipping_address),
+            webhookEventId: options?.webhookEventId,
+        });
 
         return { success: true };
     } catch (error) {
@@ -352,4 +644,3 @@ export async function getUserOrders() {
 
     return { data: data || [], count: count || 0 };
 }
-

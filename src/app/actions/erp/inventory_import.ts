@@ -1,12 +1,8 @@
 "use server";
 
 import { createClient } from "@supabase/supabase-js";
+import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
-
-// Need service role key to bypass RLS for multi-table inserts
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
 interface ImportPayload {
     warehouseId: string;
@@ -17,10 +13,44 @@ interface ImportPayload {
     columns: string[]; // List of size names
 }
 
+async function requireInventoryImportAdmin() {
+    const user = await currentUser();
+    if (!user) {
+        return { error: "غير مصرح" as const };
+    }
+
+    const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        { auth: { persistSession: false } }
+    );
+    const { data: profile } = await supabase
+        .from("profiles")
+        .select("id, role")
+        .eq("clerk_id", user.id)
+        .single();
+
+    if (profile?.role !== "admin") {
+        return { error: "صلاحيات غير كافية" as const };
+    }
+
+    return { supabase, profile };
+}
+
 export async function inventoryImportAction(payload: ImportPayload) {
     console.log("Starting Smart Inventory Import...", payload.items.length, "items");
     
     try {
+        const adminAccess = await requireInventoryImportAdmin();
+        if ("error" in adminAccess) {
+            return {
+                success: false,
+                message: adminAccess.error ?? "صلاحيات غير كافية",
+                logs: [] as string[],
+            };
+        }
+
+        const supabaseAdmin = adminAccess.supabase;
         const { warehouseId, items, columns } = payload;
         
         let productsCreated = 0;

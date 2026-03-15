@@ -42,7 +42,7 @@ export function AdditionalDesignMiniWizard({
     order: CustomDesignOrder;
     mainPosition: PrintPosition | null;
     onBack: () => void;
-    onSuccess: (orderId: string) => void;
+    onSuccess: (result: { orderId: string; trackerToken?: string | null }) => void;
     onError: (msg: string) => void;
 }) {
     const [step, setStep] = useState(1);
@@ -114,7 +114,10 @@ export function AdditionalDesignMiniWizard({
             onError(result.error ?? "حدث خطأ غير متوقع");
             return;
         }
-        onSuccess((result as any).orderId);
+        onSuccess({
+            orderId: (result as any).orderId,
+            trackerToken: (result as any).trackerToken ?? null,
+        });
     };
 
     if (loading) {

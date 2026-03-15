@@ -4,6 +4,7 @@
 // ═══════════════════════════════════════════════════════════
 
 import { Resend } from "resend";
+import { reportAdminOperationalAlert } from "@/lib/admin-operational-alerts";
 
 const resend = process.env.RESEND_API_KEY
     ? new Resend(process.env.RESEND_API_KEY)
@@ -12,10 +13,53 @@ const resend = process.env.RESEND_API_KEY
 const FROM_EMAIL = process.env.EMAIL_FROM || "وشّى <info@washa.shop>";
 const SITE_NAME = "وشّى";
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://washa.shop";
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MAX_EMAIL_ADDRESS_LENGTH = 320;
+const MAX_EMAIL_SUBJECT_LENGTH = 180;
+const MAX_EMAIL_HTML_LENGTH = 250_000;
 
 export const EMAIL_ENABLED = !!resend;
 
 /* ─── Premium Email Wrapper ────────────────────────────── */
+
+function escapeHtml(value: string): string {
+    return value
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
+function sanitizeText(value: string | null | undefined, maxLength = 160, fallback = "—"): string {
+    const normalized = (value || "").trim().replace(/\s+/g, " ");
+    if (!normalized) return fallback;
+    return escapeHtml(normalized.slice(0, maxLength));
+}
+
+function sanitizeEmailAddress(value: string | null | undefined): string | null {
+    const normalized = (value || "").trim().toLowerCase();
+    if (!normalized || normalized.length > MAX_EMAIL_ADDRESS_LENGTH) return null;
+    if (!EMAIL_REGEX.test(normalized)) return null;
+    return normalized;
+}
+
+function getEmailDomain(value: string | null | undefined) {
+    const sanitized = sanitizeEmailAddress(value);
+    return sanitized?.split("@")[1] ?? null;
+}
+
+function sanitizeSubject(value: string): string {
+    return value.trim().replace(/\s+/g, " ").slice(0, MAX_EMAIL_SUBJECT_LENGTH);
+}
+
+function buildSiteUrl(path: string) {
+    try {
+        return new URL(path, BASE_URL).toString();
+    } catch {
+        return BASE_URL;
+    }
+}
 
 function wushaTemplate(content: string): string {
     return `
@@ -83,12 +127,14 @@ function wushaTemplate(content: string): string {
 }
 
 function ctaButton(text: string, url: string): string {
+    const safeText = sanitizeText(text, 80, SITE_NAME);
+    const safeUrl = buildSiteUrl(url);
     return `
       <table role="presentation" cellpadding="0" cellspacing="0" style="margin:28px auto 0;">
         <tr>
           <td style="background:linear-gradient(135deg,#5A3E2B,#ceae7f,#5A3E2B);border-radius:14px;padding:14px 32px;">
-            <a href="${url}" style="color:#080808;font-weight:700;text-decoration:none;font-size:15px;display:inline-block;">
-              ${text}
+            <a href="${safeUrl}" style="color:#080808;font-weight:700;text-decoration:none;font-size:15px;display:inline-block;">
+              ${safeText}
             </a>
           </td>
         </tr>
@@ -118,22 +164,70 @@ function infoBlock(label: string, value: string): string {
 async function send(options: { to: string; subject: string; html: string }) {
     if (!resend) {
         console.warn("[Email] RESEND_API_KEY غير معرّف — تخطي الإرسال");
+        await reportAdminOperationalAlert({
+            dispatchKey: "email:resend_config_missing",
+            bucketMs: 6 * 60 * 60 * 1000,
+            category: "system",
+            severity: "warning",
+            title: "خدمة البريد غير مهيأة",
+            message: "RESEND_API_KEY غير مضبوط حالياً، لذلك يتم تخطي رسائل البريد الخارجة من النظام.",
+            link: "/dashboard/settings",
+            source: "email.resend.config",
+        });
         return { success: false };
     }
+
+    const recipient = sanitizeEmailAddress(options.to);
+    const subject = sanitizeSubject(options.subject);
+    if (!recipient || !subject || !options.html || options.html.length > MAX_EMAIL_HTML_LENGTH) {
+        return { success: false };
+    }
+
     try {
         const { error } = await resend.emails.send({
             from: FROM_EMAIL,
-            to: options.to,
-            subject: options.subject,
+            to: recipient,
+            subject,
             html: options.html,
         });
         if (error) {
             console.error("[Email]", error);
+            await reportAdminOperationalAlert({
+                dispatchKey: "email:delivery_failed",
+                bucketMs: 30 * 60 * 1000,
+                category: "system",
+                severity: "warning",
+                title: "فشل إرسال بريد تشغيلي",
+                message: "خدمة البريد أعادت خطأ أثناء محاولة إرسال رسالة من النظام.",
+                link: "/dashboard/notifications",
+                source: "email.resend.send",
+                metadata: {
+                    subject,
+                    recipient_domain: getEmailDomain(recipient),
+                    error: error.message,
+                },
+            });
             return { success: false };
         }
         return { success: true };
     } catch (err) {
         console.error("[Email]", err);
+        await reportAdminOperationalAlert({
+            dispatchKey: "email:delivery_exception",
+            bucketMs: 30 * 60 * 1000,
+            category: "system",
+            severity: "warning",
+            title: "استثناء أثناء إرسال البريد",
+            message: "حدث استثناء غير متوقع أثناء إرسال بريد من النظام عبر Resend.",
+            link: "/dashboard/notifications",
+            source: "email.resend.send",
+            metadata: {
+                subject,
+                recipient_domain: getEmailDomain(recipient),
+                error: err instanceof Error ? err.message : String(err),
+            },
+            stack: err instanceof Error ? err.stack ?? null : null,
+        });
         return { success: false };
     }
 }
@@ -141,25 +235,28 @@ async function send(options: { to: string; subject: string; html: string }) {
 /* ─── Email Functions ──────────────────────────────────── */
 
 export async function sendWelcomeEmail(to: string, name: string) {
+    const safeName = sanitizeText(name, 80, "صديق وشّى");
     return send({
         to,
         subject: `مرحباً بك في ${SITE_NAME} 👋`,
         html: wushaTemplate(`
-            ${heading(`مرحباً ${name} 👋`)}
+            ${heading(`مرحباً ${safeName} 👋`)}
             ${paragraph(`شكراً لانضمامك إلى <strong style="color:#ceae7f;">${SITE_NAME}</strong>. أنت الآن جزء من مجتمعنا.`)}
             ${paragraph("يمكنك تصفح المتجر، اكتشاف التصاميم، وتصميم قطعك بالذكاء الاصطناعي.")}
-            ${ctaButton("استكشف المتجر", `${BASE_URL}/store`)}
+            ${ctaButton("استكشف المتجر", "/store")}
         `),
     });
 }
 
 export async function sendApplicationAcceptedEmail(to: string, name: string, tempPassword?: string) {
+    const safeName = sanitizeText(name, 80, "فنان وشّى");
+    const safePassword = tempPassword ? sanitizeText(tempPassword, 128, "") : "";
     const passwordNote = tempPassword
         ? `
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:16px 0;background:rgba(206,174,127,0.08);border:1px solid rgba(206,174,127,0.15);border-radius:12px;padding:16px 20px;">
               <tr><td>
                 ${paragraph(`تم إنشاء حسابك. كلمة المرور المؤقتة:`)}
-                <p style="margin:0;color:#ceae7f;font-size:18px;font-weight:700;font-family:monospace;direction:ltr;text-align:center;">${tempPassword}</p>
+                <p style="margin:0;color:#ceae7f;font-size:18px;font-weight:700;font-family:monospace;direction:ltr;text-align:center;">${safePassword}</p>
                 <p style="margin:8px 0 0;color:rgba(240,235,227,0.4);font-size:12px;">ننصحك بتغييرها فور تسجيل الدخول.</p>
               </td></tr>
             </table>`
@@ -169,23 +266,24 @@ export async function sendApplicationAcceptedEmail(to: string, name: string, tem
         to,
         subject: `تم قبول طلبك — أنت الآن وشّاي 🎨`,
         html: wushaTemplate(`
-            ${heading(`مبروك ${name}! 🎨`)}
+            ${heading(`مبروك ${safeName}! 🎨`)}
             ${paragraph("تم قبول طلب انضمامك كفنان وشّاي. يمكنك الآن الدخول إلى الاستوديو ورفع أعمالك وبيعها.")}
             ${passwordNote}
-            ${ctaButton("ادخل إلى الاستوديو", `${BASE_URL}/studio`)}
+            ${ctaButton("ادخل إلى الاستوديو", "/studio")}
         `),
     });
 }
 
 export async function sendApplicationRejectedEmail(to: string, name: string) {
+    const safeName = sanitizeText(name, 80, "صديق وشّى");
     return send({
         to,
         subject: `بخصوص طلب الانضمام إلى ${SITE_NAME}`,
         html: wushaTemplate(`
-            ${heading(`أهلاً ${name}،`)}
+            ${heading(`أهلاً ${safeName}،`)}
             ${paragraph("شكراً لاهتمامك بالانضمام كفنان. للأسف لم نتمكن من قبول طلبك هذه المرة.")}
             ${paragraph("يمكنك إعادة التقديم لاحقاً بعد تطوير معرض أعمالك. نتطلع لرؤيتك مجدداً.")}
-            ${ctaButton("تصفح المعرض", `${BASE_URL}/gallery`)}
+            ${ctaButton("تصفح المعرض", "/gallery")}
         `),
     });
 }
@@ -204,6 +302,8 @@ export async function sendOrderConfirmationEmail(
     total: number,
     items?: OrderEmailItem[]
 ) {
+    const safeName = sanitizeText(name, 80, "عميل");
+    const safeOrderNumber = sanitizeText(orderNumber, 40, "—");
     const itemsHtml = items && items.length > 0 ? `
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px;border-collapse:collapse;">
           <tr>
@@ -213,7 +313,7 @@ export async function sendOrderConfirmationEmail(
           </tr>
           ${items.map(item => `<tr>
             <td style="color:#f0ebe3;font-size:13px;padding:9px 0;border-bottom:1px solid rgba(240,235,227,0.04);">
-              ${item.title}${item.size ? ` <span style="color:#ceae7f;font-size:11px;">(${item.size})</span>` : ""}
+              ${sanitizeText(item.title, 120, "منتج")}${item.size ? ` <span style="color:#ceae7f;font-size:11px;">(${sanitizeText(item.size, 30, "")})</span>` : ""}
             </td>
             <td style="color:rgba(240,235,227,0.5);font-size:13px;padding:9px 0;border-bottom:1px solid rgba(240,235,227,0.04);text-align:center;">${item.quantity}</td>
             <td style="color:#ceae7f;font-size:13px;font-weight:600;padding:9px 0;border-bottom:1px solid rgba(240,235,227,0.04);text-align:left;" dir="ltr">${(item.unit_price * item.quantity).toLocaleString()} ر.س</td>
@@ -222,20 +322,20 @@ export async function sendOrderConfirmationEmail(
 
     return send({
         to,
-        subject: `تم استلام طلبك #${orderNumber} ✅`,
+        subject: `تم استلام طلبك #${safeOrderNumber} ✅`,
         html: wushaTemplate(`
-            ${heading(`شكراً لطلبك، ${name} ✅`)}
+            ${heading(`شكراً لطلبك، ${safeName} ✅`)}
             ${paragraph("تم استلام طلبك بنجاح. فيما يلي تفاصيل طلبك:")}
 
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;background:rgba(206,174,127,0.05);border:1px solid rgba(206,174,127,0.12);border-radius:12px;padding:20px 24px;">
               <tr><td>
                 ${itemsHtml}
-                ${infoBlock("رقم الطلب", `#${orderNumber}`)}
+                ${infoBlock("رقم الطلب", `#${safeOrderNumber}`)}
                 ${infoBlock("الإجمالي", `<strong style="color:#ceae7f;font-size:17px;">${total.toLocaleString()} ر.س</strong>`)}
               </td></tr>
             </table>
 
-            ${ctaButton("تتبع طلبك", `${BASE_URL}/account/orders`)}
+            ${ctaButton("تتبع طلبك", "/account/orders")}
         `),
     });
 }
@@ -246,10 +346,11 @@ export async function sendAdminOrderNotificationEmail(
     type: "new_order" | "payment_received",
     adminEmailOverride?: string
 ) {
-    const adminEmail = adminEmailOverride || process.env.ADMIN_EMAIL;
+    const adminEmail = sanitizeEmailAddress(adminEmailOverride || process.env.ADMIN_EMAIL);
     if (!adminEmail?.trim()) {
         return { success: false };
     }
+    const safeOrderNumber = sanitizeText(orderNumber, 40, "—");
 
     const isNew = type === "new_order";
     const title = isNew ? "طلب جديد 🛒" : "تم استلام الدفع 💳";
@@ -257,8 +358,8 @@ export async function sendAdminOrderNotificationEmail(
         ? "تم إنشاء طلب جديد في المتجر."
         : "تم تأكيد الدفع لطلب عبر Stripe.";
     const subject = isNew
-        ? `طلب جديد #${orderNumber} — ${total.toLocaleString()} ر.س`
-        : `تم استلام الدفع #${orderNumber} — ${total.toLocaleString()} ر.س`;
+        ? `طلب جديد #${safeOrderNumber} — ${total.toLocaleString()} ر.س`
+        : `تم استلام الدفع #${safeOrderNumber} — ${total.toLocaleString()} ر.س`;
 
     return send({
         to: adminEmail,
@@ -269,12 +370,12 @@ export async function sendAdminOrderNotificationEmail(
 
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;background:rgba(206,174,127,0.06);border:1px solid rgba(206,174,127,0.12);border-radius:12px;padding:20px 24px;">
               <tr><td>
-                ${infoBlock("رقم الطلب", `#${orderNumber}`)}
+                ${infoBlock("رقم الطلب", `#${safeOrderNumber}`)}
                 ${infoBlock("الإجمالي", `${total.toLocaleString()} ر.س`)}
               </td></tr>
             </table>
 
-            ${ctaButton("عرض الطلبات", `${BASE_URL}/dashboard/orders`)}
+            ${ctaButton("عرض الطلبات", "/dashboard/orders")}
         `),
     });
 }
@@ -284,25 +385,28 @@ export async function sendAdminApplicationNotificationEmail(
     email: string,
     artStyle: string
 ) {
-    const adminEmail = process.env.ADMIN_EMAIL;
+    const adminEmail = sanitizeEmailAddress(process.env.ADMIN_EMAIL);
     if (!adminEmail?.trim()) return { success: false };
+    const safeFullName = sanitizeText(fullName, 100, "مقدم الطلب");
+    const safeApplicantEmail = sanitizeText(sanitizeEmailAddress(email) || email, 160, "—");
+    const safeArtStyle = sanitizeText(artStyle, 120, "—");
 
     return send({
         to: adminEmail,
-        subject: `[${SITE_NAME}] طلب انضمام جديد — ${fullName}`,
+        subject: `[${SITE_NAME}] طلب انضمام جديد — ${safeFullName}`,
         html: wushaTemplate(`
             ${heading("طلب انضمام جديد 📬")}
             ${paragraph("تم تقديم طلب انضمام كفنان وشّاي.")}
 
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;background:rgba(206,174,127,0.06);border:1px solid rgba(206,174,127,0.12);border-radius:12px;padding:20px 24px;">
               <tr><td>
-                ${infoBlock("الاسم", fullName)}
-                ${infoBlock("البريد", email)}
-                ${infoBlock("الأسلوب الفني", artStyle)}
+                ${infoBlock("الاسم", safeFullName)}
+                ${infoBlock("البريد", safeApplicantEmail)}
+                ${infoBlock("الأسلوب الفني", safeArtStyle)}
               </td></tr>
             </table>
 
-            ${ctaButton("مراجعة الطلبات", `${BASE_URL}/dashboard/applications`)}
+            ${ctaButton("مراجعة الطلبات", "/dashboard/applications")}
         `),
     });
 }
@@ -317,8 +421,14 @@ export async function sendAdminDesignOrderNotificationEmail(
     designMethod: string,
     orderId: string
 ) {
-    const adminEmail = process.env.ADMIN_EMAIL;
+    const adminEmail = sanitizeEmailAddress(process.env.ADMIN_EMAIL);
     if (!adminEmail?.trim()) return { success: false };
+    const safeCustomerName = sanitizeText(customerName, 100, "—");
+    const safeCustomerEmail = sanitizeText(sanitizeEmailAddress(customerEmail) || customerEmail, 160, "—");
+    const safeCustomerPhone = sanitizeText(customerPhone, 40, "—");
+    const safeGarmentName = sanitizeText(garmentName, 100, "—");
+    const safeColorName = sanitizeText(colorName, 100, "—");
+    const safeOrderId = encodeURIComponent((orderId || "").trim());
 
     const methodAr = designMethod === 'from_text' ? 'صورة بالذكاء الاصطناعي' 
                    : designMethod === 'from_image' ? 'صورة مرجعية مرفقة' 
@@ -334,17 +444,17 @@ export async function sendAdminDesignOrderNotificationEmail(
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;background:rgba(206,174,127,0.06);border:1px solid rgba(206,174,127,0.12);border-radius:12px;padding:20px 24px;">
               <tr><td>
                 ${infoBlock("رقم الطلب", `#${orderNumber}`)}
-                ${infoBlock("العميل", customerName || '—')}
-                ${infoBlock("البريد", customerEmail || '—')}
-                ${infoBlock("الجوال", customerPhone || '—')}
+                ${infoBlock("العميل", safeCustomerName)}
+                ${infoBlock("البريد", safeCustomerEmail)}
+                ${infoBlock("الجوال", safeCustomerPhone)}
                 <div style="height:12px;"></div>
-                ${infoBlock("القطعة المحددة", garmentName)}
-                ${infoBlock("اللون", colorName)}
+                ${infoBlock("القطعة المحددة", safeGarmentName)}
+                ${infoBlock("اللون", safeColorName)}
                 ${infoBlock("طريقة التصميم", methodAr)}
               </td></tr>
             </table>
 
-            ${ctaButton("عرض تفاصيل الطلب", `${BASE_URL}/dashboard/design-orders?id=${orderId}`)}
+            ${ctaButton("عرض تفاصيل الطلب", safeOrderId ? `/dashboard/design-orders?id=${safeOrderId}` : "/dashboard/design-orders")}
         `),
     });
 }
