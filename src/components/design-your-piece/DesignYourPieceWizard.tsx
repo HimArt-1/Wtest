@@ -43,6 +43,7 @@ import type {
     CustomDesignArtStyle,
     CustomDesignColorPackage,
     CustomDesignStudioItem,
+    GarmentStudioMockup,
 } from "@/types/database";
 
 // ─── Types ──────────────────────────────────────────────
@@ -109,6 +110,7 @@ interface Props {
     artStyles: CustomDesignArtStyle[];
     colorPackages: CustomDesignColorPackage[];
     studioItems: CustomDesignStudioItem[];
+    garmentStudioMockups: GarmentStudioMockup[];
 }
 
 // ─── Main Wizard ────────────────────────────────────────
@@ -116,7 +118,7 @@ interface Props {
 import { OrderTracker, getStoredOrderId, storeOrderId, clearOrderId } from "./OrderTracker";
 import { getDesignOrderPublic } from "@/app/actions/smart-store";
 
-export function DesignYourPieceWizard({ garments, styles, artStyles, colorPackages, studioItems }: Props) {
+export function DesignYourPieceWizard({ garments, styles, artStyles, colorPackages, studioItems, garmentStudioMockups }: Props) {
     const { isSignedIn } = useAuth();
     const { addItem, toggleCart } = useCartStore();
     const [state, setState] = useState<WizardState>(INITIAL_STATE);
@@ -215,11 +217,14 @@ export function DesignYourPieceWizard({ garments, styles, artStyles, colorPackag
                 }
             }
 
+            const cartMockup = garmentStudioMockups.find(
+                m => m.garment_id === state.garment?.id && m.studio_item_id === state.studioItem!.id
+            );
             addItem({
                 id: `studio-${state.studioItem.id}-${Date.now()}`,
                 title: `تصميم ستيديو: ${state.studioItem.name}`,
                 price: finalPrice,
-                image_url: state.studioItem.main_image_url || state.garment?.image_url || "",
+                image_url: cartMockup?.mockup_front_url || state.studioItem.main_image_url || state.garment?.image_url || "",
                 artist_name: "ستيديو وشّى",
                 type: "custom_design",
                 customGarment: `${state.garment?.name} (${state.color?.name})`,
@@ -491,6 +496,8 @@ export function DesignYourPieceWizard({ garments, styles, artStyles, colorPackag
                                 studioItems={studioItems}
                                 selectedStudioItem={state.studioItem}
                                 onSelectStudioItem={(si) => setState((s) => ({ ...s, studioItem: si }))}
+                                selectedGarment={state.garment}
+                                garmentStudioMockups={garmentStudioMockups}
                                 onBack={goBack}
                                 onNext={goNext}
                             />
@@ -513,7 +520,7 @@ export function DesignYourPieceWizard({ garments, styles, artStyles, colorPackag
                             />
                         )}
                         {state.step === 9 && (
-                            <StepSubmit state={state} onBack={goBack} onSend={handleSend} />
+                            <StepSubmit state={state} garmentStudioMockups={garmentStudioMockups} onBack={goBack} onSend={handleSend} />
                         )}
                     </motion.div>
                 </AnimatePresence>
@@ -737,6 +744,7 @@ function StepSize({ sizes, loading, selected, onSelect, onBack, onNext }: {
 function StepMethod({
     selected, onSelect, textPrompt, onTextChange, imagePreview, onImageChange,
     studioItems, selectedStudioItem, onSelectStudioItem,
+    selectedGarment, garmentStudioMockups,
     onBack, onNext
 }: {
     selected: "from_text" | "from_image" | "studio" | null;
@@ -748,6 +756,8 @@ function StepMethod({
     studioItems: CustomDesignStudioItem[];
     selectedStudioItem: CustomDesignStudioItem | null;
     onSelectStudioItem: (s: CustomDesignStudioItem | null) => void;
+    selectedGarment: CustomDesignGarment | null;
+    garmentStudioMockups: GarmentStudioMockup[];
     onBack: () => void;
     onNext: () => void;
 }) {
@@ -838,7 +848,7 @@ function StepMethod({
                 )}
             </AnimatePresence>
 
-            {/* WASHA Studio Selection */}
+            {/* WASHA Studio Selection — عرض تفاعلي مميز */}
             <AnimatePresence>
                 {selected === "studio" && (
                     <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}>
@@ -847,59 +857,199 @@ function StepMethod({
                                 <p>لا توجد تصاميم متاحة حالياً في ستيديو وشّى.</p>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                                {studioItems.map((item) => {
-                                    const isSelected = selectedStudioItem?.id === item.id;
-                                    return (
-                                        <motion.button
-                                            key={item.id}
-                                            whileHover={{ scale: 1.02 }}
-                                            whileTap={{ scale: 0.98 }}
-                                            onClick={() => onSelectStudioItem(item)}
-                                            className={`
-                                                relative rounded-2xl overflow-hidden border-2 transition-all p-1 text-right
-                                                ${isSelected ? "border-gold shadow-lg shadow-gold/20" : "border-theme-soft hover:border-white/20"}
-                                            `}
-                                        >
-                                            <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-theme-subtle mb-2">
-                                                {(item.model_image_url || item.mockup_image_url || item.main_image_url) ? (
-                                                    <img
-                                                        src={item.model_image_url || item.mockup_image_url || item.main_image_url!}
-                                                        alt={item.name}
-                                                        className="w-full h-full object-cover"
-                                                    />
-                                                ) : (
-                                                    <div className="w-full h-full flex items-center justify-center">
-                                                        <Sparkles className="w-8 h-8 text-theme-faint" />
-                                                    </div>
-                                                )}
-                                                {item.price > 0 && (
-                                                    <div className="absolute top-2 left-2 px-2 py-1 rounded bg-black/60 backdrop-blur-md text-gold text-xs font-bold border border-gold/20">
-                                                        +{item.price} ر.س
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <div className="px-2 pb-2">
-                                                <p className="font-bold text-sm text-theme truncate">{item.name}</p>
-                                                {item.description && <p className="text-xs text-theme-subtle line-clamp-2 mt-1">{item.description}</p>}
-                                            </div>
-                                            {isSelected && (
-                                                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute top-3 right-3 w-6 h-6 rounded-full bg-gold flex items-center justify-center">
-                                                    <Check className="w-3.5 h-3.5 text-bg" />
-                                                </motion.div>
-                                            )}
-                                        </motion.button>
-                                    );
-                                })}
+                            <div className="space-y-4">
+                                {/* Header */}
+                                <div className="flex items-center gap-2 px-1">
+                                    <div className="w-6 h-6 rounded-lg bg-gold/15 flex items-center justify-center"><Sparkles className="w-3.5 h-3.5 text-gold" /></div>
+                                    <span className="text-xs font-bold text-gold">تصاميم ستيديو وشّى الحصرية</span>
+                                    <span className="text-[10px] text-theme-faint">({studioItems.length} تصميم)</span>
+                                </div>
+
+                                {/* Grid */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                    {studioItems.map((item) => {
+                                        const isSelected = selectedStudioItem?.id === item.id;
+                                        // Find mockup for current garment × this studio item
+                                        const mockup = selectedGarment
+                                            ? garmentStudioMockups.find(m => m.garment_id === selectedGarment.id && m.studio_item_id === item.id)
+                                            : null;
+
+                                        // Collect all available images for gallery
+                                        const galleryImages: { url: string; label: string }[] = [];
+                                        if (mockup?.mockup_front_url) galleryImages.push({ url: mockup.mockup_front_url, label: "أمام" });
+                                        if (mockup?.mockup_back_url) galleryImages.push({ url: mockup.mockup_back_url, label: "خلف" });
+                                        if (mockup?.mockup_model_url) galleryImages.push({ url: mockup.mockup_model_url, label: "موديل" });
+                                        // Fallback to studio item images if no mockup
+                                        if (galleryImages.length === 0) {
+                                            if (item.model_image_url) galleryImages.push({ url: item.model_image_url, label: "موديل" });
+                                            if (item.mockup_image_url) galleryImages.push({ url: item.mockup_image_url, label: "موكب" });
+                                            if (item.main_image_url) galleryImages.push({ url: item.main_image_url, label: "التصميم" });
+                                        }
+
+                                        return (
+                                            <StudioItemCard
+                                                key={item.id}
+                                                item={item}
+                                                isSelected={isSelected}
+                                                galleryImages={galleryImages}
+                                                hasMockup={!!mockup}
+                                                onSelect={() => onSelectStudioItem(item)}
+                                            />
+                                        );
+                                    })}
+                                </div>
+                                <p className="text-xs text-theme-subtle text-center pt-2">اختيارك لتصميم ستيديو وشّى سيأخذك مباشرة لتأكيد الطلب 🚀</p>
                             </div>
                         )}
-                        <p className="text-xs text-theme-subtle mt-4 text-center">اختيارك لتصميم ستيديو وشّى سيأخذك مباشرة لتأكيد الطلب 🚀</p>
                     </motion.div>
                 )}
             </AnimatePresence>
 
             <NavButtons onBack={onBack} onNext={onNext} nextDisabled={!canProceed} />
         </>
+    );
+}
+
+// ═══════════════════════════════════════════════════════════
+//  StudioItemCard — بطاقة تصميم ستيديو تفاعلية مع معرض صور
+// ═══════════════════════════════════════════════════════════
+
+function StudioItemCard({ item, isSelected, galleryImages, hasMockup, onSelect }: {
+    item: CustomDesignStudioItem;
+    isSelected: boolean;
+    galleryImages: { url: string; label: string }[];
+    hasMockup: boolean;
+    onSelect: () => void;
+}) {
+    const [activeIdx, setActiveIdx] = useState(0);
+    const [isHovered, setIsHovered] = useState(false);
+
+    // Auto-cycle images on hover
+    useEffect(() => {
+        if (!isHovered || galleryImages.length <= 1) return;
+        const interval = setInterval(() => {
+            setActiveIdx((prev) => (prev + 1) % galleryImages.length);
+        }, 1800);
+        return () => clearInterval(interval);
+    }, [isHovered, galleryImages.length]);
+
+    const currentImage = galleryImages[activeIdx]?.url;
+
+    return (
+        <motion.button
+            whileHover={{ scale: 1.015 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={onSelect}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => { setIsHovered(false); setActiveIdx(0); }}
+            className={`
+                relative rounded-2xl overflow-hidden border-2 transition-all duration-300 text-right group
+                ${isSelected
+                    ? "border-gold shadow-xl shadow-gold/25 ring-1 ring-gold/30"
+                    : "border-theme-soft hover:border-gold/40 hover:shadow-lg hover:shadow-gold/10"}
+            `}
+        >
+            {/* Image Gallery */}
+            <div className="relative aspect-[4/5] overflow-hidden bg-theme-subtle">
+                <AnimatePresence mode="wait">
+                    {currentImage ? (
+                        <motion.img
+                            key={activeIdx}
+                            src={currentImage}
+                            alt={item.name}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.4 }}
+                            className="absolute inset-0 w-full h-full object-cover"
+                        />
+                    ) : (
+                        <motion.div
+                            key="placeholder"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="w-full h-full flex items-center justify-center"
+                        >
+                            <Sparkles className="w-10 h-10 text-theme-faint" />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* Gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
+
+                {/* Gallery dots */}
+                {galleryImages.length > 1 && (
+                    <div className="absolute bottom-16 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+                        {galleryImages.map((img, i) => (
+                            <button
+                                key={i}
+                                onClick={(e) => { e.stopPropagation(); setActiveIdx(i); }}
+                                className={`transition-all duration-300 rounded-full ${
+                                    i === activeIdx
+                                        ? "w-5 h-1.5 bg-gold"
+                                        : "w-1.5 h-1.5 bg-white/40 hover:bg-white/60"
+                                }`}
+                            />
+                        ))}
+                    </div>
+                )}
+
+                {/* Image label pill */}
+                {galleryImages.length > 1 && galleryImages[activeIdx] && (
+                    <motion.div
+                        key={`label-${activeIdx}`}
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="absolute top-3 right-3 px-2 py-0.5 bg-black/50 backdrop-blur-md text-white text-[10px] font-bold rounded-md border border-white/10 z-10"
+                    >
+                        {galleryImages[activeIdx].label}
+                    </motion.div>
+                )}
+
+                {/* Price badge */}
+                {item.price > 0 && (
+                    <div className="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-md text-gold text-xs font-bold border border-gold/20 z-10">
+                        +{item.price} ر.س
+                    </div>
+                )}
+
+                {/* Mockup badge */}
+                {hasMockup && (
+                    <div className="absolute bottom-16 right-3 px-2 py-0.5 rounded-md bg-emerald-500/80 backdrop-blur-md text-white text-[9px] font-bold border border-emerald-400/30 z-10 flex items-center gap-1">
+                        <Check className="w-2.5 h-2.5" />
+                        موكب جاهز
+                    </div>
+                )}
+            </div>
+
+            {/* Info */}
+            <div className="p-3 text-right">
+                <p className={`font-bold text-sm truncate transition-colors ${isSelected ? "text-gold" : "text-theme group-hover:text-gold/80"}`}>
+                    {item.name}
+                </p>
+                {item.description && (
+                    <p className="text-[11px] text-theme-subtle line-clamp-2 mt-1 leading-relaxed">{item.description}</p>
+                )}
+                {galleryImages.length > 1 && (
+                    <div className="flex items-center gap-1 mt-2 text-[10px] text-theme-faint">
+                        <ImageIcon className="w-3 h-3" />
+                        <span>{galleryImages.length} صور</span>
+                    </div>
+                )}
+            </div>
+
+            {/* Selected checkmark */}
+            {isSelected && (
+                <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute top-3 left-3 w-7 h-7 rounded-full bg-gold flex items-center justify-center shadow-lg z-20"
+                >
+                    <Check className="w-4 h-4 text-bg" />
+                </motion.div>
+            )}
+        </motion.button>
     );
 }
 
@@ -1294,7 +1444,22 @@ function StepPrintPlacement({ garment, selectedPosition, selectedSize, onSelectP
 //  Step 9: Submit
 // ═══════════════════════════════════════════════════════════
 
-function StepSubmit({ state, onBack, onSend }: { state: WizardState; onBack: () => void; onSend: () => void }) {
+function StepSubmit({ state, garmentStudioMockups, onBack, onSend }: { state: WizardState; garmentStudioMockups: GarmentStudioMockup[]; onBack: () => void; onSend: () => void }) {
+    const [previewIdx, setPreviewIdx] = useState(0);
+
+    // Find pre-made mockup for this garment × studio item
+    const mockup = (state.method === "studio" && state.garment && state.studioItem)
+        ? garmentStudioMockups.find(m => m.garment_id === state.garment!.id && m.studio_item_id === state.studioItem!.id)
+        : null;
+
+    // Build gallery images from mockup
+    const mockupGallery: { url: string; label: string }[] = [];
+    if (mockup?.mockup_front_url) mockupGallery.push({ url: mockup.mockup_front_url, label: "الأمام" });
+    if (mockup?.mockup_back_url) mockupGallery.push({ url: mockup.mockup_back_url, label: "الخلف" });
+    if (mockup?.mockup_model_url) mockupGallery.push({ url: mockup.mockup_model_url, label: "موديل" });
+
+    const hasMockupGallery = mockupGallery.length > 0;
+
     if (state.studioCartAdded) {
         return (
             <motion.div
@@ -1370,28 +1535,79 @@ function StepSubmit({ state, onBack, onSend }: { state: WizardState; onBack: () 
 
             {state.method === "studio" ? (
                 <div className="mb-8">
-                    <div className="relative w-full max-w-sm mx-auto aspect-square rounded-3xl overflow-hidden border border-gold/20 bg-theme-subtle/30 backdrop-blur-md mb-6 shadow-2xl shadow-gold/10">
-                        {state.color?.image_url && (
-                            <img src={state.color.image_url} alt="Garment" className="absolute inset-0 w-full h-full object-cover opacity-90" />
-                        )}
-                        {state.studioItem?.main_image_url && (
-                            <motion.img 
-                                initial={{ opacity: 0, y: 20, scale: 0.8 }}
-                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                transition={{ type: "spring", stiffness: 200, delay: 0.3 }}
-                                src={state.studioItem.main_image_url} 
-                                alt="Overlay" 
-                                className={`absolute z-10 drop-shadow-2xl mix-blend-multiply dark:mix-blend-screen transition-all ${
-                                    state.printPosition === "chest" && state.printSize === "large" ? "w-1/2 left-1/4 top-1/4" :
-                                    state.printPosition === "chest" && state.printSize === "small" ? "w-1/4 left-[60%] top-1/4" :
-                                    state.printPosition === "back" && state.printSize === "large" ? "w-[55%] left-[22.5%] top-1/4" :
-                                    state.printPosition === "back" && state.printSize === "small" ? "w-1/3 left-1/3 top-1/4" :
-                                    "w-1/3 left-1/3 top-1/4" // default
-                                }`} 
-                            />
-                        )}
-                        <div className="absolute top-4 right-4 z-20 px-3 py-1.5 bg-black/40 backdrop-blur-md text-white text-xs font-bold rounded-lg border border-white/10 uppercase tracking-widest">WUSHA STUDIO</div>
-                    </div>
+                    {/* Preview: Use pre-made mockup gallery or fallback to CSS overlay */}
+                    {hasMockupGallery ? (
+                        <div className="relative w-full max-w-md mx-auto mb-6">
+                            {/* Main image */}
+                            <div className="relative aspect-[3/4] rounded-3xl overflow-hidden border border-gold/20 bg-theme-subtle/30 backdrop-blur-md shadow-2xl shadow-gold/10">
+                                <AnimatePresence mode="wait">
+                                    <motion.img
+                                        key={previewIdx}
+                                        src={mockupGallery[previewIdx].url}
+                                        alt={mockupGallery[previewIdx].label}
+                                        initial={{ opacity: 0, scale: 1.02 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 0.98 }}
+                                        transition={{ duration: 0.4 }}
+                                        className="absolute inset-0 w-full h-full object-cover"
+                                    />
+                                </AnimatePresence>
+                                <div className="absolute top-4 right-4 z-20 px-3 py-1.5 bg-black/40 backdrop-blur-md text-white text-xs font-bold rounded-lg border border-white/10 uppercase tracking-widest">WUSHA STUDIO</div>
+                                {/* Label pill */}
+                                <motion.div
+                                    key={`submit-label-${previewIdx}`}
+                                    initial={{ opacity: 0, y: 5 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="absolute bottom-4 left-4 z-20 px-3 py-1 bg-black/50 backdrop-blur-md text-white text-xs font-bold rounded-lg border border-white/10"
+                                >
+                                    {mockupGallery[previewIdx].label}
+                                </motion.div>
+                            </div>
+                            {/* Thumbnail strip */}
+                            {mockupGallery.length > 1 && (
+                                <div className="flex justify-center gap-3 mt-4">
+                                    {mockupGallery.map((img, i) => (
+                                        <button
+                                            key={i}
+                                            onClick={() => setPreviewIdx(i)}
+                                            className={`relative w-16 h-20 rounded-xl overflow-hidden border-2 transition-all duration-300 ${
+                                                i === previewIdx
+                                                    ? "border-gold shadow-lg shadow-gold/20 ring-1 ring-gold/30"
+                                                    : "border-theme-soft hover:border-gold/40 opacity-60 hover:opacity-100"
+                                            }`}
+                                        >
+                                            <img src={img.url} alt={img.label} className="w-full h-full object-cover" />
+                                            <div className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[8px] font-bold text-center py-0.5">{img.label}</div>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        /* Fallback: CSS overlay compositing */
+                        <div className="relative w-full max-w-sm mx-auto aspect-square rounded-3xl overflow-hidden border border-gold/20 bg-theme-subtle/30 backdrop-blur-md mb-6 shadow-2xl shadow-gold/10">
+                            {state.color?.image_url && (
+                                <img src={state.color.image_url} alt="Garment" className="absolute inset-0 w-full h-full object-cover opacity-90" />
+                            )}
+                            {state.studioItem?.main_image_url && (
+                                <motion.img 
+                                    initial={{ opacity: 0, y: 20, scale: 0.8 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    transition={{ type: "spring", stiffness: 200, delay: 0.3 }}
+                                    src={state.studioItem.main_image_url} 
+                                    alt="Overlay" 
+                                    className={`absolute z-10 drop-shadow-2xl mix-blend-multiply dark:mix-blend-screen transition-all ${
+                                        state.printPosition === "chest" && state.printSize === "large" ? "w-1/2 left-1/4 top-1/4" :
+                                        state.printPosition === "chest" && state.printSize === "small" ? "w-1/4 left-[60%] top-1/4" :
+                                        state.printPosition === "back" && state.printSize === "large" ? "w-[55%] left-[22.5%] top-1/4" :
+                                        state.printPosition === "back" && state.printSize === "small" ? "w-1/3 left-1/3 top-1/4" :
+                                        "w-1/3 left-1/3 top-1/4"
+                                    }`} 
+                                />
+                            )}
+                            <div className="absolute top-4 right-4 z-20 px-3 py-1.5 bg-black/40 backdrop-blur-md text-white text-xs font-bold rounded-lg border border-white/10 uppercase tracking-widest">WUSHA STUDIO</div>
+                        </div>
+                    )}
                     <div className="space-y-4">
                         <SummaryRow label="القطعة واللون" value={`${state.garment?.name} (${state.color?.name})`} color={state.color?.hex_code} />
                         <SummaryRow label="التصميم" value={state.studioItem?.name} />
