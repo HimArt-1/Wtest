@@ -70,10 +70,10 @@ interface DesignOperationsCenterProps {
 }
 
 const panelClass =
-    "relative overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(8,8,8,0.92))] backdrop-blur-xl";
+    "theme-surface-panel relative overflow-hidden rounded-[28px]";
 
 const subtlePanelClass =
-    "rounded-[24px] border border-white/8 bg-white/[0.03] backdrop-blur-xl";
+    "theme-surface-panel rounded-[24px]";
 
 function formatCurrency(value: number) {
     return new Intl.NumberFormat("ar-SA", {
@@ -104,9 +104,9 @@ function getStatusMeta(status: CustomDesignOrder["status"]) {
         case "completed":
             return { label: "مكتمل", className: "border-emerald-500/20 bg-emerald-500/10 text-emerald-300" };
         case "cancelled":
-            return { label: "ملغي", className: "border-white/10 bg-white/5 text-theme-subtle" };
+            return { label: "ملغي", className: "border-theme-subtle bg-theme-faint text-theme-subtle" };
         default:
-            return { label: status, className: "border-white/10 bg-white/5 text-theme-subtle" };
+            return { label: status, className: "border-theme-subtle bg-theme-faint text-theme-subtle" };
     }
 }
 
@@ -233,7 +233,7 @@ function QueueLane({
                         );
                     })
                 ) : (
-                    <div className="rounded-2xl border border-dashed border-white/10 bg-black/10 px-4 py-8 text-center text-sm text-theme-subtle">
+                    <div className="rounded-2xl border border-dashed border-theme-subtle bg-theme-faint px-4 py-8 text-center text-sm text-theme-subtle">
                         {emptyState}
                     </div>
                 )}
@@ -292,17 +292,17 @@ export function DesignOperationsCenter({ snapshot, clientProps }: DesignOperatio
                         </div>
 
                         <div className="grid gap-3 sm:grid-cols-3">
-                            <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                            <div className="rounded-2xl border border-theme-subtle bg-theme-faint p-4">
                                 <p className="text-xs uppercase tracking-[0.18em] text-theme-faint">الضغط النشط</p>
                                 <p className="mt-3 text-3xl font-black text-theme">{snapshot.stats.activeLoad}</p>
                                 <p className="mt-2 text-sm text-theme-subtle">يشمل الجديد، الجاري، المراجعة، والتعديلات.</p>
                             </div>
-                            <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                            <div className="rounded-2xl border border-theme-subtle bg-theme-faint p-4">
                                 <p className="text-xs uppercase tracking-[0.18em] text-theme-faint">العمر النشط</p>
                                 <p className="mt-3 text-3xl font-black text-theme">{formatHours(snapshot.stats.avgActiveHours)}</p>
                                 <p className="mt-2 text-sm text-theme-subtle">متوسط عمر الطلبات غير المنتهية حاليًا.</p>
                             </div>
-                            <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                            <div className="rounded-2xl border border-theme-subtle bg-theme-faint p-4">
                                 <p className="text-xs uppercase tracking-[0.18em] text-theme-faint">إيقاع الإنجاز</p>
                                 <p className="mt-3 text-3xl font-black text-theme">{formatHours(snapshot.stats.avgCompletionHours)}</p>
                                 <p className="mt-2 text-sm text-theme-subtle">متوسط الزمن من إنشاء الطلب حتى اكتماله.</p>
@@ -317,7 +317,7 @@ export function DesignOperationsCenter({ snapshot, clientProps }: DesignOperatio
                     className={`${subtlePanelClass} p-6`}
                 >
                     <div className="flex items-center gap-3">
-                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-theme-subtle bg-theme-faint">
                             <WandSparkles className="h-5 w-5 text-gold" />
                         </div>
                         <div>
@@ -451,7 +451,7 @@ export function DesignOperationsCenter({ snapshot, clientProps }: DesignOperatio
                             كل أدوات التنفيذ العملية تبقى هنا: الفلترة، التعيين، تحديث الحالة، رفع النتائج، والمراجعة النهائية.
                         </p>
                     </div>
-                    <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-theme-subtle">
+                    <div className="rounded-2xl border border-theme-subtle bg-theme-faint px-4 py-3 text-sm text-theme-subtle">
                         <div className="flex items-center gap-2">
                             <Send className="h-4 w-4 text-gold" />
                             <span>{snapshot.stats.readyToSend} طلبات مكتملة لم تُرسل للعميل بعد</span>

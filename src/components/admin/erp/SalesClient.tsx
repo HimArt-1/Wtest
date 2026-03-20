@@ -135,7 +135,7 @@ export default function SalesClient({
                     <button
                         key={p.id}
                         onClick={() => setPeriod(p.id)}
-                        className={`px-4 py-2 rounded-xl text-xs font-medium transition-all border ${period === p.id ? "bg-gold/10 text-gold border-gold/30" : "text-theme-faint border-transparent hover:bg-theme-subtle"}`}
+                        className={`px-4 py-2 rounded-xl text-xs font-medium transition-all border ${period === p.id ? "bg-gold/10 text-gold border-gold/30" : "border-theme-subtle bg-theme-faint text-theme-faint hover:bg-[color:var(--surface-elevated)]"}`}
                     >
                         {p.label}
                     </button>
@@ -144,19 +144,19 @@ export default function SalesClient({
 
             {/* ── Stat Cards ── */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="p-5 rounded-2xl bg-theme-subtle border border-theme-faint">
+                <div className="theme-surface-panel p-5 rounded-2xl">
                     <div className="flex items-center gap-2 text-theme-subtle text-xs mb-2"><DollarSign className="w-4 h-4" />إجمالي المبيعات</div>
                     <p className="text-2xl font-bold text-gold">{stats.totalRevenue.toLocaleString("ar-SA", { maximumFractionDigits: 0 })} ر.س</p>
                 </div>
-                <div className="p-5 rounded-2xl bg-theme-subtle border border-theme-faint">
+                <div className="theme-surface-panel p-5 rounded-2xl">
                     <div className="flex items-center gap-2 text-theme-subtle text-xs mb-2"><ShoppingBag className="w-4 h-4" />القطع المباعة</div>
                     <p className="text-2xl font-bold text-theme">{stats.totalItems.toLocaleString()}</p>
                 </div>
-                <div className="p-5 rounded-2xl bg-theme-subtle border border-theme-faint">
+                <div className="theme-surface-panel p-5 rounded-2xl">
                     <div className="flex items-center gap-2 text-theme-subtle text-xs mb-2"><TrendingUp className="w-4 h-4" />متوسط قيمة الطلب</div>
                     <p className="text-2xl font-bold text-theme">{stats.aov.toLocaleString("ar-SA", { maximumFractionDigits: 0 })} ر.س</p>
                 </div>
-                <div className="p-5 rounded-2xl bg-theme-subtle border border-theme-faint">
+                <div className="theme-surface-panel p-5 rounded-2xl">
                     <div className="flex items-center gap-2 text-theme-subtle text-xs mb-2"><BarChart2 className="w-4 h-4" />عدد المعاملات</div>
                     <p className="text-2xl font-bold text-theme">{stats.totalTx}</p>
                 </div>
@@ -166,7 +166,7 @@ export default function SalesClient({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                 {/* Channel Breakdown */}
-                <div className="p-5 rounded-2xl bg-surface/30 border border-theme-faint">
+                <div className="theme-surface-panel p-5 rounded-2xl">
                     <h3 className="text-sm font-bold text-theme mb-4 flex items-center gap-2"><Store className="w-4 h-4 text-gold" />المبيعات حسب القناة</h3>
                     {stats.totalRevenue > 0 ? (
                         <div className="space-y-3">
@@ -191,7 +191,7 @@ export default function SalesClient({
                 </div>
 
                 {/* Top 5 Products */}
-                <div className="p-5 rounded-2xl bg-surface/30 border border-theme-faint">
+                <div className="theme-surface-panel p-5 rounded-2xl">
                     <h3 className="text-sm font-bold text-theme mb-4 flex items-center gap-2"><TrendingUp className="w-4 h-4 text-gold" />أفضل 5 منتجات</h3>
                     {stats.top5.length > 0 ? (
                         <div className="space-y-3">
@@ -220,14 +220,14 @@ export default function SalesClient({
                     <input
                         type="text"
                         placeholder="ابحث في سجل المبيعات..."
-                        className="w-full pl-4 pr-10 py-2 bg-surface/50 border border-theme-soft rounded-xl text-sm focus:outline-none focus:border-gold/50 transition-colors"
+                        className="input-dark w-full rounded-xl py-2 pl-4 pr-10 text-sm transition-colors"
                         value={searchQuery}
                         onChange={d => setSearchQuery(d.target.value)}
                     />
                 </div>
                 <button
                     onClick={() => setIsSelling(true)}
-                    className="shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2 bg-gold text-[#0a0a0a] font-semibold rounded-xl hover:bg-gold/90 transition-colors"
+                    className="shrink-0 inline-flex items-center justify-center gap-2 rounded-xl bg-gold px-4 py-2 font-semibold text-[var(--wusha-bg)] transition-colors hover:bg-gold/90"
                 >
                     <Plus className="w-5 h-5" />
                     <span>عملية بيع جديدة (POS)</span>
@@ -235,7 +235,7 @@ export default function SalesClient({
             </div>
 
             {/* List */}
-            <div className="bg-surface/30 border border-theme-faint rounded-2xl overflow-hidden">
+            <div className="theme-surface-panel overflow-hidden rounded-2xl">
                 <table className="w-full text-sm text-right">
                     <thead className="bg-theme-subtle text-theme-soft">
                         <tr>
@@ -301,7 +301,7 @@ export default function SalesClient({
             {isSelling && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[color-mix(in_srgb,var(--wusha-bg)_80%,transparent)] backdrop-blur-sm">
                     <div className="bg-surface border border-theme-soft rounded-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
-                        <div className="p-6 border-b border-theme-faint flex justify-between items-center bg-theme-faint">
+                        <div className="flex items-center justify-between border-b border-theme-subtle bg-theme-faint p-6">
                             <h2 className="text-xl font-bold flex items-center gap-2">
                                 <Store className="w-5 h-5 text-gold" />
                                 تسجيل بيع يدوي جديد (بدون متجر)
@@ -322,7 +322,7 @@ export default function SalesClient({
                                     <label className="text-sm font-medium text-theme-strong">المنتج (حدد بالباركود)</label>
                                     <select
                                         required
-                                        className="w-full p-3 bg-theme-subtle border border-theme-soft rounded-xl focus:border-gold/50 outline-none transition-colors font-mono text-sm"
+                                        className="input-dark w-full rounded-xl p-3 font-mono text-sm"
                                         value={selectedSkuId}
                                         onChange={e => handleSkuChange(e.target.value)}
                                     >
@@ -340,7 +340,7 @@ export default function SalesClient({
                                         <label className="text-sm font-medium text-theme-strong">سحب من مستودع</label>
                                         <select
                                             required
-                                            className="w-full p-3 bg-theme-subtle border border-theme-soft rounded-xl focus:border-gold/50 outline-none transition-colors text-sm"
+                                            className="input-dark w-full rounded-xl p-3 text-sm"
                                             value={selectedWarehouseId}
                                             onChange={e => setSelectedWarehouseId(e.target.value)}
                                         >
@@ -355,7 +355,7 @@ export default function SalesClient({
                                             type="number"
                                             required
                                             min="1"
-                                            className="w-full p-3 bg-theme-subtle border border-theme-soft rounded-xl focus:border-gold/50 outline-none transition-colors text-center"
+                                            className="input-dark w-full rounded-xl p-3 text-center"
                                             value={quantity}
                                             onChange={e => handleQuantityChange(Number(e.target.value))}
                                         />
@@ -369,7 +369,7 @@ export default function SalesClient({
                                         required
                                         step="0.01"
                                         min="0"
-                                        className="w-full p-3 bg-theme-subtle border-b-2 border-transparent focus:border-gold rounded-xl outline-none transition-colors font-bold text-2xl text-gold"
+                                        className="input-dark w-full rounded-xl border-gold/20 p-3 text-2xl font-bold text-gold focus:border-gold"
                                         value={totalPrice}
                                         onChange={e => setTotalPrice(Number(e.target.value))}
                                     />
@@ -380,7 +380,7 @@ export default function SalesClient({
                                     <label className="text-theme-strong font-medium">ملاحظات (اختياري)</label>
                                     <textarea
                                         rows={2}
-                                        className="w-full p-3 bg-theme-subtle border border-theme-soft rounded-xl focus:border-gold/50 outline-none transition-colors resize-none"
+                                        className="input-dark w-full rounded-xl p-3 resize-none"
                                         placeholder="مثال: بيع من بوث معرض الرياض، الدفع كاش أو شبكة..."
                                         value={notes}
                                         onChange={(e) => setNotes(e.target.value)}
@@ -389,7 +389,7 @@ export default function SalesClient({
                             </form>
                         </div>
 
-                        <div className="p-6 border-t border-theme-faint bg-theme-faint flex justify-end gap-3">
+                        <div className="flex justify-end gap-3 border-t border-theme-subtle bg-theme-faint p-6">
                             <button
                                 type="button"
                                 onClick={() => setIsSelling(false)}
@@ -401,7 +401,7 @@ export default function SalesClient({
                                 type="submit"
                                 form="sales-form"
                                 disabled={isSaving || !selectedSkuId || !selectedWarehouseId || quantity <= 0}
-                                className="px-5 py-2.5 rounded-xl font-medium bg-gold text-[#0a0a0a] hover:bg-gold/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                className="flex items-center gap-2 rounded-xl bg-gold px-5 py-2.5 font-medium text-[var(--wusha-bg)] transition-colors hover:bg-gold/90 disabled:cursor-not-allowed disabled:opacity-50"
                             >
                                 {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                                 إصدار فاتورة وخصم المخزون

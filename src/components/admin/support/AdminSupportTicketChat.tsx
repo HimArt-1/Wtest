@@ -43,8 +43,8 @@ export function AdminSupportTicketChat({ ticket, initialMessages }: { ticket: Ti
             case "open": return { label: "مفتوحة", icon: MessageSquare, color: "text-blue-400", bg: "bg-blue-400/10 border-blue-400/20" };
             case "in_progress": return { label: "جاري المعالجة", icon: Clock, color: "text-gold", bg: "bg-gold/10 border-gold/20" };
             case "resolved": return { label: "تم الحل", icon: CheckCircle2, color: "text-emerald-400", bg: "bg-emerald-400/10 border-emerald-400/20" };
-            case "closed": return { label: "مغلقة", icon: X, color: "text-theme-subtle", bg: "bg-theme-subtle border-theme-soft" };
-            default: return { label: status, icon: MessageSquare, color: "text-theme-soft", bg: "bg-theme-subtle border-theme-soft" };
+            case "closed": return { label: "مغلقة", icon: X, color: "text-theme-subtle", bg: "bg-theme-faint border-theme-subtle" };
+            default: return { label: status, icon: MessageSquare, color: "text-theme-soft", bg: "bg-theme-faint border-theme-subtle" };
         }
     };
 
@@ -90,11 +90,11 @@ export function AdminSupportTicketChat({ ticket, initialMessages }: { ticket: Ti
     };
 
     return (
-        <div className="flex flex-col h-[calc(100vh-12rem)] min-h-[500px] bg-theme-faint border border-theme-subtle rounded-3xl overflow-hidden relative shadow-xl">
+        <div className="theme-surface-panel relative flex h-[calc(100vh-12rem)] min-h-[500px] flex-col overflow-hidden rounded-3xl shadow-xl">
             {/* Header */}
-            <div className="p-4 sm:p-6 border-b border-theme-subtle bg-theme-faint flex flex-col sm:flex-row sm:items-center justify-between gap-4 z-10">
+            <div className="z-10 flex flex-col gap-4 border-b border-theme-subtle bg-theme-faint p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
                 <div className="flex items-center gap-4">
-                    <Link href="/dashboard/support" className="p-2 -ml-2 hover:bg-theme-subtle rounded-full transition-colors text-theme-subtle hover:text-theme">
+                    <Link href="/dashboard/support" className="-ml-2 rounded-full p-2 text-theme-subtle transition-colors hover:bg-theme-faint hover:text-theme">
                         <ArrowRight className="w-5 h-5" />
                     </Link>
                     <div>
@@ -125,7 +125,7 @@ export function AdminSupportTicketChat({ ticket, initialMessages }: { ticket: Ti
                             onClick={() => handleUpdateStatus(st.id as SupportTicketStatus)}
                             className={`px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold transition-all ${ticket.status === st.id
                                 ? statusObj.bg + " " + statusObj.color + " border cursor-default"
-                                : "bg-theme-subtle text-theme-subtle hover:bg-theme-soft hover:text-theme border border-transparent disabled:opacity-50"
+                                : "border border-theme-subtle bg-theme-faint text-theme-subtle hover:bg-[color:var(--surface-elevated)] hover:text-theme disabled:opacity-50"
                                 }`}
                         >
                             {st.label}
@@ -161,7 +161,7 @@ export function AdminSupportTicketChat({ ticket, initialMessages }: { ticket: Ti
                                     className="rounded-full object-cover border border-theme-soft"
                                 />
                                 {isAdmin && (
-                                    <div className="absolute -bottom-1 -right-1 bg-blue-500 rounded-full p-0.5 border-2 border-[#111]">
+                                    <div className="absolute -bottom-1 -right-1 rounded-full border-2 border-[var(--wusha-bg)] bg-blue-500 p-0.5">
                                         <ShieldAlert className="w-3 h-3 text-theme" />
                                     </div>
                                 )}
@@ -177,7 +177,7 @@ export function AdminSupportTicketChat({ ticket, initialMessages }: { ticket: Ti
                                     "p-3.5 sm:p-4 rounded-2xl text-sm leading-relaxed",
                                     isAdmin
                                         ? "bg-blue-500/10 border border-blue-500/20 text-theme rounded-tr-sm"
-                                        : "bg-theme-subtle border border-theme-soft text-theme-strong rounded-tl-sm"
+                                        : "bg-theme-faint border border-theme-subtle text-theme-strong rounded-tl-sm"
                                 )}>
                                     <p className="whitespace-pre-wrap">{msg.message}</p>
                                 </div>
@@ -192,14 +192,14 @@ export function AdminSupportTicketChat({ ticket, initialMessages }: { ticket: Ti
             </div>
 
             {/* Input Area */}
-            <div className="p-4 sm:p-6 border-t border-theme-subtle bg-theme-surface">
+            <div className="border-t border-theme-subtle bg-theme-faint p-4 sm:p-6">
                 {error ? (
                     <div className="mb-3 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
                         {error}
                     </div>
                 ) : null}
                 <form onSubmit={handleSubmit} className="relative flex items-center gap-3">
-                    <div className="shrink-0 hidden sm:flex items-center justify-center w-10 h-10 rounded-full bg-white/[0.05] border border-theme-subtle">
+                    <div className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-full border border-theme-subtle bg-theme-faint sm:flex">
                         <ShieldAlert className="w-5 h-5 text-theme-subtle" />
                     </div>
                     <div className="relative flex-1">
@@ -209,7 +209,7 @@ export function AdminSupportTicketChat({ ticket, initialMessages }: { ticket: Ti
                             value={newMessage}
                             onChange={(e) => setNewMessage(e.target.value)}
                             placeholder="اكتب ردك كمدير دعم..."
-                            className="w-full bg-theme-subtle border border-theme-soft disabled:opacity-50 text-theme text-sm rounded-2xl pl-16 pr-4 py-4 focus:outline-none focus:border-blue-500/50 focus:bg-white/[0.05] transition-all"
+                            className="input-dark w-full rounded-2xl py-4 pl-16 pr-4 text-sm transition-all disabled:opacity-50 focus:border-blue-500/50"
                         />
                         <button
                             type="submit"

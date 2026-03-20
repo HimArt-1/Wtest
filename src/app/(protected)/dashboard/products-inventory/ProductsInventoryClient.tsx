@@ -115,10 +115,10 @@ interface ProductsInventoryClientProps {
 }
 
 const panelClass =
-    "relative overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(8,8,8,0.92))] backdrop-blur-xl";
+    "theme-surface-panel relative overflow-hidden rounded-[28px]";
 
 const subtlePanelClass =
-    "rounded-[24px] border border-white/8 bg-white/[0.03] backdrop-blur-xl";
+    "theme-surface-panel rounded-[24px]";
 
 function formatCurrency(value: number) {
     return new Intl.NumberFormat("ar-SA", {
@@ -169,7 +169,7 @@ function getOrderTone(status: string) {
         case "refunded":
             return "border-red-500/20 bg-red-500/10 text-red-300";
         default:
-            return "border-white/10 bg-white/5 text-theme-subtle";
+            return "border-theme-subtle bg-theme-faint text-theme-subtle";
     }
 }
 
@@ -325,7 +325,7 @@ function InventoryQueueCard({
                         </div>
                     ))
                 ) : (
-                    <div className="rounded-2xl border border-dashed border-white/10 bg-black/10 px-4 py-8 text-center text-sm text-theme-subtle">
+                    <div className="rounded-2xl border border-dashed border-theme-subtle bg-theme-faint px-4 py-8 text-center text-sm text-theme-subtle">
                         {emptyState}
                     </div>
                 )}
@@ -354,7 +354,7 @@ function FulfillmentQueueCard({
                 </div>
                 <Link
                     href="/dashboard/orders"
-                    className="rounded-full border border-white/10 px-3 py-1.5 text-xs font-medium text-theme-subtle transition-colors hover:border-gold/30 hover:text-gold"
+                    className="rounded-full border border-theme-subtle bg-theme-faint px-3 py-1.5 text-xs font-medium text-theme-subtle transition-colors hover:border-gold/30 hover:bg-theme-subtle hover:text-gold"
                 >
                     فتح مركز الطلبات
                 </Link>
@@ -363,7 +363,7 @@ function FulfillmentQueueCard({
             <div className="space-y-3">
                 {items.length > 0 ? (
                     items.map((order) => (
-                        <div key={order.id} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                        <div key={order.id} className="rounded-2xl border border-theme-subtle bg-theme-faint p-4">
                             <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0">
                                     <p className="text-sm font-bold text-theme">#{order.order_number}</p>
@@ -381,14 +381,14 @@ function FulfillmentQueueCard({
                                 <span className={`rounded-full border px-2.5 py-1 font-bold ${getOrderTone(order.status)}`}>
                                     {getOrderStatusLabel(order.status)}
                                 </span>
-                                <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 font-bold text-theme-soft">
+                                <span className="rounded-full border border-theme-subtle bg-theme-faint px-2.5 py-1 font-bold text-theme-soft">
                                     {order.payment_status === "paid" ? "مدفوع" : order.payment_status}
                                 </span>
                             </div>
                         </div>
                     ))
                 ) : (
-                    <div className="rounded-2xl border border-dashed border-white/10 bg-black/10 px-4 py-8 text-center text-sm text-theme-subtle">
+                    <div className="rounded-2xl border border-dashed border-theme-subtle bg-theme-faint px-4 py-8 text-center text-sm text-theme-subtle">
                         {emptyState}
                     </div>
                 )}
@@ -803,19 +803,19 @@ export function ProductsInventoryClient({
                         <div className={`${subtlePanelClass} p-5`}>
                             <p className="text-xs font-medium tracking-[0.18em] text-theme-faint uppercase">نبض التنفيذ</p>
                             <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                                <div className="rounded-2xl border border-white/8 bg-black/10 p-4">
+                                <div className="rounded-2xl border border-theme-subtle bg-theme-faint p-4">
                                     <p className="text-theme-faint">بانتظار التأكيد</p>
                                     <p className="mt-2 text-2xl font-black text-theme">{fulfillmentSnapshot.stats.pendingReview}</p>
                                 </div>
-                                <div className="rounded-2xl border border-white/8 bg-black/10 p-4">
+                                <div className="rounded-2xl border border-theme-subtle bg-theme-faint p-4">
                                     <p className="text-theme-faint">قيد التنفيذ والشحن</p>
                                     <p className="mt-2 text-2xl font-black text-theme">{fulfillmentSnapshot.stats.fulfillmentQueue}</p>
                                 </div>
-                                <div className="rounded-2xl border border-white/8 bg-black/10 p-4">
+                                <div className="rounded-2xl border border-theme-subtle bg-theme-faint p-4">
                                     <p className="text-theme-faint">مدفوعات معلقة</p>
                                     <p className="mt-2 text-2xl font-black text-theme">{fulfillmentSnapshot.stats.paymentPending}</p>
                                 </div>
-                                <div className="rounded-2xl border border-white/8 bg-black/10 p-4">
+                                <div className="rounded-2xl border border-theme-subtle bg-theme-faint p-4">
                                     <p className="text-theme-faint">طلبات اليوم</p>
                                     <p className="mt-2 text-2xl font-black text-theme">{fulfillmentSnapshot.stats.todayOrders}</p>
                                 </div>
@@ -873,7 +873,7 @@ export function ProductsInventoryClient({
             <section className={`${panelClass} p-6`}>
                 <div className="mb-6 flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                     <div className="max-w-3xl">
-                        <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs font-semibold text-theme-soft">
+                        <span className="inline-flex items-center gap-2 rounded-full border border-theme-subtle bg-theme-faint px-3 py-1 text-xs font-semibold text-theme-soft">
                             <ShieldAlert className="h-3.5 w-3.5" />
                             طبقة قرار المخزون
                         </span>
@@ -913,7 +913,7 @@ export function ProductsInventoryClient({
                                     className={`rounded-full border px-3 py-2 text-xs font-semibold transition-colors ${
                                         automationFilter === filter
                                             ? "border-gold/40 bg-gold/15 text-gold"
-                                            : "border-white/10 bg-white/[0.03] text-theme-soft hover:border-gold/20 hover:text-gold"
+                                            : "border-theme-subtle bg-theme-faint text-theme-soft hover:border-gold/20 hover:bg-theme-subtle hover:text-gold"
                                     }`}
                                 >
                                     {label}
@@ -955,7 +955,7 @@ export function ProductsInventoryClient({
                 </div>
 
                 {bulkExecuteReport ? (
-                    <div className="mt-6 rounded-[24px] border border-white/10 bg-white/[0.03] p-5">
+                    <div className="theme-surface-panel mt-6 rounded-[24px] p-5">
                         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                             <div>
                                 <p className="text-sm font-bold text-theme">تقرير التنفيذ الجماعي</p>
@@ -967,7 +967,7 @@ export function ProductsInventoryClient({
                             </div>
                             <button
                                 onClick={() => setBulkExecuteReport(null)}
-                                className="rounded-full border border-white/10 px-3 py-1.5 text-xs font-semibold text-theme-soft transition-colors hover:border-gold/20 hover:text-gold"
+                                className="rounded-full border border-theme-subtle bg-theme-faint px-3 py-1.5 text-xs font-semibold text-theme-soft transition-colors hover:border-gold/20 hover:bg-theme-subtle hover:text-gold"
                             >
                                 إخفاء التقرير
                             </button>
@@ -1021,7 +1021,7 @@ export function ProductsInventoryClient({
                                 {selectableVisibleActionIds.length > 0 ? (
                                     <button
                                         onClick={toggleSelectVisible}
-                                        className="rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-sm font-semibold text-theme-soft transition-colors hover:border-gold/20 hover:text-gold"
+                                        className="rounded-full border border-theme-subtle bg-theme-faint px-4 py-2 text-sm font-semibold text-theme-soft transition-colors hover:border-gold/20 hover:bg-theme-subtle hover:text-gold"
                                     >
                                         {allVisibleSelected ? "إلغاء تحديد الظاهر" : "تحديد الظاهر"}
                                     </button>
@@ -1036,13 +1036,13 @@ export function ProductsInventoryClient({
                         </div>
                     </div>
                 ) : selectableVisibleActionIds.length > 0 ? (
-                    <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-[24px] border border-white/10 bg-white/[0.03] px-5 py-4">
+                    <div className="theme-surface-panel mt-6 flex flex-wrap items-center justify-between gap-3 rounded-[24px] px-5 py-4">
                         <p className="text-sm text-theme-subtle">
                             يمكنك تحديد عناصر التعبئة الظاهرة وبدء التنفيذ الجماعي مباشرة من هذه الطبقة.
                         </p>
                         <button
                             onClick={toggleSelectVisible}
-                            className="rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-sm font-semibold text-theme-soft transition-colors hover:border-gold/20 hover:text-gold"
+                            className="rounded-full border border-theme-subtle bg-theme-faint px-4 py-2 text-sm font-semibold text-theme-soft transition-colors hover:border-gold/20 hover:bg-theme-subtle hover:text-gold"
                         >
                             تحديد الظاهر
                         </button>
@@ -1060,32 +1060,32 @@ export function ProductsInventoryClient({
                             return (
                                 <div
                                     key={item.id}
-                                    className={`rounded-[24px] border bg-white/[0.03] p-5 ${
-                                        isSelected ? "border-gold/30 ring-1 ring-gold/20" : "border-white/10"
+                                    className={`rounded-[24px] border bg-theme-faint p-5 ${
+                                        isSelected ? "border-gold/30 ring-1 ring-gold/20" : "border-theme-subtle"
                                     }`}
                                 >
                                     <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                                         <div className="min-w-0">
                                             <div className="flex flex-wrap items-center gap-2">
                                                 {isSelectable ? (
-                                                    <label className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/10 px-2.5 py-1 text-[11px] font-bold text-theme-soft">
+                                                    <label className="inline-flex items-center gap-2 rounded-full border border-theme-subtle bg-[color:color-mix(in_srgb,var(--wusha-surface)_70%,transparent)] px-2.5 py-1 text-[11px] font-bold text-theme-soft">
                                                         <input
                                                             type="checkbox"
                                                             checked={isSelected}
                                                             onChange={() => toggleSelectAction(item.id)}
-                                                            className="h-4 w-4 rounded border-white/20 bg-transparent text-gold focus:ring-gold/30"
+                                                            className="h-4 w-4 rounded border-theme-subtle bg-transparent text-gold focus:ring-gold/30"
                                                         />
                                                         تحديد
                                                     </label>
                                                 ) : (
-                                                    <span className="rounded-full border border-white/10 bg-black/10 px-2.5 py-1 text-[11px] font-bold text-theme-faint">
+                                                    <span className="rounded-full border border-theme-subtle bg-[color:color-mix(in_srgb,var(--wusha-surface)_70%,transparent)] px-2.5 py-1 text-[11px] font-bold text-theme-faint">
                                                         {item.kind === "sync" ? "تنبيه مزامنة" : "غير قابل للتنفيذ"}
                                                     </span>
                                                 )}
                                                 <span className={`rounded-full border px-2.5 py-1 text-[11px] font-bold ${priorityMeta.className}`}>
                                                     {priorityMeta.label}
                                                 </span>
-                                                <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-bold text-theme-soft">
+                                                <span className="rounded-full border border-theme-subtle bg-theme-faint px-2.5 py-1 text-[11px] font-bold text-theme-soft">
                                                     {item.kind === "sync" ? "مزامنة" : item.actionLabel}
                                                 </span>
                                             </div>
@@ -1105,19 +1105,19 @@ export function ProductsInventoryClient({
                                         </div>
 
                                         <div className="grid min-w-[250px] grid-cols-2 gap-3 xl:max-w-[320px]">
-                                            <div className="rounded-2xl border border-white/8 bg-black/10 p-4">
+                                            <div className="rounded-2xl border border-theme-subtle bg-theme-faint p-4">
                                                 <p className="text-[11px] text-theme-faint">الكمية الحالية</p>
                                                 <p className="mt-2 text-xl font-black text-theme">{item.currentQty}</p>
                                             </div>
-                                            <div className="rounded-2xl border border-white/8 bg-black/10 p-4">
+                                            <div className="rounded-2xl border border-theme-subtle bg-theme-faint p-4">
                                                 <p className="text-[11px] text-theme-faint">الكمية المقترحة</p>
                                                 <p className="mt-2 text-xl font-black text-theme">{item.recommendedQty}</p>
                                             </div>
-                                            <div className="rounded-2xl border border-white/8 bg-black/10 p-4">
+                                            <div className="rounded-2xl border border-theme-subtle bg-theme-faint p-4">
                                                 <p className="text-[11px] text-theme-faint">درجة الأولوية</p>
                                                 <p className="mt-2 text-xl font-black text-theme">{item.score}</p>
                                             </div>
-                                            <div className="rounded-2xl border border-white/8 bg-black/10 p-4">
+                                            <div className="rounded-2xl border border-theme-subtle bg-theme-faint p-4">
                                                 <p className="text-[11px] text-theme-faint">القيمة التقديرية</p>
                                                 <p className="mt-2 text-lg font-black text-theme">{formatCurrency(item.estimatedRestockValue)}</p>
                                             </div>
@@ -1127,7 +1127,7 @@ export function ProductsInventoryClient({
                             );
                         })
                     ) : (
-                        <div className="rounded-[24px] border border-dashed border-white/10 bg-black/10 px-4 py-10 text-center text-sm text-theme-subtle">
+                        <div className="rounded-[24px] border border-dashed border-theme-subtle bg-theme-faint px-4 py-10 text-center text-sm text-theme-subtle">
                             لا توجد عناصر في هذا الفلتر حاليًا.
                         </div>
                     )}
@@ -1201,7 +1201,7 @@ export function ProductsInventoryClient({
                         </button>
                         <Link
                             href="/dashboard/orders"
-                            className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 font-semibold text-theme-soft transition-colors hover:border-gold/30 hover:text-gold"
+                            className="rounded-full border border-theme-subtle bg-theme-faint px-3 py-1.5 font-semibold text-theme-soft transition-colors hover:border-gold/30 hover:bg-theme-subtle hover:text-gold"
                         >
                             {fulfillmentSnapshot.stats.fulfillmentQueue} في خط التنفيذ
                         </Link>
@@ -1258,13 +1258,13 @@ export function ProductsInventoryClient({
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[90] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+                        className="fixed inset-0 z-[90] flex items-center justify-center bg-[color-mix(in_srgb,var(--wusha-bg)_68%,transparent)] p-4 backdrop-blur-sm"
                     >
                         <motion.div
                             initial={{ opacity: 0, y: 16, scale: 0.98 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: 10, scale: 0.98 }}
-                            className="w-full max-w-2xl rounded-[28px] border border-white/10 bg-[#0c0c0f] p-6 shadow-2xl"
+                            className="theme-surface-panel w-full max-w-2xl rounded-[28px] p-6 shadow-2xl"
                         >
                             <div className="flex items-start justify-between gap-4">
                                 <div>
@@ -1275,22 +1275,22 @@ export function ProductsInventoryClient({
                                 </div>
                                 <button
                                     onClick={() => !isBulkExecuting && setShowBulkExecuteModal(false)}
-                                    className="rounded-full border border-white/10 px-3 py-1.5 text-xs font-semibold text-theme-soft transition-colors hover:border-red-500/20 hover:text-red-300"
+                                    className="rounded-full border border-theme-subtle bg-theme-faint px-3 py-1.5 text-xs font-semibold text-theme-soft transition-colors hover:border-red-500/20 hover:bg-red-500/10 hover:text-red-300"
                                 >
                                     إغلاق
                                 </button>
                             </div>
 
                             <div className="mt-5 grid gap-4 md:grid-cols-3">
-                                <div className="rounded-2xl border border-white/8 bg-black/10 p-4">
+                                <div className="rounded-2xl border border-theme-subtle bg-theme-faint p-4">
                                     <p className="text-[11px] text-theme-faint">العناصر المحددة</p>
                                     <p className="mt-2 text-2xl font-black text-theme">{selectedRestockActions.length}</p>
                                 </div>
-                                <div className="rounded-2xl border border-white/8 bg-black/10 p-4">
+                                <div className="rounded-2xl border border-theme-subtle bg-theme-faint p-4">
                                     <p className="text-[11px] text-theme-faint">إجمالي الكمية</p>
                                     <p className="mt-2 text-2xl font-black text-theme">{selectedRestockQty}</p>
                                 </div>
-                                <div className="rounded-2xl border border-white/8 bg-black/10 p-4">
+                                <div className="rounded-2xl border border-theme-subtle bg-theme-faint p-4">
                                     <p className="text-[11px] text-theme-faint">القيمة التقديرية</p>
                                     <p className="mt-2 text-lg font-black text-theme">{formatCurrency(selectedRestockValue)}</p>
                                 </div>
@@ -1303,13 +1303,13 @@ export function ProductsInventoryClient({
                                     onChange={(event) => setBulkExecuteNotes(event.target.value)}
                                     rows={4}
                                     placeholder="مثال: تنفيذ دفعة إعادة التعبئة اليومية من مركز المخزون"
-                                    className="w-full rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-theme outline-none transition-colors placeholder:text-theme-faint focus:border-gold/30"
+                                    className="input-dark w-full rounded-2xl px-4 py-3 text-sm outline-none transition-colors"
                                 />
                             </div>
 
                             <div className="mt-5 max-h-56 space-y-3 overflow-y-auto pr-1">
                                 {selectedRestockActions.map((item) => (
-                                    <div key={item.id} className="rounded-2xl border border-white/8 bg-black/10 px-4 py-3">
+                                    <div key={item.id} className="rounded-2xl border border-theme-subtle bg-theme-faint px-4 py-3">
                                         <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                                             <div>
                                                 <p className="text-sm font-bold text-theme">{item.title}</p>
@@ -1329,7 +1329,7 @@ export function ProductsInventoryClient({
                                 <button
                                     onClick={() => setShowBulkExecuteModal(false)}
                                     disabled={isBulkExecuting}
-                                    className="rounded-2xl border border-white/10 px-4 py-3 text-sm font-semibold text-theme-soft transition-colors hover:border-white/20 hover:text-theme disabled:opacity-50"
+                                    className="rounded-2xl border border-theme-subtle bg-theme-faint px-4 py-3 text-sm font-semibold text-theme-soft transition-colors hover:border-theme-soft hover:bg-theme-subtle hover:text-theme disabled:opacity-50"
                                 >
                                     إلغاء
                                 </button>

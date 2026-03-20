@@ -41,9 +41,9 @@ function getStatusInfo(status: string) {
         case "resolved":
             return { label: "تم الحل", icon: CheckCircle2, className: "border-emerald-500/20 bg-emerald-500/10 text-emerald-300" };
         case "closed":
-            return { label: "مغلقة", icon: X, className: "border-white/10 bg-white/5 text-theme-subtle" };
+            return { label: "مغلقة", icon: X, className: "border-theme-subtle bg-theme-faint text-theme-subtle" };
         default:
-            return { label: status, icon: MessageSquareMore, className: "border-white/10 bg-white/5 text-theme-subtle" };
+            return { label: status, icon: MessageSquareMore, className: "border-theme-subtle bg-theme-faint text-theme-subtle" };
     }
 }
 
@@ -52,9 +52,9 @@ function getPriorityInfo(priority: string) {
         case "high":
             return { label: "عاجلة", className: "border-red-500/20 bg-red-500/10 text-red-300" };
         case "low":
-            return { label: "منخفضة", className: "border-white/10 bg-white/5 text-theme-faint" };
+            return { label: "منخفضة", className: "border-theme-subtle bg-theme-faint text-theme-faint" };
         default:
-            return { label: "عادية", className: "border-white/10 bg-white/5 text-theme-subtle" };
+            return { label: "عادية", className: "border-theme-subtle bg-theme-faint text-theme-subtle" };
     }
 }
 
@@ -102,7 +102,7 @@ function SummaryCard({
     subtitle: string;
 }) {
     return (
-        <div className="rounded-[22px] border border-white/8 bg-white/[0.03] p-4">
+        <div className="theme-surface-panel rounded-[22px] p-4">
             <p className="text-[11px] font-semibold tracking-[0.18em] text-theme-faint uppercase">{title}</p>
             <p className="mt-3 text-2xl font-black text-theme">{value}</p>
             <p className="mt-2 text-sm leading-6 text-theme-subtle">{subtitle}</p>
@@ -222,13 +222,13 @@ export function SupportCaseWorkspace({
 
     return (
         <div className="space-y-6">
-            <section className="relative overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(8,8,8,0.92))] p-6 backdrop-blur-xl md:p-7">
+            <section className="theme-surface-panel relative overflow-hidden rounded-[28px] p-6 md:p-7">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(239,68,68,0.14),transparent_32%),radial-gradient(circle_at_bottom_left,rgba(56,189,248,0.10),transparent_28%)]" />
                 <div className="relative space-y-6">
                     <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                         <div className="max-w-3xl">
                             <div className="flex flex-wrap items-center gap-2">
-                                <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs font-semibold text-theme-soft">
+                                <span className="rounded-full border border-theme-subtle bg-theme-faint px-3 py-1 text-xs font-semibold text-theme-soft">
                                     Support Case Workspace
                                 </span>
                                 <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${statusInfo.className}`}>
@@ -252,12 +252,12 @@ export function SupportCaseWorkspace({
                         <div className="flex flex-col items-stretch gap-3 xl:min-w-[300px]">
                             <Link
                                 href="/dashboard/support"
-                                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm font-semibold text-theme-soft transition-colors hover:border-gold/20 hover:text-gold"
+                                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-theme-subtle bg-theme-faint px-4 py-3 text-sm font-semibold text-theme-soft transition-colors hover:border-gold/20 hover:text-gold"
                             >
                                 <ArrowRight className="h-4 w-4" />
                                 العودة إلى مركز الدعم
                             </Link>
-                            <div className="rounded-2xl border border-white/8 bg-black/10 p-4">
+                            <div className="rounded-2xl border border-theme-subtle bg-theme-faint p-4">
                                 <p className="text-[11px] font-semibold tracking-[0.18em] text-theme-faint uppercase">قرار سريع</p>
                                 <p className="mt-3 text-sm leading-6 text-theme-subtle">{slaInfo.summary}</p>
                             </div>
@@ -283,9 +283,9 @@ export function SupportCaseWorkspace({
 
             <div className="grid gap-6 xl:grid-cols-[0.78fr,1.22fr]">
                 <aside className="space-y-6">
-                    <section className="rounded-[24px] border border-white/8 bg-white/[0.03] p-5 backdrop-blur-xl">
+                    <section className="theme-surface-panel rounded-[24px] p-5">
                         <div className="flex items-center gap-3">
-                            <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-black/10">
+                            <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl border border-theme-subtle bg-theme-faint">
                                 {customerAvatar ? (
                                     <Image src={customerAvatar} alt={customerName} width={48} height={48} className="h-full w-full object-cover" />
                                 ) : (
@@ -316,14 +316,14 @@ export function SupportCaseWorkspace({
                         </div>
 
                         {ticket.message ? (
-                            <div className="mt-5 rounded-2xl border border-white/8 bg-black/10 p-4">
+                            <div className="mt-5 rounded-2xl border border-theme-subtle bg-theme-faint p-4">
                                 <p className="text-xs font-semibold tracking-[0.18em] text-theme-faint uppercase">الرسالة الأساسية</p>
                                 <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-theme-subtle">{ticket.message}</p>
                             </div>
                         ) : null}
                     </section>
 
-                    <section className="rounded-[24px] border border-white/8 bg-white/[0.03] p-5 backdrop-blur-xl">
+                    <section className="theme-surface-panel rounded-[24px] p-5">
                         <p className="text-xs font-semibold tracking-[0.18em] text-theme-faint uppercase">سكة الإجراءات</p>
                         <div className="mt-4 grid gap-2">
                             {[
@@ -339,7 +339,7 @@ export function SupportCaseWorkspace({
                                     className={`rounded-2xl border px-4 py-3 text-right text-sm font-semibold transition-colors ${
                                         ticket.status === item.id
                                             ? `${statusInfo.className} cursor-default`
-                                            : "border-white/10 bg-black/10 text-theme-soft hover:border-gold/20 hover:text-gold"
+                                            : "border-theme-subtle bg-theme-faint text-theme-soft hover:border-gold/20 hover:text-gold"
                                     } disabled:opacity-60`}
                                 >
                                     {item.label}
@@ -348,7 +348,7 @@ export function SupportCaseWorkspace({
                         </div>
                     </section>
 
-                    <section className="rounded-[24px] border border-white/8 bg-white/[0.03] p-5 backdrop-blur-xl">
+                    <section className="theme-surface-panel rounded-[24px] p-5">
                         <p className="text-xs font-semibold tracking-[0.18em] text-theme-faint uppercase">الخط الزمني</p>
                         <div className="mt-4 space-y-4">
                             {timeline.map((item) => (
@@ -362,8 +362,8 @@ export function SupportCaseWorkspace({
                     </section>
                 </aside>
 
-                <section className="rounded-[24px] border border-white/8 bg-white/[0.03] backdrop-blur-xl">
-                    <div className="border-b border-white/8 px-5 py-4">
+                <section className="theme-surface-panel rounded-[24px]">
+                    <div className="border-b border-theme-subtle px-5 py-4">
                         <div className="flex flex-wrap items-center justify-between gap-3">
                             <div>
                                 <p className="text-lg font-bold text-theme">محادثة الدعم</p>
@@ -395,10 +395,10 @@ export function SupportCaseWorkspace({
                                             alt={senderName}
                                             width={40}
                                             height={40}
-                                            className="h-10 w-10 rounded-full border border-white/10 object-cover"
+                                            className="h-10 w-10 rounded-full border border-theme-subtle object-cover"
                                         />
                                         {isAdmin ? (
-                                            <div className="absolute -right-1 -bottom-1 rounded-full border-2 border-[#0c0c0f] bg-blue-500 p-0.5">
+                                            <div className="absolute -right-1 -bottom-1 rounded-full border-2 border-[var(--wusha-bg)] bg-blue-500 p-0.5">
                                                 <ShieldAlert className="h-3 w-3 text-white" />
                                             </div>
                                         ) : null}
@@ -413,7 +413,7 @@ export function SupportCaseWorkspace({
                                                 "rounded-2xl border px-4 py-3 text-sm leading-7",
                                                 isAdmin
                                                     ? "rounded-tr-sm border-blue-500/20 bg-blue-500/10 text-theme"
-                                                    : "rounded-tl-sm border-white/10 bg-black/10 text-theme-subtle"
+                                                    : "rounded-tl-sm border-theme-subtle bg-theme-faint text-theme-subtle"
                                             )}
                                         >
                                             <p className="whitespace-pre-wrap">{message.message}</p>
@@ -428,7 +428,7 @@ export function SupportCaseWorkspace({
                         <div ref={messagesEndRef} />
                     </div>
 
-                    <div className="border-t border-white/8 px-5 py-5">
+                    <div className="border-t border-theme-subtle px-5 py-5">
                         {error ? (
                             <div className="mb-4 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
                                 {error}
@@ -441,7 +441,7 @@ export function SupportCaseWorkspace({
                                 onChange={(event) => setNewMessage(event.target.value)}
                                 rows={4}
                                 placeholder="اكتب رد الفريق على هذه التذكرة..."
-                                className="w-full rounded-2xl border border-white/10 bg-black/10 px-4 py-3 text-sm text-theme outline-none transition-colors placeholder:text-theme-faint focus:border-gold/30"
+                                className="input-dark w-full rounded-2xl px-4 py-3 text-sm"
                             />
 
                             <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">

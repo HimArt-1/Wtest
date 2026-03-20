@@ -54,10 +54,10 @@ interface ApplicationsOperationsCenterProps {
 }
 
 const panelClass =
-    "relative overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(8,8,8,0.92))] backdrop-blur-xl";
+    "theme-surface-panel relative overflow-hidden rounded-[28px]";
 
 const subtlePanelClass =
-    "rounded-[24px] border border-white/8 bg-white/[0.03] backdrop-blur-xl";
+    "theme-surface-panel rounded-[24px]";
 
 const genderLabelMap = {
     male: "ذكر",

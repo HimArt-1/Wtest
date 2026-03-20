@@ -19,8 +19,8 @@ export function AdminSupportDashboardClient({ initialTickets }: { initialTickets
             case "open": return { label: "جديدة", icon: MessageSquare, color: "text-blue-400", bg: "bg-blue-400/10 border-blue-400/20" };
             case "in_progress": return { label: "قيد المعالجة", icon: Clock, color: "text-gold", bg: "bg-gold/10 border-gold/20" };
             case "resolved": return { label: "تم الحل", icon: CheckCircle2, color: "text-emerald-400", bg: "bg-emerald-400/10 border-emerald-400/20" };
-            case "closed": return { label: "مغلقة", icon: X, color: "text-theme-subtle", bg: "bg-theme-subtle border-theme-soft" };
-            default: return { label: status, icon: MessageSquare, color: "text-theme-soft", bg: "bg-theme-subtle border-theme-soft" };
+            case "closed": return { label: "مغلقة", icon: X, color: "text-theme-subtle", bg: "bg-theme-faint border-theme-subtle" };
+            default: return { label: status, icon: MessageSquare, color: "text-theme-soft", bg: "bg-theme-faint border-theme-subtle" };
         }
     };
 
@@ -35,7 +35,7 @@ export function AdminSupportDashboardClient({ initialTickets }: { initialTickets
 
     return (
         <div className="space-y-6">
-            <div className="flex gap-2 bg-theme-faint border border-theme-subtle p-2 rounded-2xl overflow-x-auto scrollbar-hide">
+            <div className="theme-surface-panel flex gap-2 overflow-x-auto rounded-2xl p-2 scrollbar-hide">
                 {[
                     { id: "all", label: "الكل" },
                     { id: "open", label: "الجديدة" },
@@ -47,8 +47,8 @@ export function AdminSupportDashboardClient({ initialTickets }: { initialTickets
                         key={f.id}
                         onClick={() => setFilter(f.id)}
                         className={`px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${filter === f.id
-                                ? "bg-white/10 text-theme"
-                                : "text-theme-subtle hover:text-theme hover:bg-theme-subtle"
+                                ? "bg-gold/12 text-gold border border-gold/20"
+                                : "text-theme-subtle hover:text-theme hover:bg-theme-faint"
                             }`}
                     >
                         {f.label}
@@ -57,7 +57,7 @@ export function AdminSupportDashboardClient({ initialTickets }: { initialTickets
             </div>
 
             {filteredTickets.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 bg-theme-faint border border-theme-subtle rounded-3xl text-center">
+                <div className="theme-surface-panel flex flex-col items-center justify-center rounded-3xl py-20 text-center">
                     <MessageSquare className="w-12 h-12 text-theme-faint mb-4" />
                     <h3 className="text-xl font-bold text-theme mb-2">لا يوجد تذاكر!</h3>
                     <p className="text-theme-subtle">لا توجد تذاكر تطابق الفلتر الحالي.</p>
@@ -76,7 +76,7 @@ export function AdminSupportDashboardClient({ initialTickets }: { initialTickets
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: i * 0.03 }}
-                                    className="bg-theme-faint hover:bg-theme-subtle border border-theme-subtle hover:border-gold/30 rounded-2xl p-5 sm:p-6 transition-all duration-300 group flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                                    className="theme-surface-panel rounded-2xl p-5 transition-all duration-300 group hover:border-gold/20 hover:bg-theme-faint sm:p-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
                                 >
                                     <div className="flex items-center gap-4 flex-1 min-w-0">
                                         <Image

@@ -101,28 +101,28 @@ export function CategoriesClient({ categories: initial }: { categories: Category
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="border border-gold/20 rounded-xl p-4 bg-gold/[0.02] space-y-3"
+            className="theme-surface-panel space-y-3 rounded-xl border-gold/15 p-4"
         >
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <input
                     value={form.name_ar}
                     onChange={(e) => setForm({ ...form, name_ar: e.target.value })}
                     placeholder="الاسم بالعربي *"
-                    className="px-3 py-2.5 rounded-lg bg-theme-subtle border border-theme-soft text-theme-strong text-sm focus:border-gold focus:outline-none"
+                    className="input-dark rounded-lg px-3 py-2.5 text-sm"
                 />
                 <input
                     value={form.name_en}
                     onChange={(e) => setForm({ ...form, name_en: e.target.value })}
                     placeholder="Name in English *"
                     dir="ltr"
-                    className="px-3 py-2.5 rounded-lg bg-theme-subtle border border-theme-soft text-theme-strong text-sm focus:border-gold focus:outline-none"
+                    className="input-dark rounded-lg px-3 py-2.5 text-sm"
                 />
                 <input
                     value={form.slug}
                     onChange={(e) => setForm({ ...form, slug: e.target.value.toLowerCase().replace(/\s+/g, "-") })}
                     placeholder="slug *"
                     dir="ltr"
-                    className="px-3 py-2.5 rounded-lg bg-theme-subtle border border-theme-soft text-theme-strong text-sm font-mono focus:border-gold focus:outline-none"
+                    className="input-dark rounded-lg px-3 py-2.5 text-sm font-mono"
                 />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -130,7 +130,7 @@ export function CategoriesClient({ categories: initial }: { categories: Category
                     value={form.description || ""}
                     onChange={(e) => setForm({ ...form, description: e.target.value })}
                     placeholder="وصف (اختياري)"
-                    className="px-3 py-2.5 rounded-lg bg-theme-subtle border border-theme-soft text-theme-strong text-sm focus:border-gold focus:outline-none sm:col-span-2"
+                    className="input-dark rounded-lg px-3 py-2.5 text-sm sm:col-span-2"
                 />
                 <input
                     value={form.sort_order}
@@ -138,7 +138,7 @@ export function CategoriesClient({ categories: initial }: { categories: Category
                     placeholder="الترتيب"
                     type="number"
                     dir="ltr"
-                    className="px-3 py-2.5 rounded-lg bg-theme-subtle border border-theme-soft text-theme-strong text-sm focus:border-gold focus:outline-none"
+                    className="input-dark rounded-lg px-3 py-2.5 text-sm"
                 />
             </div>
             <div className="flex items-center gap-2 justify-end">
@@ -167,7 +167,7 @@ export function CategoriesClient({ categories: initial }: { categories: Category
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="fixed top-6 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-xl bg-gold text-bg font-bold text-sm shadow-lg"
+                    className="fixed top-6 left-1/2 z-50 -translate-x-1/2 rounded-xl bg-gold px-6 py-3 text-sm font-bold text-[var(--wusha-bg)] shadow-lg"
                 >
                     {toast}
                 </motion.div>
@@ -190,7 +190,7 @@ export function CategoriesClient({ categories: initial }: { categories: Category
             </AnimatePresence>
 
             {/* Categories List */}
-            <div className="rounded-2xl border border-theme-subtle bg-surface/50 backdrop-blur-sm overflow-hidden divide-y divide-theme-faint">
+            <div className="theme-surface-panel overflow-hidden rounded-2xl divide-y divide-theme-faint">
                 {categories.length === 0 ? (
                     <div className="p-12 text-center text-theme-faint text-sm">لا توجد فئات بعد</div>
                 ) : (
@@ -204,13 +204,13 @@ export function CategoriesClient({ categories: initial }: { categories: Category
                                         <span className="text-theme-faint text-xs">({cat.name_en})</span>
                                     </div>
                                     <div className="flex items-center gap-3 mt-0.5">
-                                        <span className="text-[10px] font-mono text-theme-faint bg-theme-subtle px-1.5 py-0.5 rounded">{cat.slug}</span>
+                                        <span className="rounded bg-theme-faint px-1.5 py-0.5 text-[10px] font-mono text-theme-faint">{cat.slug}</span>
                                         {cat.description && (
                                             <span className="text-[10px] text-theme-faint truncate">{cat.description}</span>
                                         )}
                                     </div>
                                 </div>
-                                <span className="text-xs text-theme-faint px-2 py-1 bg-theme-subtle rounded-lg shrink-0">
+                                <span className="shrink-0 rounded-lg bg-theme-faint px-2 py-1 text-xs text-theme-faint">
                                     #{cat.sort_order}
                                 </span>
                                 <div className="flex items-center gap-1 shrink-0">

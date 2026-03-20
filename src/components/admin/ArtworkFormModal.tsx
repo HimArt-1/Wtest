@@ -238,9 +238,9 @@ export function ArtworkFormModal({
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
                     onClick={(e) => e.stopPropagation()}
-                    className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border border-theme-soft bg-surface shadow-2xl"
+                    className="theme-surface-panel max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl shadow-2xl"
                 >
-                    <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b border-theme-subtle bg-surface">
+                    <div className="sticky top-0 z-10 flex items-center justify-between border-b border-theme-subtle bg-theme-faint px-6 py-4">
                         <h2 className="text-lg font-bold text-theme">
                             {isEdit ? "تعديل العمل الفني" : "إضافة عمل فني"}
                         </h2>
@@ -248,7 +248,7 @@ export function ArtworkFormModal({
                             type="button"
                             onClick={handleClose}
                             disabled={isSubmitting}
-                            className="p-2 rounded-lg text-theme-subtle hover:text-theme hover:bg-theme-subtle transition-colors disabled:opacity-50"
+                            className="rounded-lg p-2 text-theme-subtle transition-colors hover:bg-[color:var(--surface-elevated)] hover:text-theme disabled:opacity-50"
                         >
                             <X className="w-5 h-5" />
                         </button>
@@ -293,7 +293,7 @@ export function ArtworkFormModal({
                                 <select
                                     value={form.artist_id}
                                     onChange={(e) => setForm({ ...form, artist_id: e.target.value })}
-                                    className="w-full px-3 py-2.5 rounded-xl bg-theme-subtle border border-theme-soft text-theme focus:border-gold focus:ring-1 focus:ring-gold/20 outline-none text-sm"
+                                    className="input-dark w-full rounded-xl px-3 py-2.5 text-sm"
                                     required
                                 >
                                     <option value="">اختر الفنان...</option>
@@ -309,7 +309,7 @@ export function ArtworkFormModal({
                                 <select
                                     value={form.category_id}
                                     onChange={(e) => setForm({ ...form, category_id: e.target.value })}
-                                    className="w-full px-3 py-2.5 rounded-xl bg-theme-subtle border border-theme-soft text-theme focus:border-gold focus:ring-1 focus:ring-gold/20 outline-none text-sm"
+                                    className="input-dark w-full rounded-xl px-3 py-2.5 text-sm"
                                 >
                                     <option value="">بدون فئة</option>
                                     {categories.map((c) => (
@@ -325,7 +325,7 @@ export function ArtworkFormModal({
                                 type="text"
                                 value={form.title}
                                 onChange={(e) => setForm({ ...form, title: e.target.value })}
-                                className="w-full px-3 py-2.5 rounded-xl bg-theme-subtle border border-theme-soft text-theme focus:border-gold focus:ring-1 focus:ring-gold/20 outline-none text-sm"
+                                className="input-dark w-full rounded-xl px-3 py-2.5 text-sm"
                                 placeholder="مثال: غروب في الصحراء"
                                 required
                             />
@@ -337,7 +337,7 @@ export function ArtworkFormModal({
                                 value={form.description}
                                 onChange={(e) => setForm({ ...form, description: e.target.value })}
                                 rows={3}
-                                className="w-full px-3 py-2.5 rounded-xl bg-theme-subtle border border-theme-soft text-theme focus:border-gold focus:ring-1 focus:ring-gold/20 outline-none text-sm resize-none"
+                                className="input-dark w-full rounded-xl px-3 py-2.5 text-sm resize-none"
                                 placeholder="قصة العمل، التقنيات..."
                             />
                         </div>
@@ -349,7 +349,7 @@ export function ArtworkFormModal({
                                     type="text"
                                     value={form.medium}
                                     onChange={(e) => setForm({ ...form, medium: e.target.value })}
-                                    className="w-full px-3 py-2.5 rounded-xl bg-theme-subtle border border-theme-soft text-theme focus:border-gold outline-none text-sm"
+                                    className="input-dark w-full rounded-xl px-3 py-2.5 text-sm"
                                     placeholder="رسم رقمي، خط عربي"
                                 />
                             </div>
@@ -359,7 +359,7 @@ export function ArtworkFormModal({
                                     type="text"
                                     value={form.dimensions}
                                     onChange={(e) => setForm({ ...form, dimensions: e.target.value })}
-                                    className="w-full px-3 py-2.5 rounded-xl bg-theme-subtle border border-theme-soft text-theme focus:border-gold outline-none text-sm"
+                                    className="input-dark w-full rounded-xl px-3 py-2.5 text-sm"
                                     placeholder="80×60 سم"
                                 />
                             </div>
@@ -369,7 +369,7 @@ export function ArtworkFormModal({
                                     type="number"
                                     value={form.year}
                                     onChange={(e) => setForm({ ...form, year: e.target.value })}
-                                    className="w-full px-3 py-2.5 rounded-xl bg-theme-subtle border border-theme-soft text-theme focus:border-gold outline-none text-sm"
+                                    className="input-dark w-full rounded-xl px-3 py-2.5 text-sm"
                                     placeholder="2024"
                                     min="1900"
                                     max="2100"
@@ -385,7 +385,7 @@ export function ArtworkFormModal({
                                     step="0.01"
                                     value={form.price}
                                     onChange={(e) => setForm({ ...form, price: e.target.value })}
-                                    className="w-full px-3 py-2.5 rounded-xl bg-theme-subtle border border-theme-soft text-theme focus:border-gold outline-none text-sm"
+                                    className="input-dark w-full rounded-xl px-3 py-2.5 text-sm"
                                     placeholder="فارغ = غير معروض للبيع"
                                 />
                             </div>
@@ -394,7 +394,7 @@ export function ArtworkFormModal({
                                 <select
                                     value={form.status}
                                     onChange={(e) => setForm({ ...form, status: e.target.value })}
-                                    className="w-full px-3 py-2.5 rounded-xl bg-theme-subtle border border-theme-soft text-theme focus:border-gold outline-none text-sm"
+                                    className="input-dark w-full rounded-xl px-3 py-2.5 text-sm"
                                 >
                                     {statusOptions.map((s) => (
                                         <option key={s.value} value={s.value}>{s.label}</option>
@@ -409,7 +409,7 @@ export function ArtworkFormModal({
                                 type="text"
                                 value={form.tags}
                                 onChange={(e) => setForm({ ...form, tags: e.target.value })}
-                                className="w-full px-3 py-2.5 rounded-xl bg-theme-subtle border border-theme-soft text-theme focus:border-gold outline-none text-sm"
+                                className="input-dark w-full rounded-xl px-3 py-2.5 text-sm"
                                 placeholder="طبيعة، تجريدي، ألوان زيتية (افصل بفاصلة أو ،)"
                             />
                         </div>
@@ -435,14 +435,14 @@ export function ArtworkFormModal({
                                 type="button"
                                 onClick={handleClose}
                                 disabled={isSubmitting}
-                                className="flex-1 py-2.5 rounded-xl border border-theme-soft text-theme-soft hover:bg-theme-subtle transition-colors disabled:opacity-50"
+                                className="flex-1 rounded-xl border border-theme-subtle bg-theme-faint py-2.5 text-theme-soft transition-colors hover:bg-[color:var(--surface-elevated)] disabled:opacity-50"
                             >
                                 إلغاء
                             </button>
                             <button
                                 type="submit"
                                 disabled={isSubmitting}
-                                className="flex-1 py-2.5 rounded-xl bg-gold text-bg font-bold hover:bg-gold/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gold py-2.5 font-bold text-[var(--wusha-bg)] transition-colors hover:bg-gold/90 disabled:opacity-50"
                             >
                                 {isSubmitting ? (
                                     <>

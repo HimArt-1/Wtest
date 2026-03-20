@@ -1,5 +1,5 @@
 import { AdminHeader } from "@/components/admin/AdminHeader";
-import { getAnnouncements } from "@/app/actions/announcements";
+import { getAnnouncementEngagementSnapshot, getAnnouncements } from "@/app/actions/announcements";
 import { AnnouncementsClient } from "./AnnouncementsClient";
 
 export const metadata = {
@@ -7,15 +7,18 @@ export const metadata = {
 };
 
 export default async function AnnouncementsPage() {
-    const announcements = await getAnnouncements();
+    const [announcements, engagement] = await Promise.all([
+        getAnnouncements(),
+        getAnnouncementEngagementSnapshot(),
+    ]);
 
     return (
         <div className="space-y-6">
             <AdminHeader
                 title="إدارة الإعلانات والعروض"
-                subtitle="إنشاء وجدولة وإدارة الإعلانات والعروض الترويجية للعملاء."
+                subtitle="تشغيل الحملات، جدولة الإطلاقات، ومراقبة تعارضات الظهور عبر الواجهة العامة."
             />
-            <AnnouncementsClient announcements={announcements} />
+            <AnnouncementsClient announcements={announcements} engagement={engagement} />
         </div>
     );
 }

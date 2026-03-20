@@ -2,8 +2,14 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
-import type { Announcement, AnnouncementTrigger } from "@/lib/announcement-types";
-import { DEFAULT_TRIGGER } from "@/lib/announcement-types";
+import type {
+    Announcement,
+    AnnouncementEngagementItem,
+    AnnouncementEngagementSnapshot,
+    AnnouncementPathPerformance,
+    AnnouncementTrigger,
+} from "@/lib/announcement-types";
+import { DEFAULT_TRIGGER, PAGE_OPTIONS } from "@/lib/announcement-types";
 import { getCurrentUserOrDevAdmin } from "@/lib/admin-access";
 import type { Database } from "@/types/database";
 
@@ -22,6 +28,115 @@ async function requireAdmin() {
     const { data: profile } = await supabase.from("profiles").select("role").eq("clerk_id", user.id).single();
     if (profile?.role !== "admin") throw new Error("Forbidden");
     return user;
+}
+
+const VALID_ANNOUNCEMENT_PAGES = new Set<string>(PAGE_OPTIONS.map((page) => page.value));
+const ANNOUNCEMENT_MEDIA_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+const ANNOUNCEMENT_MEDIA_VIDEO_TYPES = ["video/mp4", "video/webm", "video/quicktime"];
+const ANNOUNCEMENT_MEDIA_MAX_SIZE = 25 * 1024 * 1024;
+
+function normalizeAnnouncementTrigger(trigger?: AnnouncementTrigger): AnnouncementTrigger {
+    const next = { ...DEFAULT_TRIGGER, ...(trigger || {}) };
+
+    if (next.type === "after_delay") {
+        next.delaySeconds = Math.min(Math.max(next.delaySeconds || 5, 1), 300);
+    }
+
+    if (next.type === "scroll_depth") {
+        next.scrollPercent = Math.min(Math.max(next.scrollPercent || 50, 10), 100);
+    }
+
+    if (next.type === "page_enter") {
+        next.targetPages = Array.from(
+            new Set((next.targetPages || []).filter((page) => VALID_ANNOUNCEMENT_PAGES.has(page)))
+        );
+    } else {
+        delete next.targetPages;
+    }
+
+    if (next.type !== "after_delay") {
+        delete next.delaySeconds;
+    }
+
+    if (next.type !== "scroll_depth") {
+        delete next.scrollPercent;
+    }
+
+    return next;
+}
+
+function getAnnouncementMediaKind(file: File): Announcement["mediaType"] | null {
+    if (ANNOUNCEMENT_MEDIA_IMAGE_TYPES.includes(file.type)) return "image";
+    if (ANNOUNCEMENT_MEDIA_VIDEO_TYPES.includes(file.type)) return "video";
+    return null;
+}
+
+function buildAnnouncementMediaPath(file: File) {
+    const ext = file.name.split(".").pop()?.trim().toLowerCase() || (file.type.startsWith("video/") ? "mp4" : "png");
+    return `announcements/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+}
+
+function normalizeAnnouncementPayload(data: Omit<Announcement, "id" | "createdAt">) {
+    const link = data.link?.trim();
+    const linkText = data.linkText?.trim();
+    const dismissText = data.dismissText?.trim();
+    const mediaAlt = data.mediaAlt?.trim();
+    const mediaPosterUrl = data.mediaPosterUrl?.trim();
+
+    return {
+        ...data,
+        title: data.title.trim(),
+        body: data.body.trim(),
+        layoutMode: data.layoutMode || "classic",
+        link: link || undefined,
+        linkText: linkText || undefined,
+        dismissText: dismissText || undefined,
+        mediaUrl: data.mediaUrl?.trim() || undefined,
+        mediaPosterUrl: mediaPosterUrl || undefined,
+        mediaAlt: mediaAlt || undefined,
+        priority: Number.isFinite(data.priority) ? data.priority : 0,
+        trigger: normalizeAnnouncementTrigger(data.trigger),
+    };
+}
+
+function validateAnnouncementPayload(data: Omit<Announcement, "id" | "createdAt">) {
+    if (!data.title) return "عنوان الإعلان مطلوب";
+    if (!data.body) return "محتوى الإعلان مطلوب";
+
+    if (data.startDate && data.endDate && new Date(data.endDate) <= new Date(data.startDate)) {
+        return "تاريخ نهاية العرض يجب أن يكون بعد تاريخ البداية";
+    }
+
+    if (data.link && !data.linkText) {
+        return "أضف نصًا واضحًا للرابط قبل حفظ الإعلان";
+    }
+
+    if (!data.link && data.linkText) {
+        return "أضف رابطًا صالحًا أو احذف نص الرابط";
+    }
+
+    if (data.trigger.type === "page_enter" && (!data.trigger.targetPages || data.trigger.targetPages.length === 0)) {
+        return "اختر صفحة واحدة على الأقل عند استخدام محفّز دخول الصفحة";
+    }
+
+    if (data.mediaUrl && !data.mediaType) {
+        return "حدد نوع الوسيط قبل حفظ الإعلان";
+    }
+
+    if (!data.mediaUrl && data.mediaType) {
+        return "ارفع الوسيط أولاً أو احذف نوع الوسيط";
+    }
+
+    if (data.mediaPosterUrl && data.mediaType !== "video") {
+        return "صورة الغلاف مخصصة للإعلانات التي تحتوي على فيديو فقط";
+    }
+
+    return null;
+}
+
+function revalidateAnnouncementSurfaces() {
+    revalidatePath("/dashboard/announcements");
+    revalidatePath("/", "layout");
 }
 
 // ─── GET Announcements ──────────────────────────────────────
@@ -76,9 +191,12 @@ export async function createAnnouncement(data: Omit<Announcement, "id" | "create
     const supabase = getAdminSupabase();
 
     const existing = await getAnnouncements();
+    const normalized = normalizeAnnouncementPayload(data);
+    const validationError = validateAnnouncementPayload(normalized);
+    if (validationError) return { success: false, error: validationError };
+
     const newAnnouncement: Announcement = {
-        ...data,
-        trigger: data.trigger || DEFAULT_TRIGGER,
+        ...normalized,
         id: crypto.randomUUID(),
         createdAt: new Date().toISOString(),
     };
@@ -94,8 +212,7 @@ export async function createAnnouncement(data: Omit<Announcement, "id" | "create
 
     if (error) return { success: false, error: error.message };
 
-    revalidatePath("/dashboard/announcements");
-    revalidatePath("/");
+    revalidateAnnouncementSurfaces();
     return { success: true, id: newAnnouncement.id };
 }
 
@@ -109,7 +226,11 @@ export async function updateAnnouncement(id: string, updates: Partial<Omit<Annou
     const index = existing.findIndex((a) => a.id === id);
     if (index === -1) return { success: false, error: "الإعلان غير موجود" };
 
-    existing[index] = { ...existing[index], ...updates };
+    const normalized = normalizeAnnouncementPayload({ ...existing[index], ...updates });
+    const validationError = validateAnnouncementPayload(normalized);
+    if (validationError) return { success: false, error: validationError };
+
+    existing[index] = { ...existing[index], ...normalized };
 
     const { error } = await supabase
         .from("site_settings")
@@ -120,8 +241,7 @@ export async function updateAnnouncement(id: string, updates: Partial<Omit<Annou
 
     if (error) return { success: false, error: error.message };
 
-    revalidatePath("/dashboard/announcements");
-    revalidatePath("/");
+    revalidateAnnouncementSurfaces();
     return { success: true };
 }
 
@@ -143,8 +263,7 @@ export async function deleteAnnouncement(id: string) {
 
     if (error) return { success: false, error: error.message };
 
-    revalidatePath("/dashboard/announcements");
-    revalidatePath("/");
+    revalidateAnnouncementSurfaces();
     return { success: true };
 }
 
@@ -156,4 +275,210 @@ export async function toggleAnnouncementActive(id: string) {
     if (!announcement) return { success: false, error: "غير موجود" };
 
     return updateAnnouncement(id, { isActive: !announcement.isActive });
+}
+
+export async function uploadAnnouncementMedia(formData: FormData) {
+    await requireAdmin();
+    const supabase = getAdminSupabase();
+
+    const file = formData.get("file");
+    const purpose = String(formData.get("purpose") || "media");
+    if (!(file instanceof File)) {
+        return { success: false, error: "لم يتم اختيار ملف" } as const;
+    }
+
+    const mediaType = getAnnouncementMediaKind(file);
+    if (!mediaType) {
+        return { success: false, error: "الملف غير مدعوم. استخدم JPG/PNG/WebP/GIF أو MP4/WebM/MOV" } as const;
+    }
+
+    if (purpose === "poster" && mediaType !== "image") {
+        return { success: false, error: "صورة الغلاف يجب أن تكون ملف صورة فقط" } as const;
+    }
+
+    if (file.size > ANNOUNCEMENT_MEDIA_MAX_SIZE) {
+        return { success: false, error: "حجم الملف كبير جدًا. الحد الأقصى 25MB" } as const;
+    }
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const path = purpose === "poster"
+        ? buildAnnouncementMediaPath(file).replace("announcements/", "announcements/posters/")
+        : buildAnnouncementMediaPath(file);
+    const { data, error } = await supabase.storage.from("smart-store").upload(path, buffer, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: file.type,
+    });
+
+    if (error || !data?.path) {
+        console.error("[uploadAnnouncementMedia]", error);
+        return { success: false, error: error?.message || "فشل رفع الوسيط" } as const;
+    }
+
+    const { data: publicUrlData } = supabase.storage.from("smart-store").getPublicUrl(data.path);
+    return {
+        success: true,
+        url: publicUrlData.publicUrl,
+        mediaType,
+        fileName: file.name,
+    } as const;
+}
+
+export async function getAnnouncementEngagementSnapshot(): Promise<AnnouncementEngagementSnapshot> {
+    const emptySnapshot: AnnouncementEngagementSnapshot = {
+        totals: { views: 0, clicks: 0, dismisses: 0, ctr: 0, dismissRate: 0, trackedAnnouncements: 0 },
+        topAnnouncements: [],
+        topPaths: [],
+        livePerformance: [],
+        frictionQueue: [],
+        lookbackDays: 30,
+    };
+
+    try {
+        await requireAdmin();
+        const logsSupabase = createClient<any>(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!,
+            { auth: { persistSession: false } }
+        );
+        const lookbackDays = 30;
+        const since = new Date(Date.now() - lookbackDays * 24 * 60 * 60 * 1000).toISOString();
+
+        const { data, error } = await logsSupabase
+            .from("system_logs")
+            .select("source, metadata, created_at")
+            .in("source", ["announcement.view", "announcement.click", "announcement.dismiss"])
+            .gte("created_at", since)
+            .order("created_at", { ascending: false })
+            .limit(3000);
+
+        if (error || !data) return emptySnapshot;
+
+        const liveAnnouncementIds = new Set((await getActiveAnnouncements()).map((announcement) => announcement.id));
+        const byAnnouncement = new Map<string, AnnouncementEngagementItem>();
+        const byPath = new Map<string, AnnouncementPathPerformance>();
+
+        for (const row of data as Array<{ source: string; metadata?: Record<string, unknown> | null; created_at: string }>) {
+            const metadata =
+                row.metadata && typeof row.metadata === "object" && !Array.isArray(row.metadata)
+                    ? row.metadata
+                    : {};
+
+            const announcementId = typeof metadata.announcement_id === "string" ? metadata.announcement_id : null;
+            const announcementTitle = typeof metadata.announcement_title === "string" ? metadata.announcement_title : "إعلان";
+            const announcementType = typeof metadata.announcement_type === "string" ? metadata.announcement_type : "banner";
+            const pathname = typeof metadata.pathname === "string" ? metadata.pathname : "/";
+
+            if (!announcementId) continue;
+
+            const announcementEntry =
+                byAnnouncement.get(announcementId) ||
+                {
+                    id: announcementId,
+                    title: announcementTitle,
+                    type: (["banner", "popup", "toast", "marquee"].includes(announcementType)
+                        ? announcementType
+                        : "banner") as Announcement["type"],
+                    views: 0,
+                    clicks: 0,
+                    dismisses: 0,
+                    ctr: 0,
+                    dismissRate: 0,
+                    lastSeenAt: null,
+                    lastClickAt: null,
+                    lastDismissAt: null,
+                };
+
+            const pathEntry =
+                byPath.get(pathname) ||
+                {
+                    path: pathname,
+                    views: 0,
+                    clicks: 0,
+                    dismisses: 0,
+                    ctr: 0,
+                    dismissRate: 0,
+                };
+
+            if (row.source === "announcement.view") {
+                announcementEntry.views += 1;
+                announcementEntry.lastSeenAt = announcementEntry.lastSeenAt || row.created_at;
+                pathEntry.views += 1;
+            }
+
+            if (row.source === "announcement.click") {
+                announcementEntry.clicks += 1;
+                announcementEntry.lastClickAt = announcementEntry.lastClickAt || row.created_at;
+                pathEntry.clicks += 1;
+            }
+
+            if (row.source === "announcement.dismiss") {
+                announcementEntry.dismisses += 1;
+                announcementEntry.lastDismissAt = announcementEntry.lastDismissAt || row.created_at;
+                pathEntry.dismisses += 1;
+            }
+
+            byAnnouncement.set(announcementId, announcementEntry);
+            byPath.set(pathname, pathEntry);
+        }
+
+        const announcementStats = Array.from(byAnnouncement.values())
+            .map((item) => ({
+                ...item,
+                ctr: item.views > 0 ? Number(((item.clicks / item.views) * 100).toFixed(1)) : 0,
+                dismissRate: item.views > 0 ? Number(((item.dismisses / item.views) * 100).toFixed(1)) : 0,
+            }))
+            .sort((left, right) => {
+                if (right.clicks !== left.clicks) return right.clicks - left.clicks;
+                if (right.views !== left.views) return right.views - left.views;
+                return left.title.localeCompare(right.title, "ar");
+            });
+
+        const pathStats = Array.from(byPath.values())
+            .map((item) => ({
+                ...item,
+                ctr: item.views > 0 ? Number(((item.clicks / item.views) * 100).toFixed(1)) : 0,
+                dismissRate: item.views > 0 ? Number(((item.dismisses / item.views) * 100).toFixed(1)) : 0,
+            }))
+            .sort((left, right) => {
+                if (right.views !== left.views) return right.views - left.views;
+                return right.clicks - left.clicks;
+            });
+
+        const frictionQueue = [...announcementStats]
+            .filter((item) => item.views >= 5 && item.dismisses > 0)
+            .sort((left, right) => {
+                if (right.dismissRate !== left.dismissRate) return right.dismissRate - left.dismissRate;
+                return right.dismisses - left.dismisses;
+            })
+            .slice(0, 6);
+
+        const totals = announcementStats.reduce(
+            (acc, item) => {
+                acc.views += item.views;
+                acc.clicks += item.clicks;
+                acc.dismisses += item.dismisses;
+                return acc;
+            },
+            { views: 0, clicks: 0, dismisses: 0 }
+        );
+
+        return {
+            totals: {
+                views: totals.views,
+                clicks: totals.clicks,
+                dismisses: totals.dismisses,
+                ctr: totals.views > 0 ? Number(((totals.clicks / totals.views) * 100).toFixed(1)) : 0,
+                dismissRate: totals.views > 0 ? Number(((totals.dismisses / totals.views) * 100).toFixed(1)) : 0,
+                trackedAnnouncements: announcementStats.length,
+            },
+            topAnnouncements: announcementStats.slice(0, 6),
+            topPaths: pathStats.slice(0, 6),
+            livePerformance: announcementStats.filter((item) => liveAnnouncementIds.has(item.id)).slice(0, 4),
+            frictionQueue,
+            lookbackDays,
+        };
+    } catch {
+        return emptySnapshot;
+    }
 }

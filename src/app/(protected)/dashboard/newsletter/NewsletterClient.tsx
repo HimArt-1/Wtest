@@ -59,7 +59,7 @@ export function NewsletterClient({ subscribers: initial }: { subscribers: Subscr
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="fixed top-6 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-xl bg-gold text-bg font-bold text-sm shadow-lg"
+                    className="fixed top-6 left-1/2 z-50 -translate-x-1/2 rounded-xl bg-gold px-6 py-3 text-sm font-bold text-[var(--wusha-bg)] shadow-lg"
                 >
                     {toast}
                 </motion.div>
@@ -87,7 +87,7 @@ export function NewsletterClient({ subscribers: initial }: { subscribers: Subscr
             </div>
 
             {/* Subscribers List */}
-            <div className="rounded-2xl border border-theme-subtle bg-surface/50 backdrop-blur-sm overflow-hidden divide-y divide-theme-faint">
+            <div className="theme-surface-panel overflow-hidden rounded-2xl divide-y divide-theme-faint">
                 {subscribers.length === 0 ? (
                     <div className="p-12 text-center text-theme-faint text-sm">لا يوجد مشتركون بعد</div>
                 ) : (

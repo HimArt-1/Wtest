@@ -37,10 +37,10 @@ const PERIODS: { id: AnalyticsPeriod; label: string }[] = [
 ];
 
 const panelClass =
-    "relative overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(8,8,8,0.92))] backdrop-blur-xl";
+    "theme-surface-panel relative overflow-hidden rounded-[28px]";
 
 const subtlePanelClass =
-    "rounded-[24px] border border-white/8 bg-white/[0.03] backdrop-blur-xl";
+    "theme-surface-panel rounded-[24px]";
 
 function formatDate(iso: string) {
     const d = new Date(iso);
@@ -99,7 +99,7 @@ function getOrderStatusTone(status: string) {
         case "refunded":
             return "border-red-500/20 bg-red-500/10 text-red-300";
         default:
-            return "border-white/10 bg-white/5 text-theme-subtle";
+            return "border-theme-subtle bg-theme-faint text-theme-subtle";
     }
 }
 
@@ -114,7 +114,7 @@ function getPaymentStatusTone(status: string) {
         case "refunded":
             return "border-slate-500/20 bg-slate-500/10 text-slate-300";
         default:
-            return "border-white/10 bg-white/5 text-theme-subtle";
+            return "border-theme-subtle bg-theme-faint text-theme-subtle";
     }
 }
 
@@ -234,7 +234,7 @@ function FinanceQueueCard({
                 </div>
                 <Link
                     href="/dashboard/orders"
-                    className="rounded-full border border-white/10 px-3 py-1.5 text-xs font-medium text-theme-subtle transition-colors hover:border-gold/30 hover:text-gold"
+                    className="rounded-full border border-theme-subtle bg-theme-faint px-3 py-1.5 text-xs font-medium text-theme-subtle transition-colors hover:border-gold/30 hover:bg-theme-subtle hover:text-gold"
                 >
                     فتح الطلبات
                 </Link>
@@ -273,7 +273,7 @@ function FinanceQueueCard({
                         </div>
                     ))
                 ) : (
-                    <div className="rounded-2xl border border-dashed border-white/10 bg-black/10 px-4 py-8 text-center text-sm text-theme-subtle">
+                    <div className="rounded-2xl border border-dashed border-theme-subtle bg-theme-faint px-4 py-8 text-center text-sm text-theme-subtle">
                         {emptyState}
                     </div>
                 )}
@@ -322,7 +322,7 @@ function MixBars({
                         </div>
                     ))
                 ) : (
-                    <div className="rounded-2xl border border-dashed border-white/10 bg-black/10 px-4 py-8 text-center text-sm text-theme-subtle">
+                    <div className="rounded-2xl border border-dashed border-theme-subtle bg-theme-faint px-4 py-8 text-center text-sm text-theme-subtle">
                         لا توجد بيانات كافية في الفترة المحددة.
                     </div>
                 )}
@@ -438,7 +438,7 @@ export function AnalyticsClient({
                         <div className="flex flex-wrap gap-2 xl:justify-end">
                             <button
                                 onClick={exportCSV}
-                                className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-sm font-medium text-theme-soft transition-colors hover:border-gold/30 hover:text-gold"
+                                className="inline-flex items-center gap-2 rounded-full border border-theme-subtle bg-theme-faint px-4 py-2 text-sm font-medium text-theme-soft transition-colors hover:border-gold/30 hover:bg-theme-subtle hover:text-gold"
                             >
                                 <Download className="h-4 w-4" />
                                 تصدير التقرير
@@ -451,7 +451,7 @@ export function AnalyticsClient({
                                     className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
                                         period === option.id
                                             ? "border-gold/40 bg-gold/15 text-gold"
-                                            : "border-white/10 bg-white/[0.03] text-theme-soft hover:border-gold/20 hover:text-gold"
+                                            : "border-theme-subtle bg-theme-faint text-theme-soft hover:border-gold/20 hover:bg-theme-subtle hover:text-gold"
                                     }`}
                                 >
                                     {option.label}
@@ -678,7 +678,7 @@ export function AnalyticsClient({
                         <div className="overflow-x-auto">
                             <table className="w-full text-sm">
                                 <thead>
-                                    <tr className="border-b border-white/8 text-theme-subtle">
+                                    <tr className="border-b border-theme-subtle text-theme-subtle">
                                         <th className="px-4 py-3 text-right">#</th>
                                         <th className="px-4 py-3 text-right">المنتج</th>
                                         <th className="px-4 py-3 text-right">الكمية</th>
@@ -687,7 +687,7 @@ export function AnalyticsClient({
                                 </thead>
                                 <tbody>
                                     {data.topProducts.map((product, index) => (
-                                        <tr key={product.productId} className="border-b border-white/6 last:border-b-0">
+                                        <tr key={product.productId} className="border-b border-theme-faint last:border-b-0">
                                             <td className="px-4 py-3 text-theme-soft">{index + 1}</td>
                                             <td className="px-4 py-3 font-semibold text-theme">{product.title}</td>
                                             <td className="px-4 py-3 text-theme-soft">{product.quantity}</td>
@@ -698,7 +698,7 @@ export function AnalyticsClient({
                             </table>
                         </div>
                     ) : (
-                        <div className="rounded-2xl border border-dashed border-white/10 bg-black/10 px-4 py-10 text-center text-sm text-theme-subtle">
+                        <div className="rounded-2xl border border-dashed border-theme-subtle bg-theme-faint px-4 py-10 text-center text-sm text-theme-subtle">
                             لا توجد مبيعات مدفوعة كافية لإظهار محركات الإيراد في هذه الفترة.
                         </div>
                     )}

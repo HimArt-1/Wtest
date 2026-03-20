@@ -102,7 +102,7 @@ export function InventoryClient({ initialProducts, lowStockCount, outOfStockCoun
                         key={f}
                         onClick={() => setFilter(f)}
                         className={`px-4 py-2 rounded-xl text-sm font-medium ${
-                            filter === f ? "bg-gold/20 text-gold border border-gold/40" : "bg-theme-subtle text-theme-soft border border-theme-soft"
+                            filter === f ? "bg-gold/20 text-gold border border-gold/40" : "bg-theme-faint text-theme-soft border border-theme-subtle"
                         }`}
                     >
                         {f === "all" && "الكل"}
@@ -113,7 +113,7 @@ export function InventoryClient({ initialProducts, lowStockCount, outOfStockCoun
             </div>
 
             {/* جدول المنتجات */}
-            <div className="rounded-2xl border border-theme-subtle bg-surface/50 overflow-hidden">
+            <div className="theme-surface-panel overflow-hidden rounded-2xl">
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                         <thead>
@@ -135,7 +135,7 @@ export function InventoryClient({ initialProducts, lowStockCount, outOfStockCoun
                                         <tr key={p.id} className="border-b border-theme-faint hover:bg-theme-faint">
                                             <td className="px-5 py-3">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-lg bg-theme-subtle overflow-hidden shrink-0 relative">
+                                                    <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-theme-faint">
                                                         {p.image_url && (
                                                             <Image src={p.image_url} alt="" fill className="object-cover" sizes="40px" />
                                                         )}
@@ -151,7 +151,7 @@ export function InventoryClient({ initialProducts, lowStockCount, outOfStockCoun
                                                             type="text"
                                                             value={editValue}
                                                             onChange={(e) => setEditValue(e.target.value)}
-                                                            className="w-20 px-2 py-1 rounded-lg bg-theme-subtle border border-theme-soft text-theme text-sm"
+                                                            className="input-dark w-20 rounded-lg px-2 py-1 text-sm"
                                                             placeholder="∞"
                                                             dir="ltr"
                                                         />

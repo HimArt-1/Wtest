@@ -51,10 +51,10 @@ type FilterValue = "all" | "open" | "in_progress" | "resolved" | "closed";
 type SortValue = "recent" | "priority";
 
 const panelClass =
-    "relative overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(8,8,8,0.92))] backdrop-blur-xl";
+    "theme-surface-panel relative overflow-hidden rounded-[28px]";
 
 const subtlePanelClass =
-    "rounded-[24px] border border-white/8 bg-white/[0.03] backdrop-blur-xl";
+    "theme-surface-panel rounded-[24px]";
 
 function formatHours(value: number) {
     if (!value) return "—";
@@ -84,12 +84,12 @@ function getStatusMeta(status: string) {
         case "closed":
             return {
                 label: "مغلقة",
-                className: "border-white/10 bg-white/5 text-theme-subtle",
+                className: "border-theme-subtle bg-theme-faint text-theme-subtle",
             };
         default:
             return {
                 label: status,
-                className: "border-white/10 bg-white/5 text-theme-subtle",
+                className: "border-theme-subtle bg-theme-faint text-theme-subtle",
             };
     }
 }
@@ -104,12 +104,12 @@ function getPriorityMeta(priority: string) {
         case "low":
             return {
                 label: "منخفضة",
-                className: "border-white/10 bg-white/5 text-theme-faint",
+                className: "border-theme-subtle bg-theme-faint text-theme-faint",
             };
         default:
             return {
                 label: "عادية",
-                className: "border-white/10 bg-white/5 text-theme-subtle",
+                className: "border-theme-subtle bg-theme-faint text-theme-subtle",
             };
     }
 }
@@ -197,7 +197,7 @@ function QueueLane({
                             <Link key={ticket.id} href={`/dashboard/support/${ticket.id}`}>
                                 <div className={`rounded-2xl border p-4 transition-all hover:border-gold/30 ${toneClass}`}>
                                     <div className="flex items-start gap-3">
-                                        <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-black/20">
+                                        <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-theme-subtle bg-[color:color-mix(in_srgb,var(--wusha-surface)_74%,transparent)]">
                                             {avatar ? (
                                                 <Image src={avatar} alt={userName} width={44} height={44} className="h-full w-full object-cover" />
                                             ) : (
@@ -225,7 +225,7 @@ function QueueLane({
                                                 </span>
                                             </div>
                                             {ticket.flagLabel ? (
-                                                <div className="mt-3 rounded-xl border border-white/8 bg-black/10 px-3 py-2 text-[11px] text-theme-subtle">
+                                                <div className="mt-3 rounded-xl border border-theme-subtle bg-theme-faint px-3 py-2 text-[11px] text-theme-subtle">
                                                     {ticket.flagLabel}
                                                 </div>
                                             ) : null}
@@ -236,7 +236,7 @@ function QueueLane({
                         );
                     })
                 ) : (
-                    <div className="rounded-2xl border border-dashed border-white/10 bg-black/10 px-4 py-8 text-center text-sm text-theme-subtle">
+                    <div className="rounded-2xl border border-dashed border-theme-subtle bg-theme-faint px-4 py-8 text-center text-sm text-theme-subtle">
                         {emptyState}
                     </div>
                 )}
@@ -328,17 +328,17 @@ export function SupportOperationsCenter({ snapshot, tickets }: SupportOperations
                         </div>
 
                         <div className="grid gap-3 sm:grid-cols-3">
-                            <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                            <div className="rounded-2xl border border-theme-subtle bg-theme-faint p-4">
                                 <p className="text-xs uppercase tracking-[0.18em] text-theme-faint">الضغط الحالي</p>
                                 <p className="mt-3 text-3xl font-black text-theme">{serviceLoad}</p>
                                 <p className="mt-2 text-sm text-theme-subtle">يشمل الجديدة، الجاري العمل عليها، العاجلة، والراكدة.</p>
                             </div>
-                            <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                            <div className="rounded-2xl border border-theme-subtle bg-theme-faint p-4">
                                 <p className="text-xs uppercase tracking-[0.18em] text-theme-faint">عمر التذاكر النشطة</p>
                                 <p className="mt-3 text-3xl font-black text-theme">{formatHours(snapshot.stats.avgActiveHours)}</p>
                                 <p className="mt-2 text-sm text-theme-subtle">كلما ارتفع هذا الرقم زاد احتمال تدهور تجربة الدعم.</p>
                             </div>
-                            <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                            <div className="rounded-2xl border border-theme-subtle bg-theme-faint p-4">
                                 <p className="text-xs uppercase tracking-[0.18em] text-theme-faint">معدل الإغلاق</p>
                                 <p className="mt-3 text-3xl font-black text-theme">{formatHours(snapshot.stats.avgResolutionHours)}</p>
                                 <p className="mt-2 text-sm text-theme-subtle">متوسط الزمن التقريبي من فتح التذكرة حتى إغلاقها.</p>
@@ -353,7 +353,7 @@ export function SupportOperationsCenter({ snapshot, tickets }: SupportOperations
                     className={`${subtlePanelClass} p-6`}
                 >
                     <div className="flex items-center gap-3">
-                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-theme-subtle bg-theme-faint">
                             <ShieldAlert className="h-5 w-5 text-gold" />
                         </div>
                         <div>
@@ -511,7 +511,7 @@ export function SupportOperationsCenter({ snapshot, tickets }: SupportOperations
                                 value={query}
                                 onChange={(event) => setQuery(event.target.value)}
                                 placeholder="ابحث بالعنوان، الاسم، البريد، أو رقم التذكرة"
-                                className="w-full rounded-2xl border border-white/10 bg-black/20 py-3 pr-10 pl-4 text-sm text-theme outline-none transition-all placeholder:text-theme-faint focus:border-gold/30"
+                                className="input-dark w-full rounded-2xl py-3 pr-10 pl-4 text-sm transition-all"
                             />
                         </div>
 
@@ -529,7 +529,7 @@ export function SupportOperationsCenter({ snapshot, tickets }: SupportOperations
                                     className={`rounded-full border px-3 py-1.5 text-xs font-bold transition-all ${
                                         filter === item.value
                                             ? "border-gold/35 bg-gold/15 text-gold"
-                                            : "border-white/10 bg-white/[0.03] text-theme-subtle hover:text-theme"
+                                            : "border-theme-subtle bg-theme-faint text-theme-subtle hover:bg-theme-subtle hover:text-theme"
                                     }`}
                                 >
                                     {item.label}
@@ -538,7 +538,7 @@ export function SupportOperationsCenter({ snapshot, tickets }: SupportOperations
 
                             <button
                                 onClick={() => setSortBy(sortBy === "recent" ? "priority" : "recent")}
-                                className="mr-auto inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs font-bold text-theme-subtle transition-all hover:text-theme"
+                                className="mr-auto inline-flex items-center gap-2 rounded-full border border-theme-subtle bg-theme-faint px-3 py-1.5 text-xs font-bold text-theme-subtle transition-all hover:bg-theme-subtle hover:text-theme"
                             >
                                 <Filter className="h-3.5 w-3.5" />
                                 {sortBy === "recent" ? "ترتيب: الأحدث" : "ترتيب: الأولوية"}
@@ -547,7 +547,7 @@ export function SupportOperationsCenter({ snapshot, tickets }: SupportOperations
                     </div>
                 </div>
 
-                <div className="mt-6 overflow-hidden rounded-[22px] border border-white/8 bg-black/20">
+                <div className="theme-surface-panel mt-6 overflow-hidden rounded-[22px]">
                     {filteredTickets.length > 0 ? (
                         <div className="divide-y divide-white/6">
                             {filteredTickets.map((ticket, index) => {
@@ -562,10 +562,10 @@ export function SupportOperationsCenter({ snapshot, tickets }: SupportOperations
                                             initial={{ opacity: 0, y: 8 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: Math.min(index * 0.015, 0.18) }}
-                                            className="grid gap-4 px-5 py-4 transition-all hover:bg-white/[0.03] md:grid-cols-[1.3fr_0.7fr_0.5fr]"
+                                            className="grid gap-4 px-5 py-4 transition-all hover:bg-theme-faint md:grid-cols-[1.3fr_0.7fr_0.5fr]"
                                         >
                                             <div className="flex items-start gap-3">
-                                                <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]">
+                                                <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-theme-subtle bg-theme-faint">
                                                     {avatar ? (
                                                         <Image src={avatar} alt={userName} width={44} height={44} className="h-full w-full object-cover" />
                                                     ) : (

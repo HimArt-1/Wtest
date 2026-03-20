@@ -67,10 +67,10 @@ const nextStatuses: Record<string, string[]> = {
 };
 
 const panelClass =
-    "relative overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(8,8,8,0.92))] backdrop-blur-xl";
+    "theme-surface-panel relative overflow-hidden rounded-[28px]";
 
 const subtlePanelClass =
-    "rounded-[24px] border border-white/8 bg-white/[0.03] backdrop-blur-xl";
+    "theme-surface-panel rounded-[24px]";
 
 function formatCurrency(value: number) {
     return new Intl.NumberFormat("ar-SA", {
@@ -174,7 +174,7 @@ function QueueLane({
             <div className="space-y-3">
                 {items.length > 0 ? (
                     items.map((order) => (
-                        <div key={order.id} className="rounded-2xl border border-white/8 bg-black/20 p-4">
+                        <div key={order.id} className="rounded-2xl border border-theme-subtle bg-theme-faint p-4">
                             <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0">
                                     <p className="font-mono text-xs font-bold text-gold">#{order.order_number}</p>
@@ -195,7 +195,7 @@ function QueueLane({
                         </div>
                     ))
                 ) : (
-                    <div className="rounded-2xl border border-dashed border-white/10 bg-black/10 px-4 py-8 text-center text-sm text-theme-subtle">
+                    <div className="rounded-2xl border border-dashed border-theme-subtle bg-theme-faint px-4 py-8 text-center text-sm text-theme-subtle">
                         {emptyState}
                     </div>
                 )}
@@ -270,7 +270,7 @@ export function OrdersClient({
                             <span className="rounded-full border border-gold/25 bg-gold/10 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] text-gold uppercase">
                                 Orders Operations Center
                             </span>
-                            <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-theme-subtle">
+                            <span className="rounded-full border border-theme-subtle bg-theme-faint px-3 py-1 text-xs text-theme-subtle">
                                 مراجعة، تحصيل، تنفيذ، وشحن
                             </span>
                         </div>
@@ -286,17 +286,17 @@ export function OrdersClient({
                         </div>
 
                         <div className="grid gap-3 md:grid-cols-3">
-                            <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                            <div className="rounded-2xl border border-theme-subtle bg-theme-faint p-4">
                                 <p className="text-xs text-theme-faint">عناصر تحتاج تدخل الآن</p>
                                 <p className="mt-2 text-3xl font-black text-theme">{attentionLoad}</p>
                                 <p className="mt-2 text-sm text-theme-subtle">طلبات بانتظار مراجعة أو تحصيل أو نقل للتنفيذ.</p>
                             </div>
-                            <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                            <div className="rounded-2xl border border-theme-subtle bg-theme-faint p-4">
                                 <p className="text-xs text-theme-faint">أداء اليوم</p>
                                 <p className="mt-2 text-3xl font-black text-theme">{snapshot.stats.todayOrders}</p>
                                 <p className="mt-2 text-sm text-theme-subtle">{formatCurrency(snapshot.stats.todayRevenue)} إيراد اليوم.</p>
                             </div>
-                            <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                            <div className="rounded-2xl border border-theme-subtle bg-theme-faint p-4">
                                 <p className="text-xs text-theme-faint">معدل التحصيل</p>
                                 <p className="mt-2 text-3xl font-black text-theme">{collectionRate.toFixed(1)}%</p>
                                 <p className="mt-2 text-sm text-theme-subtle">نسبة الطلبات المدفوعة من إجمالي الطلبات.</p>
@@ -306,7 +306,7 @@ export function OrdersClient({
                         <div className="grid gap-3 sm:grid-cols-3">
                             <button
                                 onClick={() => navigate({ status: "pending", page: "1" })}
-                                className="group flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 transition-all hover:border-gold/20 hover:bg-white/[0.06]"
+                                className="group flex items-center justify-between rounded-2xl border border-theme-subtle bg-theme-faint px-4 py-3 transition-all hover:border-gold/20 hover:bg-theme-subtle"
                             >
                                 <div className="text-right">
                                     <p className="text-sm font-bold text-theme">بانتظار التأكيد</p>
@@ -316,7 +316,7 @@ export function OrdersClient({
                             </button>
                             <button
                                 onClick={() => navigate({ status: "processing", page: "1" })}
-                                className="group flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 transition-all hover:border-gold/20 hover:bg-white/[0.06]"
+                                className="group flex items-center justify-between rounded-2xl border border-theme-subtle bg-theme-faint px-4 py-3 transition-all hover:border-gold/20 hover:bg-theme-subtle"
                             >
                                 <div className="text-right">
                                     <p className="text-sm font-bold text-theme">طابور التنفيذ</p>
@@ -326,7 +326,7 @@ export function OrdersClient({
                             </button>
                             <button
                                 onClick={() => navigate({ status: "all", page: "1" })}
-                                className="group flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 transition-all hover:border-gold/20 hover:bg-white/[0.06]"
+                                className="group flex items-center justify-between rounded-2xl border border-theme-subtle bg-theme-faint px-4 py-3 transition-all hover:border-gold/20 hover:bg-theme-subtle"
                             >
                                 <div className="text-right">
                                     <p className="text-sm font-bold text-theme">مدفوعات معلقة</p>
@@ -361,19 +361,19 @@ export function OrdersClient({
                         </div>
 
                         <div className="grid grid-cols-2 gap-3">
-                            <div className="rounded-2xl border border-white/8 bg-black/20 p-4">
+                            <div className="rounded-2xl border border-theme-subtle bg-theme-faint p-4">
                                 <p className="text-xs text-theme-faint">طلبات مدفوعة</p>
                                 <p className="mt-2 text-2xl font-black text-theme">{snapshot.stats.paidOrders}</p>
                             </div>
-                            <div className="rounded-2xl border border-white/8 bg-black/20 p-4">
+                            <div className="rounded-2xl border border-theme-subtle bg-theme-faint p-4">
                                 <p className="text-xs text-theme-faint">تم تسليمها</p>
                                 <p className="mt-2 text-2xl font-black text-theme">{snapshot.stats.delivered}</p>
                             </div>
-                            <div className="rounded-2xl border border-white/8 bg-black/20 p-4">
+                            <div className="rounded-2xl border border-theme-subtle bg-theme-faint p-4">
                                 <p className="text-xs text-theme-faint">ملغاة أو مسترجعة</p>
                                 <p className="mt-2 text-2xl font-black text-theme">{snapshot.stats.cancelledOrRefunded}</p>
                             </div>
-                            <div className="rounded-2xl border border-white/8 bg-black/20 p-4">
+                            <div className="rounded-2xl border border-theme-subtle bg-theme-faint p-4">
                                 <p className="text-xs text-theme-faint">إجمالي الطلبات</p>
                                 <p className="mt-2 text-2xl font-black text-theme">{snapshot.stats.totalOrders}</p>
                             </div>
@@ -448,7 +448,7 @@ export function OrdersClient({
             </div>
 
             <div className={`${panelClass} overflow-hidden`}>
-                <div className="border-b border-white/8 px-5 py-5">
+                <div className="border-b border-theme-subtle px-5 py-5">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                         <div>
                             <p className="text-xs font-medium tracking-[0.2em] text-theme-faint uppercase">Orders Table</p>
@@ -458,19 +458,19 @@ export function OrdersClient({
                             </p>
                         </div>
                         <div className="grid grid-cols-2 gap-3 text-sm md:grid-cols-4">
-                            <div className="rounded-2xl border border-white/8 bg-black/20 px-4 py-3">
+                            <div className="rounded-2xl border border-theme-subtle bg-theme-faint px-4 py-3">
                                 <p className="text-xs text-theme-faint">نتائج الفلتر</p>
                                 <p className="mt-2 text-xl font-black text-theme">{count}</p>
                             </div>
-                            <div className="rounded-2xl border border-white/8 bg-black/20 px-4 py-3">
+                            <div className="rounded-2xl border border-theme-subtle bg-theme-faint px-4 py-3">
                                 <p className="text-xs text-theme-faint">الصفحة الحالية</p>
                                 <p className="mt-2 text-xl font-black text-theme">{currentPage}</p>
                             </div>
-                            <div className="rounded-2xl border border-white/8 bg-black/20 px-4 py-3">
+                            <div className="rounded-2xl border border-theme-subtle bg-theme-faint px-4 py-3">
                                 <p className="text-xs text-theme-faint">إجمالي الصفحات</p>
                                 <p className="mt-2 text-xl font-black text-theme">{Math.max(totalPages, 1)}</p>
                             </div>
-                            <div className="rounded-2xl border border-white/8 bg-black/20 px-4 py-3">
+                            <div className="rounded-2xl border border-theme-subtle bg-theme-faint px-4 py-3">
                                 <p className="text-xs text-theme-faint">الفلتر</p>
                                 <p className="mt-2 text-base font-bold text-theme">
                                     {statuses.find((item) => item.value === currentStatus)?.label || "الكل"}
@@ -489,7 +489,7 @@ export function OrdersClient({
                                 className={`rounded-xl px-4 py-2 text-xs font-bold whitespace-nowrap transition-all ${
                                     currentStatus === s.value
                                         ? "bg-gold/10 text-gold ring-1 ring-gold/20"
-                                        : "bg-white/[0.03] text-theme-subtle hover:bg-white/[0.06] hover:text-theme"
+                                        : "bg-theme-faint text-theme-subtle hover:bg-theme-subtle hover:text-theme"
                                 }`}
                             >
                                 {s.label}
@@ -500,7 +500,7 @@ export function OrdersClient({
 
                 <div className="relative">
                     {isPending && (
-                        <div className="absolute inset-0 z-10 flex items-center justify-center bg-bg/55 backdrop-blur-sm">
+                            <div className="absolute inset-0 z-10 flex items-center justify-center bg-[color-mix(in_srgb,var(--wusha-bg)_40%,transparent)] backdrop-blur-sm">
                             <Loader2 className="h-6 w-6 animate-spin text-gold" />
                         </div>
                     )}
@@ -508,7 +508,7 @@ export function OrdersClient({
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead>
-                                <tr className="border-y border-white/8 text-right text-xs text-theme-faint">
+                                <tr className="border-y border-theme-subtle text-right text-xs text-theme-faint">
                                     <th className="w-10 px-3 py-4"></th>
                                     <th className="px-4 py-4 font-medium">رقم الطلب</th>
                                     <th className="px-4 py-4 font-medium">المشتري</th>
@@ -532,13 +532,13 @@ export function OrdersClient({
                                                     initial={{ opacity: 0 }}
                                                     animate={{ opacity: 1 }}
                                                     transition={{ delay: index * 0.02 }}
-                                                    className="border-b border-white/6 transition-colors hover:bg-white/[0.03]"
+                                                    className="border-b border-theme-faint transition-colors hover:bg-theme-faint"
                                                 >
                                                     <td className="px-3 py-4">
                                                         {items.length > 0 ? (
                                                             <button
                                                                 onClick={() => setExpandedOrder(isExpanded ? null : order.id)}
-                                                                className="rounded-lg p-1 text-theme-faint transition-colors hover:bg-white/[0.06]"
+                                                                className="rounded-lg p-1 text-theme-faint transition-colors hover:bg-theme-subtle"
                                                             >
                                                                 <ChevronDown className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
                                                             </button>
@@ -577,7 +577,7 @@ export function OrdersClient({
                                                         <div className="flex flex-wrap items-center gap-2">
                                                             <button
                                                                 onClick={() => setInvoiceOrder(order)}
-                                                                className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-[11px] font-bold text-theme-soft transition-all hover:border-gold/20 hover:bg-gold/5 hover:text-gold"
+                                                                className="inline-flex items-center gap-1.5 rounded-lg border border-theme-subtle bg-theme-faint px-3 py-1.5 text-[11px] font-bold text-theme-soft transition-all hover:border-gold/20 hover:bg-gold/5 hover:text-gold"
                                                             >
                                                                 <FileDown className="h-3.5 w-3.5" />
                                                                 فاتورة
@@ -619,7 +619,7 @@ export function OrdersClient({
                                                         initial={{ opacity: 0, height: 0 }}
                                                         animate={{ opacity: 1, height: "auto" }}
                                                         exit={{ opacity: 0, height: 0 }}
-                                                        className="border-b border-white/6 bg-white/[0.03]"
+                                                        className="border-b border-theme-faint bg-[color:color-mix(in_srgb,var(--wusha-surface)_70%,transparent)]"
                                                     >
                                                         <td colSpan={8} className="px-6 py-5">
                                                             <div className="space-y-3">
@@ -636,8 +636,8 @@ export function OrdersClient({
                                                                                 : "منتج بدون مقاس";
 
                                                                         return (
-                                                                            <div key={item.id} className="flex min-w-[290px] items-center gap-3 rounded-2xl border border-white/8 bg-black/20 p-3">
-                                                                                <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-black/30">
+                                                                            <div key={item.id} className="flex min-w-[290px] items-center gap-3 rounded-2xl border border-theme-subtle bg-theme-faint p-3">
+                                                                                <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-[color:color-mix(in_srgb,var(--wusha-surface)_74%,transparent)]">
                                                                                     {imageUrl ? (
                                                                                         <Image
                                                                                             src={imageUrl}
@@ -694,7 +694,7 @@ export function OrdersClient({
                         <button
                             onClick={() => navigate({ status: currentStatus, page: String(currentPage - 1) })}
                             disabled={currentPage <= 1}
-                            className="rounded-lg border border-white/10 bg-white/[0.03] p-2 text-theme-subtle transition-colors hover:text-theme disabled:opacity-30"
+                            className="rounded-lg border border-theme-subtle bg-theme-faint p-2 text-theme-subtle transition-colors hover:bg-theme-subtle hover:text-theme disabled:opacity-30"
                         >
                             <ChevronRight className="h-4 w-4" />
                         </button>
@@ -702,7 +702,7 @@ export function OrdersClient({
                         <button
                             onClick={() => navigate({ status: currentStatus, page: String(currentPage + 1) })}
                             disabled={currentPage >= totalPages}
-                            className="rounded-lg border border-white/10 bg-white/[0.03] p-2 text-theme-subtle transition-colors hover:text-theme disabled:opacity-30"
+                            className="rounded-lg border border-theme-subtle bg-theme-faint p-2 text-theme-subtle transition-colors hover:bg-theme-subtle hover:text-theme disabled:opacity-30"
                         >
                             <ChevronLeft className="h-4 w-4" />
                         </button>

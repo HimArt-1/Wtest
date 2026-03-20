@@ -65,14 +65,14 @@ export function ActivityLogClient({ activities }: { activities: Activity[] }) {
                     <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-faint" />
                     <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
                         placeholder="بحث في السجل..."
-                        className="w-full pr-10 pl-4 py-2 bg-theme-subtle border border-theme-subtle rounded-lg text-sm text-theme placeholder:text-theme-faint focus:outline-none focus:border-gold/30 transition-all" />
+                        className="input-dark w-full rounded-lg py-2 pr-10 pl-4 text-sm transition-all" />
                 </div>
 
                 <div className="flex items-center gap-1.5">
                     {["all", "order", "product", "user"].map((t) => (
                         <button key={t} onClick={() => setFilterType(t)}
                             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${filterType === t
-                                ? "bg-gold text-bg" : "bg-theme-subtle text-theme-subtle hover:bg-theme-soft border border-theme-faint"}`}>
+                                ? "bg-gold text-[var(--wusha-bg)]" : "border border-theme-subtle bg-theme-faint text-theme-subtle hover:bg-[color:var(--surface-elevated)]"}`}>
                             {t === "all" ? "الكل" : typeLabels[t]}
                         </button>
                     ))}
@@ -80,7 +80,7 @@ export function ActivityLogClient({ activities }: { activities: Activity[] }) {
             </div>
 
             {/* Timeline */}
-            <div className="rounded-2xl border border-theme-subtle bg-surface/50 backdrop-blur-sm overflow-hidden">
+            <div className="theme-surface-panel overflow-hidden rounded-2xl">
                 {filtered.length === 0 ? (
                     <div className="p-16 text-center text-theme-faint">
                         <Clock className="w-12 h-12 mx-auto mb-3 opacity-30" />
@@ -90,7 +90,7 @@ export function ActivityLogClient({ activities }: { activities: Activity[] }) {
                     <div className="divide-y divide-theme-faint">
                         {filtered.map((activity, index) => {
                             const Icon = typeIcons[activity.type] || Package;
-                            const color = typeColors[activity.type] || "text-theme-subtle bg-theme-subtle";
+                            const color = typeColors[activity.type] || "text-theme-subtle bg-theme-faint";
 
                             return (
                                 <motion.div

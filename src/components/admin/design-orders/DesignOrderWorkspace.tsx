@@ -100,7 +100,7 @@ function DetailCard({
     imageUrl?: string | null;
 }) {
     return (
-        <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4 text-center">
+        <div className="theme-surface-panel rounded-2xl p-4 text-center">
             {imageUrl ? (
                 <img src={imageUrl} alt={label} className="mb-3 h-24 w-full rounded-xl object-cover" />
             ) : (
@@ -136,8 +136,8 @@ function ResultUpload({
     const inputRef = useRef<HTMLInputElement>(null);
 
     return (
-        <div className="flex items-center gap-3 rounded-2xl border border-white/8 bg-black/20 p-4">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03]">
+        <div className="flex items-center gap-3 rounded-2xl border border-theme-subtle bg-theme-faint p-4">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-theme-subtle bg-[color:var(--surface-elevated)]">
                 <Icon className="h-5 w-5 text-theme-faint" />
             </div>
             <div className="min-w-0 flex-1">
@@ -151,7 +151,7 @@ function ResultUpload({
                 )}
             </div>
 
-            <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-theme-soft bg-white/[0.03] px-3 py-2 text-xs font-medium text-theme-subtle transition-colors hover:border-gold/30">
+            <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-theme-subtle bg-theme-faint px-3 py-2 text-xs font-medium text-theme-subtle transition-colors hover:border-gold/30">
                 {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
                 {uploading ? "جاري..." : currentUrl ? "تغيير" : "رفع"}
                 <input
@@ -383,7 +383,7 @@ export function DesignOrderWorkspace({
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <Link
                     href="/dashboard/design-orders"
-                    className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-sm font-medium text-theme-subtle transition-colors hover:text-theme"
+                    className="inline-flex items-center gap-2 rounded-full border border-theme-subtle bg-theme-faint px-4 py-2 text-sm font-medium text-theme-subtle transition-colors hover:text-theme"
                 >
                     <ArrowRight className="h-4 w-4" />
                     العودة إلى مركز العمليات
@@ -404,7 +404,7 @@ export function DesignOrderWorkspace({
                 <motion.section
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="relative overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(8,8,8,0.92))] p-6 backdrop-blur-xl"
+                    className="theme-surface-panel relative overflow-hidden rounded-[28px] p-6"
                 >
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(147,51,234,0.14),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(212,175,55,0.12),transparent_30%)]" />
                     <div className="relative space-y-5">
@@ -412,7 +412,7 @@ export function DesignOrderWorkspace({
                             <span className="rounded-full border border-violet-400/20 bg-violet-400/10 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] text-violet-200 uppercase">
                                 Design Case Workspace
                             </span>
-                            <span className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-[11px] font-semibold text-theme-subtle">
+                            <span className="rounded-full border border-theme-subtle bg-theme-faint px-3 py-1 text-[11px] font-semibold text-theme-subtle">
                                 {getMethodLabel(currentOrder.design_method)}
                             </span>
                         </div>
@@ -427,17 +427,17 @@ export function DesignOrderWorkspace({
                         </div>
 
                         <div className="grid gap-3 md:grid-cols-3">
-                            <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                            <div className="rounded-2xl border border-theme-subtle bg-theme-faint p-4">
                                 <p className="text-xs uppercase tracking-[0.18em] text-theme-faint">القطعة</p>
                                 <p className="mt-2 text-lg font-bold text-theme">{currentOrder.garment_name}</p>
                                 <p className="mt-1 text-xs text-theme-subtle">{currentOrder.color_name} · {currentOrder.size_name}</p>
                             </div>
-                            <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                            <div className="rounded-2xl border border-theme-subtle bg-theme-faint p-4">
                                 <p className="text-xs uppercase tracking-[0.18em] text-theme-faint">المسؤول الحالي</p>
                                 <p className="mt-2 text-lg font-bold text-theme">{assignedAdmin || "غير معيّن"}</p>
                                 <p className="mt-1 text-xs text-theme-subtle">{currentOrder.customer_email || currentOrder.customer_phone || "بدون بيانات تواصل إضافية"}</p>
                             </div>
-                            <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                            <div className="rounded-2xl border border-theme-subtle bg-theme-faint p-4">
                                 <p className="text-xs uppercase tracking-[0.18em] text-theme-faint">القيمة النهائية</p>
                                 <p className="mt-2 text-lg font-bold text-theme">{formatMoney(currentOrder.final_price)}</p>
                                 <p className="mt-1 text-xs text-theme-subtle">
@@ -451,18 +451,18 @@ export function DesignOrderWorkspace({
                 <motion.aside
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="rounded-[28px] border border-white/8 bg-white/[0.03] p-6 backdrop-blur-xl"
+                    className="theme-surface-panel rounded-[28px] p-6"
                 >
                     <h3 className="text-lg font-bold text-theme">لوحة التحكم السريعة</h3>
                     <div className="mt-5 space-y-4">
-                        <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                        <div className="rounded-2xl border border-theme-subtle bg-theme-faint p-4">
                             <p className="text-xs text-theme-faint">الأدمن المسؤول</p>
                             <div className="mt-2 flex items-start gap-3">
                                 <Users className="mt-1 h-4 w-4 text-gold/70" />
                                 <select
                                     value={assignedTo}
                                     onChange={(event) => handleAssign(event.target.value)}
-                                    className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-theme outline-none transition-colors focus:border-gold/30"
+                                    className="input-dark w-full rounded-xl px-3 py-2 text-sm"
                                 >
                                     <option value="">غير معيّن</option>
                                     {adminList.map((admin) => (
@@ -501,7 +501,7 @@ export function DesignOrderWorkspace({
                                             onChange={(event) => setRejectReason(event.target.value)}
                                             placeholder="اكتب سبب الرفض..."
                                             rows={3}
-                                            className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-3 py-3 text-sm text-theme outline-none focus:border-red-500/30"
+                                            className="input-dark w-full rounded-xl px-3 py-3 text-sm focus:border-red-500/30"
                                         />
                                         <div className="flex gap-3">
                                             <button
@@ -513,7 +513,7 @@ export function DesignOrderWorkspace({
                                             </button>
                                             <button
                                                 onClick={() => setShowRejectForm(false)}
-                                                className="rounded-xl border border-white/10 px-4 py-3 text-sm text-theme-subtle"
+                                                className="rounded-xl border border-theme-subtle bg-theme-faint px-4 py-3 text-sm text-theme-subtle"
                                             >
                                                 رجوع
                                             </button>
@@ -522,7 +522,7 @@ export function DesignOrderWorkspace({
                                 )}
                             </div>
                         ) : (
-                            <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                            <div className="rounded-2xl border border-theme-subtle bg-theme-faint p-4">
                                 <p className="text-xs text-theme-faint">تحريك الحالة</p>
                                 <div className="mt-3 flex flex-wrap gap-2">
                                     {next.map((nextStatus) => {
@@ -561,12 +561,12 @@ export function DesignOrderWorkspace({
                                         value={finalPrice}
                                         onChange={(event) => setFinalPrice(event.target.value)}
                                         placeholder="السعر النهائي"
-                                        className="w-full rounded-xl border border-gold/20 bg-black/20 px-4 py-3 text-sm text-theme outline-none focus:border-gold/40"
+                                        className="input-dark w-full rounded-xl border-gold/20 px-4 py-3 text-sm focus:border-gold/40"
                                     />
                                     <button
                                         onClick={handleSendToCustomer}
                                         disabled={loading || !finalPrice}
-                                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-gold to-gold-light px-4 py-3 text-sm font-bold text-bg disabled:opacity-50"
+                                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-gold to-gold-light px-4 py-3 text-sm font-bold text-[var(--wusha-bg)] disabled:opacity-50"
                                     >
                                         {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                                         اعتماد وإرسال
@@ -579,7 +579,7 @@ export function DesignOrderWorkspace({
                             <button
                                 onClick={handleSkip}
                                 disabled={loading}
-                                className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm font-medium text-theme-subtle transition-colors hover:text-theme"
+                                className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-theme-subtle bg-theme-faint px-4 py-3 text-sm font-medium text-theme-subtle transition-colors hover:text-theme"
                             >
                                 <Slash className="h-4 w-4" />
                                 تجاوز النتائج وإكمال الطلب
@@ -593,10 +593,10 @@ export function DesignOrderWorkspace({
                 <motion.section
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="space-y-6 rounded-[28px] border border-white/8 bg-white/[0.03] p-6 backdrop-blur-xl"
+                    className="theme-surface-panel space-y-6 rounded-[28px] p-6"
                 >
                     {(currentOrder.customer_name || currentOrder.customer_email || currentOrder.customer_phone) ? (
-                        <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                        <div className="rounded-2xl border border-theme-subtle bg-theme-faint p-4">
                             <p className="text-xs uppercase tracking-[0.18em] text-theme-faint">Customer Contact</p>
                             <div className="mt-3 flex items-start gap-3">
                                 <UserCircle2 className="mt-1 h-5 w-5 text-gold/70" />
@@ -633,20 +633,20 @@ export function DesignOrderWorkspace({
                     ) : null}
 
                     {currentOrder.text_prompt ? (
-                        <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                        <div className="rounded-2xl border border-theme-subtle bg-theme-faint p-4">
                             <p className="text-xs uppercase tracking-[0.18em] text-theme-faint">Customer Brief</p>
                             <p className="mt-3 text-sm leading-7 text-theme">{currentOrder.text_prompt}</p>
                         </div>
                     ) : null}
 
                     {currentOrder.reference_image_url ? (
-                        <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                        <div className="rounded-2xl border border-theme-subtle bg-theme-faint p-4">
                             <p className="text-xs uppercase tracking-[0.18em] text-theme-faint">Reference Image</p>
                             <img src={currentOrder.reference_image_url} alt="Reference" className="mt-3 max-h-72 rounded-2xl object-contain" />
                         </div>
                     ) : null}
 
-                    <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                    <div className="rounded-2xl border border-theme-subtle bg-theme-faint p-4">
                         <div className="flex items-center justify-between gap-3">
                             <div className="flex items-center gap-2 text-gold">
                                 <Settings2 className="h-4 w-4" />
@@ -660,23 +660,23 @@ export function DesignOrderWorkspace({
                                 {copied ? "تم النسخ" : "نسخ"}
                             </button>
                         </div>
-                        <pre className="mt-4 max-h-72 overflow-y-auto whitespace-pre-wrap rounded-2xl border border-white/8 bg-black/30 p-4 text-xs leading-relaxed text-theme-soft">
+                        <pre className="mt-4 max-h-72 overflow-y-auto whitespace-pre-wrap rounded-2xl border border-theme-subtle bg-[color:var(--surface-elevated)] p-4 text-xs leading-relaxed text-theme-soft">
                             {currentOrder.ai_prompt}
                         </pre>
                     </div>
 
-                    <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                    <div className="rounded-2xl border border-theme-subtle bg-theme-faint p-4">
                         <label className="block text-xs uppercase tracking-[0.18em] text-theme-faint">Admin Notes</label>
                         <textarea
                             value={notes}
                             onChange={(event) => setNotes(event.target.value)}
                             rows={4}
                             placeholder="أضف ملاحظات تشغيلية أو إبداعية على الطلب..."
-                            className="mt-3 w-full rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-theme outline-none focus:border-gold/30"
+                            className="input-dark mt-3 w-full rounded-2xl px-4 py-3 text-sm"
                         />
                         <button
                             onClick={handleSaveNotes}
-                            className="mt-3 inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2 text-xs font-medium text-theme-subtle transition-colors hover:text-theme"
+                            className="mt-3 inline-flex items-center gap-2 rounded-xl border border-theme-subtle bg-theme-faint px-4 py-2 text-xs font-medium text-theme-subtle transition-colors hover:text-theme"
                         >
                             <Save className="h-3.5 w-3.5" />
                             حفظ الملاحظات
@@ -687,7 +687,7 @@ export function DesignOrderWorkspace({
                 <motion.section
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="space-y-6 rounded-[28px] border border-white/8 bg-white/[0.03] p-6 backdrop-blur-xl"
+                    className="theme-surface-panel space-y-6 rounded-[28px] p-6"
                 >
                     {!currentOrder.skip_results && currentOrder.status !== "cancelled" ? (
                         <div className="space-y-3">
@@ -734,7 +734,7 @@ export function DesignOrderWorkspace({
                         </div>
                     )}
 
-                    <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                    <div className="rounded-2xl border border-theme-subtle bg-theme-faint p-4">
                         <div className="flex items-center gap-2">
                             <Sparkles className="h-4 w-4 text-gold" />
                             <h3 className="text-lg font-bold text-theme">محادثة الطلب</h3>

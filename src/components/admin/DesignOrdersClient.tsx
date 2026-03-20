@@ -145,7 +145,7 @@ export function DesignOrdersClient({
                         <button
                             key={s.value}
                             onClick={() => navigate({ status: s.value, page: "1" })}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${currentStatus === s.value ? "bg-gold/15 text-gold border-gold/30" : "bg-theme-subtle text-theme-subtle border-theme-subtle hover:bg-white/[0.05]"}`}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${currentStatus === s.value ? "bg-gold/15 text-gold border-gold/30" : "bg-theme-faint text-theme-subtle border-theme-subtle hover:bg-[color:var(--surface-elevated)]"}`}
                         >
                             {s.label}
                         </button>
@@ -154,7 +154,7 @@ export function DesignOrdersClient({
                 {/* Actions */}
                 <div className="flex items-center gap-2">
                     <span className="text-xs text-theme-subtle">{count} طلب</span>
-                    <button onClick={() => setShowSettings(true)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-theme-subtle border border-theme-soft text-theme-soft text-xs hover:text-theme transition-colors">
+                    <button onClick={() => setShowSettings(true)} className="flex items-center gap-1.5 rounded-lg border border-theme-subtle bg-theme-faint px-3 py-1.5 text-xs text-theme-soft transition-colors hover:text-theme">
                         <Settings2 className="w-3.5 h-3.5" /> إعدادات البرومبت
                     </button>
                 </div>
@@ -169,14 +169,14 @@ export function DesignOrdersClient({
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         placeholder="بحث بالاسم أو رقم الطلب..."
-                        className="w-full pr-10 pl-4 py-2.5 rounded-xl bg-theme-subtle border border-theme-soft text-theme text-sm placeholder:text-theme-faint focus:outline-none focus:border-gold/30 transition-colors"
+                        className="input-dark w-full rounded-xl py-2.5 pr-10 pl-4 text-sm transition-colors"
                     />
                 </div>
                 {/* Admin Filter */}
                 <select
                     value={filterAdmin}
                     onChange={(e) => setFilterAdmin(e.target.value)}
-                    className="px-4 py-2.5 rounded-xl bg-theme-subtle border border-theme-soft text-theme text-sm focus:outline-none focus:border-gold/30 transition-colors min-w-[180px]"
+                    className="input-dark min-w-[180px] rounded-xl px-4 py-2.5 text-sm transition-colors"
                 >
                     <option value="all">كل الأدمن</option>
                     <option value="unassigned">غير معيّن</option>
@@ -193,7 +193,7 @@ export function DesignOrdersClient({
                     <p>لا توجد طلبات تصميم {searchTerm ? `تطابق "${searchTerm}"` : currentStatus !== "all" && `بحالة "${FILTER_STATUSES.find(s => s.value === currentStatus)?.label}"`}</p>
                 </div>
             ) : (
-                <div className="overflow-x-auto">
+                <div className="theme-surface-panel overflow-x-auto rounded-2xl">
                     <table className="w-full text-sm">
                         <thead>
                             <tr className="border-b border-theme-subtle">
@@ -215,7 +215,7 @@ export function DesignOrdersClient({
                                     <tr
                                         key={order.id}
                                         onClick={() => router.push(`/dashboard/design-orders/${order.id}`)}
-                                        className={`border-b border-theme-faint hover:bg-theme-subtle transition-colors cursor-pointer group ${order.status === "new" ? "bg-blue-500/5" : ""}`}
+                                        className={`border-b border-theme-faint transition-colors cursor-pointer group hover:bg-theme-faint ${order.status === "new" ? "bg-blue-500/5" : ""}`}
                                     >
                                         {/* Order Number */}
                                         <td className="px-4 py-3 relative pl-6">
@@ -284,11 +284,11 @@ export function DesignOrdersClient({
             {/* Pagination */}
             {totalPages > 1 && (
                 <div className="flex items-center justify-center gap-3 pt-4">
-                    <button disabled={currentPage <= 1} onClick={() => navigate({ page: String(currentPage - 1) })} className="p-2 rounded-lg bg-theme-subtle border border-theme-soft disabled:opacity-30">
+                    <button disabled={currentPage <= 1} onClick={() => navigate({ page: String(currentPage - 1) })} className="rounded-lg border border-theme-subtle bg-theme-faint p-2 disabled:opacity-30">
                         <ChevronRight className="w-4 h-4 text-theme-soft" />
                     </button>
                     <span className="text-sm text-theme-subtle">{currentPage} / {totalPages}</span>
-                    <button disabled={currentPage >= totalPages} onClick={() => navigate({ page: String(currentPage + 1) })} className="p-2 rounded-lg bg-theme-subtle border border-theme-soft disabled:opacity-30">
+                    <button disabled={currentPage >= totalPages} onClick={() => navigate({ page: String(currentPage + 1) })} className="rounded-lg border border-theme-subtle bg-theme-faint p-2 disabled:opacity-30">
                         <ChevronLeft className="w-4 h-4 text-theme-soft" />
                     </button>
                 </div>
@@ -349,11 +349,11 @@ function PromptSettingsModal({ template, onClose }: { template: string; onClose:
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="relative z-10 w-full max-w-2xl rounded-2xl bg-surface border border-theme-soft p-6 shadow-2xl"
+                className="theme-surface-panel relative z-10 w-full max-w-2xl rounded-2xl p-6 shadow-2xl"
             >
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-bold text-theme flex items-center gap-2"><Settings2 className="w-5 h-5 text-gold" /> إعدادات البرومبت الموحد</h3>
-                    <button onClick={onClose} className="p-2 hover:bg-theme-subtle rounded-lg"><X className="w-5 h-5 text-theme-subtle" /></button>
+                    <button onClick={onClose} className="rounded-lg p-2 hover:bg-theme-faint"><X className="w-5 h-5 text-theme-subtle" /></button>
                 </div>
 
                 <p className="text-xs text-theme-subtle mb-3">
@@ -363,16 +363,16 @@ function PromptSettingsModal({ template, onClose }: { template: string; onClose:
                 <textarea
                     value={value}
                     onChange={(e) => setValue(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl bg-theme-subtle border border-theme-soft text-theme text-sm font-mono placeholder:text-theme-faint focus:outline-none focus:border-gold/40 resize-none"
+                    className="input-dark w-full rounded-xl px-4 py-3 text-sm font-mono resize-none"
                     rows={14}
                 />
 
                 <div className="flex items-center gap-3 mt-4">
-                    <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-gold to-gold-light text-bg font-bold text-sm hover:shadow-lg hover:shadow-gold/20 transition-all disabled:opacity-50">
+                    <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-gold to-gold-light px-6 py-2.5 text-sm font-bold text-[var(--wusha-bg)] transition-all hover:shadow-lg hover:shadow-gold/20 disabled:opacity-50">
                         {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : saved ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
                         {saving ? "جاري الحفظ..." : saved ? "تم الحفظ!" : "حفظ القالب"}
                     </button>
-                    <button onClick={onClose} className="px-4 py-2.5 rounded-xl border border-theme-soft text-theme-soft text-sm hover:bg-theme-subtle">إلغاء</button>
+                    <button onClick={onClose} className="rounded-xl border border-theme-subtle bg-theme-faint px-4 py-2.5 text-sm text-theme-soft hover:bg-[color:var(--surface-elevated)]">إلغاء</button>
                 </div>
             </motion.div>
         </div>

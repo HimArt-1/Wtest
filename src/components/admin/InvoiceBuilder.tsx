@@ -84,19 +84,19 @@ export function InvoiceBuilder({ order, onClose }: InvoiceBuilderProps) {
                     animate={{ x: 0, opacity: 1 }}
                     exit={{ x: 200, opacity: 0 }}
                     transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                    className="relative flex w-full max-w-7xl h-[90vh] m-auto bg-surface rounded-2xl overflow-hidden border border-theme-soft shadow-2xl"
+                    className="theme-surface-panel relative m-auto flex h-[90vh] w-full max-w-7xl overflow-hidden rounded-2xl shadow-2xl"
                     style={{ zIndex: 51 }}
                 >
                     {/* ─── LEFT PANEL: CONTROLS ─── */}
-                    <div className="w-[400px] shrink-0 bg-surface/80 border-l border-theme-faint flex flex-col h-full relative z-10">
-                        <div className="p-5 border-b border-theme-faint flex items-center justify-between shadow-sm bg-surface">
+                    <div className="relative z-10 flex h-full w-[400px] shrink-0 flex-col border-l border-theme-subtle bg-theme-faint">
+                        <div className="flex items-center justify-between border-b border-theme-subtle bg-theme-faint p-5 shadow-sm">
                             <h2 className="text-lg font-bold text-theme flex items-center gap-2">
                                 <Settings2 className="w-5 h-5 text-gold" />
                                 تصميم الفاتورة
                             </h2>
                             <button
                                 onClick={onClose}
-                                className="p-2 rounded-lg hover:bg-theme-subtle text-theme-subtle hover:text-theme transition-colors"
+                                className="rounded-lg p-2 text-theme-subtle transition-colors hover:bg-[color:var(--surface-elevated)] hover:text-theme"
                             >
                                 <X className="w-5 h-5" />
                             </button>
@@ -147,7 +147,7 @@ export function InvoiceBuilder({ order, onClose }: InvoiceBuilderProps) {
                                         <input
                                             value={config.companyName}
                                             onChange={(e) => updateConfig("companyName", e.target.value)}
-                                            className="w-full bg-theme-subtle border border-theme-soft rounded-lg px-3 py-2.5 text-sm text-theme focus:border-gold/50 focus:ring-1 focus:ring-gold/50 outline-none transition-all"
+                                            className="input-dark w-full rounded-lg px-3 py-2.5 text-sm"
                                         />
                                     </div>
                                     <div>
@@ -155,7 +155,7 @@ export function InvoiceBuilder({ order, onClose }: InvoiceBuilderProps) {
                                         <input
                                             value={config.tagline}
                                             onChange={(e) => updateConfig("tagline", e.target.value)}
-                                            className="w-full bg-theme-subtle border border-theme-soft rounded-lg px-3 py-2.5 text-sm text-theme focus:border-gold/50 focus:ring-1 focus:ring-gold/50 outline-none transition-all"
+                                            className="input-dark w-full rounded-lg px-3 py-2.5 text-sm"
                                         />
                                     </div>
                                     <div>
@@ -163,7 +163,7 @@ export function InvoiceBuilder({ order, onClose }: InvoiceBuilderProps) {
                                         <input
                                             value={config.vatNumber}
                                             onChange={(e) => updateConfig("vatNumber", e.target.value)}
-                                            className="w-full bg-theme-subtle border border-theme-soft rounded-lg px-3 py-2.5 text-sm text-theme focus:border-gold/50 focus:ring-1 focus:ring-gold/50 outline-none transition-all"
+                                            className="input-dark w-full rounded-lg px-3 py-2.5 text-sm"
                                         />
                                     </div>
                                 </div>
@@ -206,7 +206,7 @@ export function InvoiceBuilder({ order, onClose }: InvoiceBuilderProps) {
                                     <select
                                         value={config.fontFamily}
                                         onChange={(e) => updateConfig("fontFamily", e.target.value)}
-                                        className="w-full bg-theme-subtle border border-theme-soft rounded-lg px-3 py-2.5 text-sm text-theme outline-none appearance-none"
+                                        className="input-dark w-full rounded-lg px-3 py-2.5 text-sm appearance-none"
                                     >
                                         <option value="IBM Plex Sans Arabic">IBM Plex Sans</option>
                                         <option value="Cairo">Cairo</option>
@@ -223,13 +223,13 @@ export function InvoiceBuilder({ order, onClose }: InvoiceBuilderProps) {
                                         value={config.notes}
                                         onChange={(e) => updateConfig("notes", e.target.value)}
                                         rows={4}
-                                        className="w-full bg-theme-subtle border border-theme-soft rounded-lg px-3 py-2.5 text-sm text-theme focus:border-gold/50 focus:ring-1 focus:ring-gold/50 outline-none transition-all resize-none"
+                                        className="input-dark w-full rounded-lg px-3 py-2.5 text-sm resize-none"
                                     />
                                 </div>
 
                                 <div className="space-y-2 pt-2">
                                     <label className="flex items-center gap-3 cursor-pointer group">
-                                        <div className="relative flex items-center justify-center w-5 h-5 rounded border border-theme-soft bg-theme-subtle group-hover:border-gold/50 transition-colors">
+                                        <div className="relative flex items-center justify-center w-5 h-5 rounded border border-theme-subtle bg-theme-faint group-hover:border-gold/50 transition-colors">
                                             <input
                                                 type="checkbox"
                                                 checked={config.showLogo}
@@ -242,7 +242,7 @@ export function InvoiceBuilder({ order, onClose }: InvoiceBuilderProps) {
                                     </label>
 
                                     <label className="flex items-center gap-3 cursor-pointer group">
-                                        <div className="relative flex items-center justify-center w-5 h-5 rounded border border-theme-soft bg-theme-subtle group-hover:border-gold/50 transition-colors">
+                                        <div className="relative flex items-center justify-center w-5 h-5 rounded border border-theme-subtle bg-theme-faint group-hover:border-gold/50 transition-colors">
                                             <input
                                                 type="checkbox"
                                                 checked={config.showWatermark}
@@ -255,7 +255,7 @@ export function InvoiceBuilder({ order, onClose }: InvoiceBuilderProps) {
                                     </label>
 
                                     <label className="flex items-center gap-3 cursor-pointer group">
-                                        <div className="relative flex items-center justify-center w-5 h-5 rounded border border-theme-soft bg-theme-subtle group-hover:border-gold/50 transition-colors">
+                                        <div className="relative flex items-center justify-center w-5 h-5 rounded border border-theme-subtle bg-theme-faint group-hover:border-gold/50 transition-colors">
                                             <input
                                                 type="checkbox"
                                                 checked={config.showTax}
@@ -275,9 +275,9 @@ export function InvoiceBuilder({ order, onClose }: InvoiceBuilderProps) {
                                                 min={0}
                                                 max={100}
                                                 step={0.5}
-                                                value={config.taxRate}
-                                                onChange={(e) => updateConfig("taxRate", Number(e.target.value))}
-                                                className="w-28 bg-theme-subtle border border-theme-soft rounded-lg px-3 py-2 text-sm text-theme focus:border-gold/50 focus:ring-1 focus:ring-gold/50 outline-none transition-all"
+                                            value={config.taxRate}
+                                            onChange={(e) => updateConfig("taxRate", Number(e.target.value))}
+                                                className="input-dark w-28 rounded-lg px-3 py-2 text-sm"
                                             />
                                         </div>
                                     )}
@@ -292,7 +292,7 @@ export function InvoiceBuilder({ order, onClose }: InvoiceBuilderProps) {
                                 </label>
                                 <div className="space-y-2">
                                     <label className="flex items-center gap-3 cursor-pointer group">
-                                        <div className="relative flex items-center justify-center w-5 h-5 rounded border border-theme-soft bg-theme-subtle group-hover:border-gold/50 transition-colors">
+                                        <div className="relative flex items-center justify-center w-5 h-5 rounded border border-theme-subtle bg-theme-faint group-hover:border-gold/50 transition-colors">
                                             <input
                                                 type="checkbox"
                                                 checked={config.hiddenColumns?.quantity || false}
@@ -305,7 +305,7 @@ export function InvoiceBuilder({ order, onClose }: InvoiceBuilderProps) {
                                     </label>
 
                                     <label className="flex items-center gap-3 cursor-pointer group">
-                                        <div className="relative flex items-center justify-center w-5 h-5 rounded border border-theme-soft bg-theme-subtle group-hover:border-gold/50 transition-colors">
+                                        <div className="relative flex items-center justify-center w-5 h-5 rounded border border-theme-subtle bg-theme-faint group-hover:border-gold/50 transition-colors">
                                             <input
                                                 type="checkbox"
                                                 checked={config.hiddenColumns?.unitPrice || false}
@@ -318,7 +318,7 @@ export function InvoiceBuilder({ order, onClose }: InvoiceBuilderProps) {
                                     </label>
 
                                     <label className="flex items-center gap-3 cursor-pointer group">
-                                        <div className="relative flex items-center justify-center w-5 h-5 rounded border border-theme-soft bg-theme-subtle group-hover:border-gold/50 transition-colors">
+                                        <div className="relative flex items-center justify-center w-5 h-5 rounded border border-theme-subtle bg-theme-faint group-hover:border-gold/50 transition-colors">
                                             <input
                                                 type="checkbox"
                                                 checked={config.hiddenColumns?.subtotal || false}
@@ -335,18 +335,18 @@ export function InvoiceBuilder({ order, onClose }: InvoiceBuilderProps) {
                         </div>
 
                         {/* Bottom Action Bar */}
-                        <div className="absolute bottom-0 left-0 right-0 p-5 bg-surface border-t border-theme-faint shadow-[0_-10px_30px_rgba(0,0,0,0.2)]">
+                        <div className="absolute bottom-0 left-0 right-0 border-t border-theme-subtle bg-theme-faint p-5 shadow-[0_-10px_30px_rgba(0,0,0,0.12)]">
                             <div className="flex gap-3">
                                 <button
                                     onClick={handleSaveConfig}
-                                    className="flex-1 py-3 px-4 rounded-xl bg-theme-subtle hover:bg-theme-soft text-theme text-sm font-bold flex items-center justify-center gap-2 transition-all border border-theme-faint hover:border-theme-soft"
+                                    className="flex-1 rounded-xl border border-theme-subtle bg-theme-faint px-4 py-3 text-sm font-bold text-theme transition-all hover:bg-[color:var(--surface-elevated)] flex items-center justify-center gap-2"
                                 >
                                     <Save className="w-4 h-4 text-theme-soft" />
                                     حفظ كافتراضي
                                 </button>
                                 <button
                                     onClick={handlePrint}
-                                    className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-l from-gold to-gold-light text-bg text-sm font-bold flex items-center justify-center gap-2 shadow-[0_4px_15px_rgba(206,174,127,0.3)] hover:shadow-[0_4px_25px_rgba(206,174,127,0.5)] transition-all transform hover:-translate-y-0.5"
+                                    className="flex-1 rounded-xl bg-gradient-to-l from-gold to-gold-light px-4 py-3 text-sm font-bold text-[var(--wusha-bg)] shadow-[0_4px_15px_rgba(206,174,127,0.3)] transition-all hover:-translate-y-0.5 hover:shadow-[0_4px_25px_rgba(206,174,127,0.5)] flex items-center justify-center gap-2"
                                 >
                                     <Download className="w-4 h-4" />
                                     تصدير PDF / طباعة
@@ -356,7 +356,7 @@ export function InvoiceBuilder({ order, onClose }: InvoiceBuilderProps) {
                     </div>
 
                     {/* ─── RIGHT PANEL: LIVE PREVIEW ─── */}
-                    <div className="flex-1 bg-theme-faint relative flex items-center justify-center p-8">
+                    <div className="relative flex flex-1 items-center justify-center bg-theme-faint p-8">
                         {/* Background pattern */}
                         <div className="absolute inset-0 pattern-dots opacity-5 pointer-events-none" />
 

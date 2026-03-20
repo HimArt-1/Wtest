@@ -127,7 +127,7 @@ function FilterChip(props: {
                 "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs transition-colors",
                 active
                     ? "border-gold/30 bg-gold/10 text-gold"
-                    : "border-theme-soft bg-theme-subtle text-theme-subtle hover:border-gold/20 hover:text-theme"
+                    : "border-theme-subtle bg-theme-faint text-theme-subtle hover:border-gold/20 hover:text-theme"
             )}
         >
             <span>{label}</span>
@@ -241,7 +241,7 @@ export function NotificationsAdminClient({ notifications, alerts }: Notification
                     <div className="mb-2 flex items-center gap-3">
                         <div className={cn(
                             "flex h-10 w-10 items-center justify-center rounded-xl",
-                            alerts.lowStock > 0 ? "bg-amber-500/10" : "bg-theme-subtle"
+                            alerts.lowStock > 0 ? "bg-amber-500/10" : "bg-theme-faint"
                         )}>
                             <AlertTriangle className={cn("h-5 w-5", alerts.lowStock > 0 ? "text-amber-400" : "text-theme-faint")} />
                         </div>
@@ -267,7 +267,7 @@ export function NotificationsAdminClient({ notifications, alerts }: Notification
                     <div className="mb-2 flex items-center gap-3">
                         <div className={cn(
                             "flex h-10 w-10 items-center justify-center rounded-xl",
-                            alerts.pendingOrders > 0 ? "bg-blue-500/10" : "bg-theme-subtle"
+                            alerts.pendingOrders > 0 ? "bg-blue-500/10" : "bg-theme-faint"
                         )}>
                             <ShoppingCart className={cn("h-5 w-5", alerts.pendingOrders > 0 ? "text-blue-400" : "text-theme-faint")} />
                         </div>
@@ -293,7 +293,7 @@ export function NotificationsAdminClient({ notifications, alerts }: Notification
                     <div className="mb-2 flex items-center gap-3">
                         <div className={cn(
                             "flex h-10 w-10 items-center justify-center rounded-xl",
-                            alerts.newUsersToday > 0 ? "bg-emerald-500/10" : "bg-theme-subtle"
+                            alerts.newUsersToday > 0 ? "bg-emerald-500/10" : "bg-theme-faint"
                         )}>
                             <UserPlus className={cn("h-5 w-5", alerts.newUsersToday > 0 ? "text-emerald-400" : "text-theme-faint")} />
                         </div>
@@ -308,7 +308,7 @@ export function NotificationsAdminClient({ notifications, alerts }: Notification
                 </motion.div>
             </div>
 
-            <div className="overflow-hidden rounded-2xl border border-theme-subtle bg-surface/50 backdrop-blur-sm">
+            <div className="theme-surface-panel overflow-hidden rounded-2xl">
                 <div className="space-y-4 border-b border-theme-subtle px-5 py-4">
                     <div className="flex flex-wrap items-center gap-3">
                         <div className="flex items-center gap-2">
@@ -318,14 +318,14 @@ export function NotificationsAdminClient({ notifications, alerts }: Notification
                         <span className="mr-auto text-xs text-theme-faint">
                             {filteredNotifications.length} من {items.length} إشعار
                         </span>
-                        <span className="inline-flex items-center rounded-full border border-theme-soft bg-theme-subtle px-2.5 py-1 text-[11px] text-theme-subtle">
+                        <span className="inline-flex items-center rounded-full border border-theme-subtle bg-theme-faint px-2.5 py-1 text-[11px] text-theme-subtle">
                             غير المقروء: {unreadCount}
                         </span>
                         <button
                             type="button"
                             onClick={handleMarkAllRead}
                             disabled={unreadCount === 0 || isMarkingAll}
-                            className="inline-flex items-center gap-2 rounded-full border border-theme-soft bg-theme-subtle px-3 py-1.5 text-[11px] font-bold text-theme-soft transition-colors hover:border-gold/20 hover:text-theme disabled:cursor-not-allowed disabled:opacity-50"
+                            className="inline-flex items-center gap-2 rounded-full border border-theme-subtle bg-theme-faint px-3 py-1.5 text-[11px] font-bold text-theme-soft transition-colors hover:border-gold/20 hover:text-theme disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             {isMarkingAll ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle className="h-3.5 w-3.5" />}
                             تعليم الكل كمقروء
@@ -408,7 +408,7 @@ export function NotificationsAdminClient({ notifications, alerts }: Notification
                                     <div className="flex items-start gap-4">
                                         <div className={cn(
                                             "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border",
-                                            notification.is_read ? "border-theme-soft bg-theme-subtle text-theme-subtle" : severity.icon
+                                            notification.is_read ? "border-theme-subtle bg-theme-faint text-theme-subtle" : severity.icon
                                         )}>
                                             <Icon className="h-4 w-4" />
                                         </div>
@@ -456,7 +456,7 @@ export function NotificationsAdminClient({ notifications, alerts }: Notification
                                                         type="button"
                                                         onClick={() => handleMarkRead(notification.id)}
                                                         disabled={pendingNotificationId === notification.id}
-                                                        className="inline-flex items-center gap-1 rounded-full border border-theme-soft bg-theme-subtle px-2 py-0.5 text-[10px] font-medium text-theme-soft transition-colors hover:border-gold/20 hover:text-theme disabled:cursor-not-allowed disabled:opacity-50"
+                                                        className="inline-flex items-center gap-1 rounded-full border border-theme-subtle bg-theme-faint px-2 py-0.5 text-[10px] font-medium text-theme-soft transition-colors hover:border-gold/20 hover:text-theme disabled:cursor-not-allowed disabled:opacity-50"
                                                     >
                                                         {pendingNotificationId === notification.id ? (
                                                             <Loader2 className="h-3 w-3 animate-spin" />
